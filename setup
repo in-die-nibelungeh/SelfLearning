@@ -1,0 +1,2 @@
+#!/bin/sh
+export MY_AUDIO_ROOT=`pwd`

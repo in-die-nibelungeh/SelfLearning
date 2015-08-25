@@ -1,11 +1,12 @@
 SRC = \
 	main.cpp \
-	Fft.cpp \
-	../WaveGen/sources/WaveGen.cpp \
+	Fft.cpp
 
 INC = 
-LIB = -lm -lstdc++
-CPPFLAGS += -I../WaveGen/sources
+LIB = -lm -lstdc++ -lwg
+CPPFLAGS += \
+	-I$(MY_AUDIO_ROOT)/Programs/Include \
+	-L$(MY_AUDIO_ROOT)/Programs/Library \
 
 BIN = fft.exe
 
