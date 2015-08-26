@@ -8,16 +8,23 @@
 
 static void test_test(void)
 {
-	FileIo wav;
+	FileIo wave;
 	
-	wav.Test();
+	wave.Test();
 }
 
 static void test_read(void)
 {
-	FileIo wav;
-	wav.ReadHeader("ding.wav");
+	FileIo wave;
+	wave.Read("ding.wav");
+	s32 fs;
+	s32 ch, bit;
 	
+	wave.GetMetaData(&fs, &ch, &bit);
+	
+	printf("fs =%5d: %s\n",  fs,  fs == 44100 ? "OK" : "NG");
+	printf("ch =%5d: %s\n",  ch,  ch ==     2 ? "OK" : "NG");
+	printf("bit=%5d: %s\n", bit, bit ==    16 ? "OK" : "NG");
 }
 
 static void test_write(void)
@@ -57,9 +64,9 @@ static void test_write(void)
 
 int main(void)
 {
-	//test_test();
+	test_test();
 	//test_read();
-	test_write();
+	//test_write();
 	
 	return 0;
 }

@@ -1,6 +1,21 @@
 
+#include "debug.h"
+#include "status.h"
 #include "FileIo.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct WaveChunk
+{
+	union
+	{
+		char c[4];
+		s32 i;
+	} m_Name;
+	u32  m_Size;
+};
+
 
 FileIo::FileIo()
   : 
@@ -8,68 +23,110 @@ FileIo::FileIo()
     m_SamplingRate(48000),
     m_NumChannels(1),
     m_BitDepth(16),
-    m_Data(reinterpret_cast<void*>(0)),
-    m_DataSize(0)
+    m_Data(NULL),
+    m_DataSize(0),
+    m_Allocated(false),
+    m_Duration(0.0)
 {
 }
 
 FileIo::~FileIo()
 {
+	if (true == m_Allocated &&
+		NULL != m_Data)
+	{
+		free(m_Data);
+	}
 }
 
 status_t FileIo::Test(void)
 {
-	if (8 != sizeof(WaveChunk))
-	{
-	}
+	CHECK(8 == sizeof(WaveChunk));
+	CHECK(4 == sizeof(s32));
+	CHECK(2 == sizeof(s16));
 	return NO_ERROR;
 }
 
-status_t FileIo::ReadHeader(const char* path)
+status_t FileIo::Read(const char* path)
 {
 	FILE* fd = fopen(path, "r");
 	
 	if (NULL == fd)
 	{
-		return -1; // NOT_FOUND
+		return -ERROR_NOT_FOUND; // NOT_FOUND
 	}
+	
+	status_t ret = NO_ERROR;
+	s32 length = 0;
 	
 	while(1)
 	{
-		WaveChunk chunk;
+		WaveChunk chunk = {0, 0};
+		int rb = fread(&chunk, sizeof(chunk), 1, fd);
+		//printf("rb=%d, pos=%d, size=%d, eof=%d\n", rb, ftell(fd), chunk.m_Size, feof(fd));
 		
-		fread(&chunk, sizeof(chunk), 1, fd);
-		
+		if (feof(fd) || rb == 0)
+		{
+			break;
+		}
 		switch(chunk.m_Name.i)
 		{
-			CID_RIFF: 
+			case CID_RIFF: 
 			{
-				char name[4];
-				//fseek(fd, SEEK_CUR, 4);
-				fread(name, sizeof(char), 4, fd);
+				s32 name;
+				fread(&name, sizeof(name), 1, fd);
+				if (name != C4TOI('W', 'A', 'V', 'E'))
+				{
+					fprintf(stderr, "Unknown: %08x\n", name);
+					//ret = ERROR_UNKNOWN;
+				}
 				break;
 			}
-			CID_FMT: 
+			case CID_FMT: 
 			{
+				fread(&m_Format      , sizeof(s16), 1, fd);
+				fread(&m_NumChannels , sizeof(s16), 1, fd);
+				fread(&m_SamplingRate, sizeof(s32), 1, fd);
+				fseek(fd, sizeof(s32)+sizeof(s16), SEEK_CUR);
+				fread(&m_BitDepth    , sizeof(s16), 1, fd);
+				fseek(fd, chunk.m_Size-16, SEEK_CUR);
 				break;
 			}
-			CID_DATA: 
+			case CID_DATA: 
 			{
+				m_Allocated = true;
+				m_Data = malloc(chunk.m_Size);
+				fread(m_Data, sizeof(u8), chunk.m_Size, fd);
 				break;
 			}
-			CID_FACT: 
+			case CID_FACT: 
 			{
+				fread(&length, sizeof(s32), 1, fd);
+				fseek(fd, chunk.m_Size-sizeof(s32), SEEK_CUR);
+				if (chunk.m_Size > 4)
+				{
+					fprintf(stderr, "Unexpected size of fact: size=%d\n", chunk.m_Size);
+					ret = ERROR_UNKNOWN;
+				}
 				break;
 			}
 			default:
+			{
+				char * c = chunk.m_Name.c;
+				printf("Unexpeced chunk: %c%c%c%c\n", c[0], c[1], c[2], c[3]);
+				fseek(fd, chunk.m_Size, SEEK_CUR);
+				// ret = ERROR_UNKNOWN;
 				break;
-			
+			}
 		}
 	}
-	
+	if (length != 0)
+	{
+		m_Duration = (f64)length / m_SamplingRate;
+	}
 	fclose(fd);
 	
-	return NO_ERROR;
+	return ret;
 }
 
 status_t FileIo::SetMetaData(s32 fs, s32 numChannels, s32 bitDepth)
@@ -80,7 +137,19 @@ status_t FileIo::SetMetaData(s32 fs, s32 numChannels, s32 bitDepth)
 	return NO_ERROR;
 }
 
-#define ERROR_NULL_POINTER 0xe4
+status_t FileIo::GetMetaData(s32* fs, s32* chnumChannels, s32* bitDepth) const
+{
+	*fs = m_SamplingRate;
+	*chnumChannels = m_NumChannels;
+	*bitDepth = m_BitDepth;
+	return NO_ERROR;
+}
+
+status_t FileIo::GetAudioData(void* buffer) const 
+{
+	memcpy(buffer, m_Data, m_DataSize);
+	return NO_ERROR;
+}
 
 status_t FileIo::SetAudioData(void* buffer, size_t size)
 {
@@ -103,7 +172,7 @@ status_t FileIo::Write(const char* path)
 	
 	if (NULL == fd)
 	{
-		return -1;
+		return -ERROR_NOT_FOUND;
 	}
 	
 	// 'RIFF'
@@ -116,7 +185,7 @@ status_t FileIo::Write(const char* path)
 	s32 BytesPerDt = m_BitDepth / 8;
 	FileWrite(fd, s32, CID_FMT);
 	FileWrite(fd, s32, 0x10);
-	FileWrite(fd, s16, 0x1); // PCM
+	FileWrite(fd, s16, DF_LPCM); // PCM
 	FileWrite(fd, s16, m_NumChannels); 
 	FileWrite(fd, s32, m_SamplingRate);
 	FileWrite(fd, s32, m_SamplingRate * m_NumChannels * BytesPerDt);
@@ -133,7 +202,7 @@ status_t FileIo::Write(const char* path)
 	}
 	else
 	{
-		ret = -ERROR_NULL_POINTER;
+		ret = -ERROR_NULL;
 	}
 	
 	fclose(fd);
