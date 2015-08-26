@@ -1,8 +1,6 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
-#define NO_ERROR 0
-
 typedef int status_t;
 typedef unsigned int size_t;
 
