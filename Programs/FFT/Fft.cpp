@@ -8,14 +8,64 @@
 namespace Fft
 {
 
-static f64 g_Pi(M_PI);
-
-bool Fft(f64 real[], f64 imag[], f64 td[], s32 n)
+namespace 
 {
-	return true;
+	static f64 g_Pi(M_PI);
+	int Ilog2(int v)
+	{
+		for (int i = sizeof(v) * 8 - 1; i >= 0 ; --i)
+		{
+			if ((v >> i) & 0x1)
+			{
+				return i;
+			}
+		}
+		return -ERROR_ILLEGAL;
+	}
+	int Count1(int v)
+	{
+		int ans = 0;
+		for (int i = 0; 0 < sizeof(v); ++i)
+		{
+			ans += ((v >> i) & 0x1) ? 1 : 0;
+		}
+		return ans;
+	}
+	int BitReverse(int v, int w)
+	{
+		int x = 0;
+		for (int i = 0; i < w; ++i)
+		{
+			x |= (((v >> i) & 0x1) << (w - i - 1));
+		}
+		return x;
+	}
 }
 
-bool Ft(f64 real[], f64 imag[], f64 td[], s32 n)
+status_t Fft(f64 real[], f64 imag[], f64 td[], s32 n)
+{
+	if (Count1(n) != 1)
+	{
+		return -ERROR_ILLEGAL;
+	}
+	
+	s32 int iter = Ilog2(n);
+	
+	for (int i = 0; i < iter; ++i)
+	{
+		for (int j = 0; j < ((i+1) << 1); ++j)
+		{
+		}
+	}
+	return NO_ERROR;
+}
+
+status_t Ifft(f64 td[], f64 real[], f64 imag[], s32 n)
+{
+	return NO_ERROR;
+}
+
+status_t Ft(f64 real[], f64 imag[], f64 td[], s32 n)
 {
 	for (int i = 0; i < n; ++i)
 	{
@@ -27,13 +77,11 @@ bool Ft(f64 real[], f64 imag[], f64 td[], s32 n)
 			real[i] += (td[j] * cos(df * j));
 			imag[i] -= (td[j] * sin(df * j));
 		}
-		//real[i] /= n;
-		//imag[i] /= n;
 	}
-	return true;
+	return NO_ERROR;
 }
 
-bool Ift(f64 td[], f64 real[], f64 imag[], s32 n)
+status_t Ift(f64 td[], f64 real[], f64 imag[], s32 n)
 {
 	for (int i = 0; i < n; ++i)
 	{
@@ -45,7 +93,7 @@ bool Ift(f64 td[], f64 real[], f64 imag[], s32 n)
 		}
 		td[i] /= n;
 	}
-	return true;
+	return NO_ERROR;
 }
 
 }; // namespace Fft
