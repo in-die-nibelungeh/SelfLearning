@@ -1,4 +1,5 @@
 #include "types.h"
+#include "status.h"
 #include <math.h>
 
 #ifndef M_PI
@@ -49,7 +50,7 @@ status_t Fft(f64 real[], f64 imag[], f64 td[], s32 n)
 		return -ERROR_ILLEGAL;
 	}
 	
-	s32 int iter = Ilog2(n);
+	s32 iter = Ilog2(n);
 	
 	for (int i = 0; i < iter; ++i)
 	{

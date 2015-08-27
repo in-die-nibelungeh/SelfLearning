@@ -4,11 +4,11 @@ BIN=wavgen.exe
 LIB=libwg.a
 HEADER=WaveGen.h
 
-SRC=WaveGen.cpp main.cpp
-OBJ=$(SRC:.cpp=.o)
+ENTRY_SRC=main.cpp
+MODULE_SRC=WaveGen.cpp
+SRC = $(ENTRY_SRC) $(MODULE_SRC)
+OBJ=$(MODULE_SRC:.cpp=.o)
 INC=$(MY_AUDIO_ROOT)/Programs/Include/types.h $(HEADER)
-
-$(info OBJ=$(OBJ))
 
 CPPFLAGS += -I$(MY_AUDIO_ROOT)/Programs/Include
 
@@ -29,5 +29,5 @@ install: $(LIB) $(HEADER)
 	cp $(HEADER) $(MY_AUDIO_ROOT)/Programs/Include/
 
 clean: 
-	@rm -rf $(BIN) $(LIB) *.BAK 
+	@rm -rf $(BIN) $(LIB) *.BAK *.o
 

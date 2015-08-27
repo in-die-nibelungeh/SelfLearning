@@ -32,7 +32,7 @@ static void test_write(void)
 	WaveGen wg;
 	s32 freq = 440;
 	s32 fs = 48000;
-	s32 duration = 3;
+	s32 duration = 10;
 	s32 ch = 1;
 	s32 depth = sizeof(s16) * 8;
 	s32 amp = 32767;
@@ -66,7 +66,7 @@ int main(void)
 {
 	test_test();
 	//test_read();
-	//test_write();
+	test_write();
 	
 	return 0;
 }
