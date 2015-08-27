@@ -1,24 +1,13 @@
-SRC = \
-	main.cpp \
-	FileIo.cpp
+BIN=fileio.exe
+LIB=libfio.a
 
-INC = 
-LIB = -lm -lstdc++ -lwg
-CPPFLAGS += \
-	-I$(MY_AUDIO_ROOT)/Programs/Include \
-	-L$(MY_AUDIO_ROOT)/Programs/Library \
+MODULE_HEADER=FileIo.h
+MODULE_SRC=FileIo.cpp
 
-BIN = fileio.exe
+INC=$(MODULE_HEADER)
 
-all: build
+LIBS=-lwg
 
-run: $(BIN)
-	@$(BIN)
+CPPFLAGS += -O3
 
-build: $(SRC) $(INC)
-	gcc $(CPPFLAGS) -o $(BIN) $(SRC) $(LIB)
-
-clean:
-	@if [ -f "$(BIN)" ] ; then rm $(BIN) ; fi
-
-.PHONY: clean run all build 
+include $(MY_AUDIO_ROOT)/Build/Make/module.mk
