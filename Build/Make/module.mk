@@ -18,7 +18,7 @@ MODULE_OBJ := \
 #	$(MODULE_SRC:.s=.o)   \
 #	$(MODULE_SRC:.S=.o)
 
-INC += $(addprefix $(PROJECT_INCDIR)/, types.h status.h debug.h)
+INC += $(addprefix $(PROJECT_INCDIR)/, types.h status.h debug.h) $(MODULE_HEADER)
 OBJ := $(MODULE_OBJ) $(ENTRY_SRC:*.cpp=.o)
 
 CPPFLAGS += \

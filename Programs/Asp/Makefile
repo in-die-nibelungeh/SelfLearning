@@ -2,7 +2,7 @@
 BIN=asp.exe
 LIB=libasp.a
 
-MODULE_HEADER=Asp.h
+MODULE_HEADER=Asp.h Window.h
 MODULE_SRC=Asp.cpp Window.cpp
 
 INC=$(MODULE_HEADER)
