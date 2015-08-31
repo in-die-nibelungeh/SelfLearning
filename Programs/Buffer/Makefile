@@ -1,8 +1,7 @@
 BIN=buffer.exe
-LIB=libuffer.a
 
 MODULE_HEADER=Buffer.h
-MODULE_SRC=Buffer.cpp
+MODULE_SRC=
 
 INC=$(MODULE_HEADER)
 
