@@ -4,67 +4,92 @@
 
 #include <stdlib.h>
 
-#define DECL_CAST_OPERATOR(t) \
-    operator t*() { return PTR_CAST(t*, m_Address); }
-
-//template <class T>
+template <class T>
 class Buffer
 {
-    void* m_Address;
+    T*     m_Address;
+    int    m_NumOfData;
     size_t m_Size;
 
+    int min(int a, int b) const { return (a > b) ? b : a; };
+
 public:
-    Buffer();
-    Buffer(size_t size);
+    Buffer(int numData);
     ~Buffer();
 
-/*
-    DECL_CAST_OPERATOR(f64*);
-    DECL_CAST_OPERATOR(f32*);
-    DECL_CAST_OPERATOR(s32*);
-    DECL_CAST_OPERATOR(u32*);
-    DECL_CAST_OPERATOR(s16*);
-    DECL_CAST_OPERATOR(u16*);
-    DECL_CAST_OPERATOR(s8*);
-    DECL_CAST_OPERATOR(u8*);
-*/
+    template <class U>
+    void Copy(Buffer<U>& b);
 
-    int& operator[](int i) { return PTR_CAST(int*, m_Address)[i]; }
-    f64& operator[](f64 i) { return PTR_CAST(f64*, m_Address)[static_cast<int>(i)]; }
-    size_t GetSize(void) const { return m_Size; }
+    T& operator[](int i)
+    {
+        if (0 > i)
+        {
+            return m_Address[0];
+        }
+        if (i >= m_NumOfData)
+        {
+            return m_Address[m_NumOfData-1];
+        }
+        return m_Address[i];
+    }
+
+    template <class U>
+    Buffer<T>& operator=(Buffer<U>& b);
+
+    size_t GetSize     (void) const { return m_Size; }
+    int    GetNumOfData(void) const { return m_NumOfData; }
 };
 
-#if 1
 template <class T>
-class TBuffer
+Buffer<T>::Buffer(int numData)
+    :
+    m_Size(numData * sizeof(T)),
+    m_Address(reinterpret_cast<T*>(malloc(numData * sizeof(T)))),
+    m_NumOfData(numData)
 {
-    T* m_Address;
-    size_t m_Size;
-
-public:
-    TBuffer();
-    TBuffer(size_t size);
-    ~TBuffer();
-
-    T& operator[](int i) { return m_Address[i]; }
-    size_t GetSize(void) const { return m_Size; }
-
-};
+}
 
 template <class T>
-TBuffer<T>::TBuffer() : m_Size(0), m_Address(NULL)
-{}
-
-template <class T>
-TBuffer<T>::TBuffer(size_t size) : m_Size(size), m_Address(reinterpret_cast<T*>(malloc(size)))
-{}
-
-template <class T>
-TBuffer<T>::~TBuffer()
+Buffer<T>::~Buffer()
 {
     if (NULL != m_Address)
     {
         free(m_Address);
+        m_Address = NULL;
+    }
+    m_NumOfData = 0;
+    m_Size = 0;
+}
+
+template <class T>
+template <class U>
+void Buffer<T>::Copy(Buffer<U>& b)
+{
+    int iter = this->min(this->m_NumOfData, b.GetNumOfData());
+    for (int i = 0; i < iter; ++i)
+    {
+        (*this)[i] = static_cast<T>(b[i]);
     }
 }
-#endif
+
+template <class T>
+template <class U>
+Buffer<T>& Buffer<T>::operator=(Buffer<U>& b)
+{
+    if (NULL != this->m_Address)
+    {
+        free(this->m_Address);
+    }
+    m_NumOfData = b.GetNumOfData();
+    m_Size = m_NumOfData * sizeof(T);
+    m_Address = PTR_CAST(T*, malloc(m_Size));
+
+    if (NULL != m_Address)
+    {
+        for (int i = 0; i < m_NumOfData; ++i)
+        {
+            (*this)[i] = static_cast<T>(b[i]);
+        }
+    }
+    return *this;
+}
