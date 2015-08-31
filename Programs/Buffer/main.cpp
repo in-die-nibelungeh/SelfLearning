@@ -2,6 +2,8 @@
 
 #include "Buffer.h"
 
+using namespace Container;
+
 int main(void)
 {
     int numData = 8;
@@ -14,11 +16,20 @@ int main(void)
         printf("%d: %f\n", i, iof64[i]);
     }
 
+    // Substituting
     ios16 = iof64;
 
     for (int i = 0; i < ios16.GetNumOfData(); ++i)
     {
         printf("%d: %d\n", i, ios16[i]);
+    }
+
+    // Copy-constructor
+    Buffer<f32> iof32(ios16);
+
+    for (int i = 0; i < iof32.GetNumOfData(); ++i)
+    {
+        printf("%d: %f\n", i, iof32[i]);
     }
 
     return 0;

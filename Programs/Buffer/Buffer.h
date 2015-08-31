@@ -1,27 +1,35 @@
 #pragma once
 
 #include "types.h"
+#include "debug.h"
 
+// To use malloc/free
 #include <stdlib.h>
+
+namespace Container {
 
 template <class T>
 class Buffer
 {
     T*     m_Address;
     int    m_NumOfData;
-    size_t m_Size;
 
-    int min(int a, int b) const { return (a > b) ? b : a; };
+    inline int min(int a, int b) const { return (a > b) ? b : a; };
 
 public:
+    template <class U>
+    Buffer(Buffer<U>& );
+
     Buffer(int numData);
     ~Buffer();
 
     template <class U>
     void Copy(Buffer<U>& b);
 
-    T& operator[](int i)
+    T& operator[](int i) const
     {
+        ASSERT(0 < m_NumOfData);
+        ASSERT(NULL != m_Address);
         if (0 > i)
         {
             return m_Address[0];
@@ -36,29 +44,35 @@ public:
     template <class U>
     Buffer<T>& operator=(Buffer<U>& b);
 
-    size_t GetSize     (void) const { return m_Size; }
-    int    GetNumOfData(void) const { return m_NumOfData; }
+    intGetNumOfData(void) const
+    {
+        return m_NumOfData;
+    }
 };
 
 template <class T>
 Buffer<T>::Buffer(int numData)
     :
-    m_Size(numData * sizeof(T)),
-    m_Address(reinterpret_cast<T*>(malloc(numData * sizeof(T)))),
+    m_Address(PTR_CAST(T*, malloc(numData * sizeof(T)))),
     m_NumOfData(numData)
 {
+    ASSERT(NULL != m_Address);
+}
+
+template <class T>
+template <class U>
+Buffer<T>::Buffer(Buffer<U>& b)
+  : m_Address(NULL)
+{
+    *this = b;
 }
 
 template <class T>
 Buffer<T>::~Buffer()
 {
-    if (NULL != m_Address)
-    {
-        free(m_Address);
-        m_Address = NULL;
-    }
-    m_NumOfData = 0;
-    m_Size = 0;
+    ASSERT(NULL != m_Address);
+    free(m_Address);
+    m_Address = NULL;
 }
 
 template <class T>
@@ -76,20 +90,19 @@ template <class T>
 template <class U>
 Buffer<T>& Buffer<T>::operator=(Buffer<U>& b)
 {
-    if (NULL != this->m_Address)
-    {
-        free(this->m_Address);
-    }
-    m_NumOfData = b.GetNumOfData();
-    m_Size = m_NumOfData * sizeof(T);
-    m_Address = PTR_CAST(T*, malloc(m_Size));
+    ASSERT(NULL != m_Address);
+    free(this->m_Address);
 
-    if (NULL != m_Address)
+    m_NumOfData = b.GetNumOfData();
+    m_Address = PTR_CAST(T*, malloc(m_NumOfData * sizeof(T)));
+
+    ASSERT(NULL != m_Address);
+
+    for (int i = 0; i < m_NumOfData; ++i)
     {
-        for (int i = 0; i < m_NumOfData; ++i)
-        {
-            (*this)[i] = static_cast<T>(b[i]);
-        }
+        (*this)[i] = static_cast<T>(b[i]);
     }
     return *this;
 }
+
+} // namespace Container {
