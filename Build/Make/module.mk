@@ -1,6 +1,5 @@
 
 BIN ?= a.exe
-LIB ?= liba.a
 
 LIBS += -lstdc++ -lm
 
@@ -32,10 +31,16 @@ $(BIN): $(OBJ) $(INC)
 	gcc $(CPPFLAGS) -o $(BIN) $(OBJ) $(LIBS)
 
 lib: $(MODULE_OBJ)
-	ar r $(LIB) $(MODULE_OBJ)
+	@if [ -n "$(LIB)" ] ; then \
+		ar r $(LIB) $(MODULE_OBJ) ; \
+	else \
+		echo LIB is not define. ; \
+	fi
 
 install: $(LIB) $(MODULE_HEADER)
-	cp $(LIB) $(PROJECT_LIBDIR)/
+	@if [ -n "$(LIB)" ] ; then \
+		cp $(LIB) $(PROJECT_LIBDIR)/ ; \
+	fi
 	cp $(MODULE_HEADER) $(PROJECT_INCDIR)/
 
 clean: 
