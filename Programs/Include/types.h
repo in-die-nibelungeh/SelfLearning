@@ -27,4 +27,6 @@ typedef double f64;
 #define FALSE 1
 #endif
 
+#define PTR_CAST(t, v) reinterpret_cast<t>(v)
+
 #endif // #ifndef _TYPES_H_
