@@ -9,4 +9,4 @@ LIBS=-lwg
 
 CPPFLAGS += -O3
 
-include $(MY_AUDIO_ROOT)/Build/Make/module.mk
+include $(MY_AUDIO_ROOT)/Build/Make/modulerules.mk
