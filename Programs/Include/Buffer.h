@@ -123,7 +123,7 @@ public:
         ASSERT(0 < m_NumOfArray);
         ASSERT(NULL != m_Array);
 
-        Vector<T>* p = NULL;
+        Vector<T>* p;
         if (0 > i)
         {
             p = m_Array[0];

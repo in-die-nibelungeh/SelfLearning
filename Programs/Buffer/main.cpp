@@ -82,5 +82,11 @@ int main(void)
 
     DUMP_MATRIX(m2, %d);
 
+    Vector<f64> vec = m2[0];
+
+    for (int i = 0; i < vec.GetNumOfData(); ++i)
+    {
+        printf("vec[%d]=%f\n", i, vec[i]);
+    }
     return 0;
 }
