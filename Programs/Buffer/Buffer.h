@@ -88,8 +88,10 @@ template <class T>
 template <class U>
 Vector<T>& Vector<T>::operator=(Vector<U>& b)
 {
-    ASSERT(NULL != m_Address);
-    delete[] this->m_Address;
+    if (NULL != m_Address)
+    {
+        delete[] this->m_Address;
+    }
 
     m_NumOfData = b.GetNumOfData();
     m_Address = new T[m_NumOfData];
@@ -112,7 +114,8 @@ class Matrix
     Vector<T>** m_Array;
 public:
     Matrix(int ,int);
-    Matrix(Matrix<T>& m);
+    template <class U>
+    Matrix(Matrix<U>& m);
     ~Matrix();
     Vector<T>& operator[](int i) const
     {
@@ -133,9 +136,9 @@ public:
         {
             p = m_Array[i];
         }
-        ASSERT(NULL != m_Array[i]);
+        ASSERT(NULL != p);
 
-        return *m_Array[i];
+        return *p;
     }
 
     template <class U>
@@ -185,9 +188,12 @@ Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
     m_NumOfArray = m.GetNumOfArray();
     m_NumOfData = m.GetNumOfData();
 
-    delete[] m_Array;
+    if (NULL != m_Array)
+    {
+        delete[] m_Array;
+    }
 
-    m_Array = new Vector<T>[m_NumOfArray];
+    m_Array = new Vector<T>*[m_NumOfArray];
 
     for (int i = 0; i < m_NumOfArray; ++i)
     {
@@ -197,7 +203,8 @@ Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
 }
 
 template <class T>
-Matrix<T>::Matrix(Matrix<T>& m)
+template <class U>
+Matrix<T>::Matrix(Matrix<U>& m)
   : m_Array(NULL)
 {
     *this = m;
