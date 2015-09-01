@@ -70,7 +70,7 @@ Vector<T>::~Vector()
 {
     ASSERT(NULL != m_Address);
     delete[] m_Address;
-    m_Address = NULL;
+    m_Address = PTR_CAST(T*, NULL);
 }
 
 template <class T>
