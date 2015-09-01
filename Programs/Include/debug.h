@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#if defined(DEBUG)
+
 #define LOG(...) printf(__VA_ARGS__)
 #define DEBUG_LOG(...) printf(__VA_ARGS__)
 
@@ -26,5 +28,14 @@
         *((int*)0) = 0; \
     }
 #endif // #ifndef ASSERT
+
+#else  // #if defined(DEBUG)
+
+#define LOG(...) printf(__VA_ARGS__)
+#define DEBUG_LOG(...)
+#define CHECK(cond)
+#define ASSERT(c)
+
+#endif // #if defined(DEBUG)
 
 #endif // #ifndef _DEBUG_H_

@@ -11,6 +11,13 @@ LIBDIRS += $(PROJECT_LIBDIR)
 
 ENTRY_SRC ?= main.cpp
 
+MODULE_BUILD ?= Debug
+OUTDIR ?= .
+
+ifeq ($(MODULE_BUILD),Debug)
+    CPPFLAGS += -DDEBUG
+endif
+
 MODULE_OBJ := \
 	$(MODULE_SRC:.cpp=.o) \
 #	$(MODULE_SRC:.c=.o)   \
