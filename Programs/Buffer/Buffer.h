@@ -3,28 +3,26 @@
 #include "types.h"
 #include "debug.h"
 
-// To use malloc/free
 #include <stdlib.h>
 
 namespace Container {
 
 template <class T>
-class Buffer
+class Vector
 {
     T*     m_Address;
     int    m_NumOfData;
-
     inline int min(int a, int b) const { return (a > b) ? b : a; };
 
 public:
     template <class U>
-    Buffer(Buffer<U>& );
+    Vector(Vector<U>& );
 
-    Buffer(int numData);
-    ~Buffer();
+    Vector(int numData);
+    ~Vector();
 
     template <class U>
-    void Copy(Buffer<U>& b);
+    void Copy(Vector<U>& b);
 
     T& operator[](int i) const
     {
@@ -42,18 +40,18 @@ public:
     }
 
     template <class U>
-    Buffer<T>& operator=(Buffer<U>& b);
+    Vector<T>& operator=(Vector<U>& b);
 
-    intGetNumOfData(void) const
+    int GetNumOfData(void) const
     {
         return m_NumOfData;
     }
 };
 
 template <class T>
-Buffer<T>::Buffer(int numData)
+Vector<T>::Vector(int numData)
     :
-    m_Address(PTR_CAST(T*, malloc(numData * sizeof(T)))),
+    m_Address(new T[numData]),
     m_NumOfData(numData)
 {
     ASSERT(NULL != m_Address);
@@ -61,23 +59,23 @@ Buffer<T>::Buffer(int numData)
 
 template <class T>
 template <class U>
-Buffer<T>::Buffer(Buffer<U>& b)
+Vector<T>::Vector(Vector<U>& b)
   : m_Address(NULL)
 {
     *this = b;
 }
 
 template <class T>
-Buffer<T>::~Buffer()
+Vector<T>::~Vector()
 {
     ASSERT(NULL != m_Address);
-    free(m_Address);
+    delete[] m_Address;
     m_Address = NULL;
 }
 
 template <class T>
 template <class U>
-void Buffer<T>::Copy(Buffer<U>& b)
+void Vector<T>::Copy(Vector<U>& b)
 {
     int iter = this->min(this->m_NumOfData, b.GetNumOfData());
     for (int i = 0; i < iter; ++i)
@@ -88,13 +86,13 @@ void Buffer<T>::Copy(Buffer<U>& b)
 
 template <class T>
 template <class U>
-Buffer<T>& Buffer<T>::operator=(Buffer<U>& b)
+Vector<T>& Vector<T>::operator=(Vector<U>& b)
 {
     ASSERT(NULL != m_Address);
-    free(this->m_Address);
+    delete[] this->m_Address;
 
     m_NumOfData = b.GetNumOfData();
-    m_Address = PTR_CAST(T*, malloc(m_NumOfData * sizeof(T)));
+    m_Address = new T[m_NumOfData];
 
     ASSERT(NULL != m_Address);
 
@@ -103,6 +101,106 @@ Buffer<T>& Buffer<T>::operator=(Buffer<U>& b)
         (*this)[i] = static_cast<T>(b[i]);
     }
     return *this;
+}
+
+
+template <class T>
+class Matrix
+{
+    int m_NumOfArray;
+    int m_NumOfData;
+    Vector<T>** m_Array;
+public:
+    Matrix(int ,int);
+    Matrix(Matrix<T>& m);
+    ~Matrix();
+    Vector<T>& operator[](int i) const
+    {
+        ASSERT(0 < m_NumOfData);
+        ASSERT(0 < m_NumOfArray);
+        ASSERT(NULL != m_Array);
+
+        Vector<T>* p = NULL;
+        if (0 > i)
+        {
+            p = m_Array[0];
+        }
+        else if (i >= m_NumOfArray)
+        {
+            p = m_Array[m_NumOfArray-1];
+        }
+        else
+        {
+            p = m_Array[i];
+        }
+        ASSERT(NULL != m_Array[i]);
+
+        return *m_Array[i];
+    }
+
+    template <class U>
+    Matrix<T>& operator=(Matrix<U>& b);
+
+    int GetNumOfArray(void) const
+    {
+        return m_NumOfArray;
+    }
+    int GetNumOfData(void) const
+    {
+        return m_NumOfData;
+    }
+};
+
+template <class T>
+Matrix<T>::Matrix(int numArray, int numData)
+  : m_NumOfData(numData),
+    m_NumOfArray(numArray),
+    //m_Array(PTR_CAST(Vector<T>**, malloc(sizeof(Vector<T*>) * numArray)))
+    m_Array(new Vector<T>*[numArray])
+{
+    ASSERT(m_Array != NULL);
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        m_Array[i] = new Vector<T>(m_NumOfData);
+        ASSERT(m_Array[i] != NULL);
+    }
+}
+
+template <class T>
+Matrix<T>::~Matrix()
+{
+    ASSERT(m_Array != NULL);
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        delete m_Array[i];
+    }
+    delete[] m_Array;
+    m_Array = NULL;
+}
+
+template <class T>
+template <class U>
+Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
+{
+    m_NumOfArray = m.GetNumOfArray();
+    m_NumOfData = m.GetNumOfData();
+
+    delete[] m_Array;
+
+    m_Array = new Vector<T>[m_NumOfArray];
+
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        m_Array[i] = new Vector<T>(m[i]);
+    }
+    return *this;
+}
+
+template <class T>
+Matrix<T>::Matrix(Matrix<T>& m)
+  : m_Array(NULL)
+{
+    *this = m;
 }
 
 } // namespace Container {

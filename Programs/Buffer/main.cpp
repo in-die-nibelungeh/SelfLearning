@@ -7,8 +7,8 @@ using namespace Container;
 int main(void)
 {
     int numData = 8;
-    Buffer<f64> iof64(numData/2);
-    Buffer<s16> ios16(numData);
+    Vector<f64> iof64(numData/2);
+    Vector<s16> ios16(numData);
 
     for (int i = 0; i < iof64.GetNumOfData(); ++i)
     {
@@ -25,12 +25,25 @@ int main(void)
     }
 
     // Copy-constructor
-    Buffer<f32> iof32(ios16);
+    Vector<f32> iof32(ios16);
 
     for (int i = 0; i < iof32.GetNumOfData(); ++i)
     {
         printf("%d: %f\n", i, iof32[i]);
     }
+
+    int numArray = 2;
+    Matrix<f64> m1(numArray, numData);
+
+    for (int i = 0; i < numArray; ++i)
+    {
+        for (int j = 0; j < numData; ++j)
+        {
+            m1[i][j] = (i+1) * 8 + (j+1);
+        }
+    }
+
+    Matrix<s16> m2(m1);
 
     return 0;
 }
