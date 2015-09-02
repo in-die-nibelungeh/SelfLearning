@@ -28,15 +28,16 @@ public:
     {
         ASSERT(0 < m_NumOfData);
         ASSERT(NULL != m_Address);
+        int index = i;
         if (0 > i)
         {
-            return m_Address[0];
+            index = 0;
         }
-        if (i >= m_NumOfData)
+        else if (i >= m_NumOfData)
         {
-            return m_Address[m_NumOfData-1];
+            index = m_NumOfData - 1;
         }
-        return m_Address[i];
+        return m_Address[index];
     }
 
     template <class U>
@@ -57,7 +58,7 @@ Vector<T>::Vector(int numData)
 {
     if (m_NumOfData > 0)
     {
-        m_Address = new T[numData];
+        m_Address = new T[m_NumOfData];
         ASSERT(NULL != m_Address);
     }
 }
@@ -73,9 +74,11 @@ Vector<T>::Vector(Vector<U>& b)
 template <class T>
 Vector<T>::~Vector()
 {
-    ASSERT(NULL != m_Address);
-    delete[] m_Address;
-    m_Address = PTR_CAST(T*, NULL);
+    if (NULL != m_Address)
+    {
+        delete[] m_Address;
+        m_Address = PTR_CAST(T*, NULL);
+    }
 }
 
 template <class T>
@@ -157,7 +160,6 @@ public:
             p = m_Array[i];
         }
         ASSERT(NULL != p);
-
         return *p;
     }
 
@@ -177,7 +179,8 @@ public:
 
 template <class T>
 Matrix<T>::Matrix(int numArray, int numData)
-  : m_NumOfData(numData),
+  : m_Array(PTR_CAST(Vector<T>**, NULL)),
+    m_NumOfData(numData),
     m_NumOfArray(numArray)
 {
     if (m_NumOfArray > 0)
@@ -196,10 +199,6 @@ Matrix<T>::Matrix(int numArray, int numData)
                 m_Array[i] = PTR_CAST(Vector<T>*, NULL);
             }
         }
-    }
-    else
-    {
-        m_Array = PTR_CAST(Vector<T>**, NULL);
     }
 }
 
