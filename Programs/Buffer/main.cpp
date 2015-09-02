@@ -22,11 +22,13 @@ int main(void)
     ios16 = iof64;
 
     printf("CheckPoint: %d\n", CheckPoint++);
+    printf("ios16.GetNumOfData()=%d\n", ios16.GetNumOfData());
     for (int i = 0; i < ios16.GetNumOfData(); ++i)
     {
         printf("%d: %d\n", i, ios16[i]);
     }
 
+    printf("CheckPoint: %d\n", CheckPoint++);
     // Copy-constructor
     Vector<f32> iof32(ios16);
 
@@ -44,7 +46,7 @@ int main(void)
     {
         for (int j = 0; j < m1.GetNumOfData(); ++j)
         {
-            m1[i][j] = (i+1) * 8 + (j+1);
+            m1[i][j] = i * m1.GetNumOfData() + (j+1);
         }
     }
 
@@ -57,9 +59,9 @@ int main(void)
         }\
     }
 
-    printf("CheckPoint: %d\n", CheckPoint++);
     DUMP_MATRIX(m1, %f);
 
+    printf("CheckPoint: %d\n", CheckPoint++);
     Matrix<s16> m2(m1);
 
     printf("CheckPoint: %d\n", CheckPoint++);
@@ -77,13 +79,16 @@ int main(void)
         }
     }
 
-    printf("CheckPoint: %d\n", CheckPoint++);
+    printf("CheckPoint: %d\n", __LINE__);
     m2 = m3;
 
+    printf("CheckPoint: %d\n", __LINE__);
     DUMP_MATRIX(m2, %d);
 
-    Vector<f64> vec = m2[0];
+    printf("CheckPoint: %d\n", __LINE__);
+    Vector<f64> vec(m2[0]);
 
+    printf("CheckPoint: %d\n", __LINE__);
     for (int i = 0; i < vec.GetNumOfData(); ++i)
     {
         printf("vec[%d]=%f\n", i, vec[i]);

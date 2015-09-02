@@ -46,21 +46,26 @@ public:
     {
         return m_NumOfData;
     }
+    void Reallocate(size_t numData);
 };
 
 template <class T>
 Vector<T>::Vector(int numData)
     :
-    m_Address(new T[numData]),
+    m_Address(PTR_CAST(T*, NULL)),
     m_NumOfData(numData)
 {
-    ASSERT(NULL != m_Address);
+    if (m_NumOfData > 0)
+    {
+        m_Address = new T[numData];
+        ASSERT(NULL != m_Address);
+    }
 }
 
 template <class T>
 template <class U>
 Vector<T>::Vector(Vector<U>& b)
-  : m_Address(NULL)
+  : m_Address(PTR_CAST(T*, NULL))
 {
     *this = b;
 }
@@ -88,23 +93,38 @@ template <class T>
 template <class U>
 Vector<T>& Vector<T>::operator=(Vector<U>& b)
 {
-    if (NULL != m_Address)
+    // m_NumOfData is updated in Reallocate().
+    Reallocate(b.GetNumOfData());
+
+    if (m_NumOfData > 0)
     {
-        delete[] this->m_Address;
-    }
-
-    m_NumOfData = b.GetNumOfData();
-    m_Address = new T[m_NumOfData];
-
-    ASSERT(NULL != m_Address);
-
-    for (int i = 0; i < m_NumOfData; ++i)
-    {
-        (*this)[i] = static_cast<T>(b[i]);
+        for (int i = 0; i < m_NumOfData; ++i)
+        {
+            (*this)[i] = static_cast<T>(b[i]);
+        }
     }
     return *this;
 }
 
+template <class T>
+void Vector<T>::Reallocate(size_t numData)
+{
+    if (numData == m_NumOfData)
+    {
+        return ;
+    }
+    if (NULL != m_Address)
+    {
+        delete[] this->m_Address;
+        m_Address = PTR_CAST(T*, NULL);
+    }
+    m_NumOfData = numData;
+    if (m_NumOfData > 0)
+    {
+        m_Address = new T[m_NumOfData];
+        ASSERT(NULL != m_Address);
+    }
+}
 
 template <class T>
 class Matrix
@@ -152,52 +172,119 @@ public:
     {
         return m_NumOfData;
     }
+    void Reallocate(int, int);
 };
 
 template <class T>
 Matrix<T>::Matrix(int numArray, int numData)
   : m_NumOfData(numData),
-    m_NumOfArray(numArray),
-    //m_Array(PTR_CAST(Vector<T>**, malloc(sizeof(Vector<T*>) * numArray)))
-    m_Array(new Vector<T>*[numArray])
+    m_NumOfArray(numArray)
 {
-    ASSERT(m_Array != NULL);
-    for (int i = 0; i < m_NumOfArray; ++i)
+    if (m_NumOfArray > 0)
     {
-        m_Array[i] = new Vector<T>(m_NumOfData);
-        ASSERT(m_Array[i] != NULL);
+        m_Array = new Vector<T>*[m_NumOfArray];
+        ASSERT(m_Array != NULL);
+        for (int i = 0; i < m_NumOfArray; ++i)
+        {
+            if (m_NumOfData > 0)
+            {
+                m_Array[i] = new Vector<T>(m_NumOfData);
+                ASSERT(m_Array[i] != NULL);
+            }
+            else
+            {
+                m_Array[i] = PTR_CAST(Vector<T>*, NULL);
+            }
+        }
+    }
+    else
+    {
+        m_Array = PTR_CAST(Vector<T>**, NULL);
     }
 }
 
 template <class T>
 Matrix<T>::~Matrix()
 {
-    ASSERT(m_Array != NULL);
-    for (int i = 0; i < m_NumOfArray; ++i)
+
+    if (m_Array != NULL)
     {
-        delete m_Array[i];
+        for (int i = 0; i < m_NumOfArray; ++i)
+        {
+            if (PTR_CAST(Vector<T>*, NULL) != m_Array[i])
+            {
+                delete m_Array[i];
+            }
+        }
+        delete[] m_Array;
+        m_Array = PTR_CAST(Vector<T>**, NULL);
     }
-    delete[] m_Array;
-    m_Array = NULL;
+}
+
+template <class T>
+void Matrix<T>::Reallocate(int numArray, int numData)
+{
+    if (numArray != m_NumOfArray)
+    {
+        for (int i = 0; i < m_NumOfArray; ++i)
+        {
+            if (NULL != m_Array[i])
+            {
+                delete m_Array[i];
+            }
+        }
+        delete[] m_Array;
+        m_Array = PTR_CAST(Vector<T>**, NULL);
+
+        m_NumOfArray = numArray;
+
+        if (m_NumOfArray > 0)
+        {
+            m_Array = new Vector<T>*[m_NumOfArray];
+            ASSERT(NULL != m_Array);
+            m_NumOfData = numData;
+            for (int i = 0; i < m_NumOfArray; ++i)
+            {
+                if (m_NumOfData > 0)
+                {
+                    m_Array[i] = new Vector<T>(m_NumOfData);
+                }
+                else
+                {
+                    m_Array[i] = PTR_CAST(Vector<T>*, NULL);
+                }
+                ASSERT(NULL != m_Array[i]);
+            }
+        }
+    }
+    else if (numData != m_NumOfData)
+    {
+        m_NumOfData = numData;
+
+        for (int i = 0; i < m_NumOfArray; ++i)
+        {
+            if (NULL != m_Array[i])
+            {
+                delete m_Array[i];
+                m_Array[i] = PTR_CAST(Vector<T>*, NULL);
+            }
+            if (m_NumOfData > 0)
+            {
+                m_Array[i] = new Vector<T>(m_NumOfData);
+                ASSERT(m_Array[i] != PTR_CAST(Vector<T>*, NULL));
+            }
+        }
+    }
 }
 
 template <class T>
 template <class U>
 Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
 {
-    m_NumOfArray = m.GetNumOfArray();
-    m_NumOfData = m.GetNumOfData();
-
-    if (NULL != m_Array)
-    {
-        delete[] m_Array;
-    }
-
-    m_Array = new Vector<T>*[m_NumOfArray];
-
+    Reallocate(m.GetNumOfArray(), m.GetNumOfData());
     for (int i = 0; i < m_NumOfArray; ++i)
     {
-        m_Array[i] = new Vector<T>(m[i]);
+        *m_Array[i] = m[i];
     }
     return *this;
 }
@@ -205,7 +292,9 @@ Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
 template <class T>
 template <class U>
 Matrix<T>::Matrix(Matrix<U>& m)
-  : m_Array(NULL)
+  : m_Array(NULL),
+    m_NumOfArray(0),
+    m_NumOfData(0)
 {
     *this = m;
 }
