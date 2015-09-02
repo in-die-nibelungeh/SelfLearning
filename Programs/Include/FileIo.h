@@ -1,55 +1,69 @@
 #pragma once
 
+#include <sys/types.h>
+
 #include "types.h"
+#include "status.h"
+#include "Buffer.h"
 
 #define C4TOI(c0, c1, c2, c3) \
-	( ((c3 << 24) & 0xff000000) | \
-	  ((c2 << 16) & 0x00ff0000) | \
-	  ((c1 <<  8) & 0x0000ff00) | \
-	  ((c0 <<  0) & 0x000000ff) )
+    ( ((c3 << 24) & 0xff000000) | \
+      ((c2 << 16) & 0x00ff0000) | \
+      ((c1 <<  8) & 0x0000ff00) | \
+      ((c0 <<  0) & 0x000000ff) )
 
 class FileIo
 {
-	enum Format
-	{
-		DF_LPCM = 1,
-		DF_UNKNOWN = 0xffff
-	};
-	
-	enum ChunkID
-	{
-		CID_RIFF = C4TOI('R','I','F','F'),
-		CID_FMT  = C4TOI('f','m','t',' '),
-		CID_FACT = C4TOI('f','a','c','t'),
-		CID_DATA = C4TOI('d','a','t','a')
-	};
-	
-	Format m_Format;
-	
-	s32 m_NumChannels;
-	s32 m_BitDepth;
-	s32 m_SamplingRate;
-	f64 m_Duration;
 
-	void*  m_Data;
-	size_t m_DataSize;
-	bool   m_Allocated;
 public:
-	FileIo();
-	~FileIo();
-	
-	// Read
-	//status_t ReadHeader(const char* path);
-	status_t Read      (const char* path);
-	status_t GetMetaData(s32* fs, s32* numChannels, s32* bitDepth) const ;
-	status_t GetAudioDataSize(void) const { return m_DataSize; };
-	status_t GetAudioData(void* buffer) const ;
-	
-	// Write
-	status_t SetMetaData(s32 fs, s32 numChannels, s32 bitDepth);
-	status_t SetAudioData(void* buffer, size_t size);
-	status_t Write(const char* path);
-	
-	// TBD
-	status_t Test(void);
+
+    enum PcmFormat
+    {
+        PF_LPCM = 1,
+        PF_UNKNOWN = 0xffff
+    };
+
+    struct MetaData
+    {
+        PcmFormat format;
+        int numChannels;
+        int bitDepth;
+        int samplingRate;
+    };
+
+    FileIo();
+    FileIo(int samplingRate, int numChannels, int bitDepth);
+    ~FileIo();
+
+    // Read
+    status_t Read(const char* path, int16_t** ptr, size_t* size);
+    status_t Read(const char* path, Container::Vector<int16_t>& data);
+
+    // Write
+    status_t Write(const char* path, int16_t* ptr, size_t size);
+    status_t Write(const char* path, const Container::Vector<int16_t>& data);
+
+    // Meta Data
+    struct MetaData GetMetaData(void) const;
+    status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth) const;
+    status_t SetMetaData(struct MetaData& meta);
+    status_t SetMetaData(int samplingRate, int numChannels, int bitDepth);
+
+    // TBD
+    status_t Test(void);
+private:
+    enum ChunkID
+    {
+        CID_RIFF = C4TOI('R','I','F','F'),
+        CID_FMT  = C4TOI('f','m','t',' '),
+        CID_FACT = C4TOI('f','a','c','t'),
+        CID_DATA = C4TOI('d','a','t','a')
+    };
+
+    PcmFormat m_Format;
+    int32_t m_SamplingRate;
+    int16_t m_NumChannels;
+    int16_t m_BitDepth;
+
+    double  m_Duration;
 };
