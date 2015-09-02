@@ -34,10 +34,17 @@ CPPFLAGS += \
 all: $(BIN)
 	@echo Succeeded in building $(BIN).
 
+run: $(BIN)
+	./$(BIN)
+
+build: $(BIN) lib
+
+lib: $(LIB)
+
 $(BIN): $(OBJ) $(INC)
 	gcc $(CPPFLAGS) -o $(BIN) $(OBJ) $(LIBS)
 
-lib: $(MODULE_OBJ)
+$(LIB): $(MODULE_OBJ)
 	@if [ -n "$(LIB)" ] ; then \
 		ar r $(LIB) $(MODULE_OBJ) ; \
 	else \
@@ -46,6 +53,7 @@ lib: $(MODULE_OBJ)
 
 install: $(LIB) $(MODULE_HEADER)
 	@if [ -n "$(LIB)" ] ; then \
+		echo cp $(LIB) $(PROJECT_LIBDIR)/ ; \
 		cp $(LIB) $(PROJECT_LIBDIR)/ ; \
 	fi
 	cp $(MODULE_HEADER) $(PROJECT_INCDIR)/
@@ -56,4 +64,4 @@ clean:
 .cpp.o: $(INC)
 	gcc -c $(CPPFLAGS) $<
 
-.PHONY: all lib install clean build
+.PHONY: all lib install clean build run
