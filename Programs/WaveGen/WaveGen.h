@@ -30,30 +30,26 @@ public:
     };
 
     struct Variable {
-        f64 phase;
-        f64 value;
-        f64 frequency;
+        double phase;
+        double value;
+        double frequency;
     };
 
+    WaveGen(int samplingRate, double frequency, WaveType type, double duty = 0.5f);
     WaveGen();
-    WaveGen(s32 samplingRate, f64 frequency, WaveType type, f64 duty);
-    WaveGen(s32 samplingRate, f64 frequency, WaveType type)
-    {
-        WaveGen(samplingRate, frequency, type, 0.5f);
-    }
     ~WaveGen();
 
     void Reset(void);
 
     struct Variable GetVariable(void) const;
-    f64  GetValue(void) const ;
-    bool SetPhase(f64 phase);
-    s32  GetSamplingRate(void) const ;
-    void SetSamplingRate(s32 samplingRate);
-    void SetWaveFrequency(f64 frequency);
-    bool SetWaveType(WaveType type, f64 duty=0.5f);
-    bool SetWaveParam(f64 frequency, WaveType type, f64 duty=0.5f);
-    bool SetSweepParam(f64 targetFrequency, f64 duration, bool enable=false);
+    double  GetValue(void) const ;
+    bool SetPhase(double phase);
+    int  GetSamplingRate(void) const ;
+    void SetSamplingRate(int samplingRate);
+    void SetWaveFrequency(double frequency);
+    bool SetWaveType(WaveType type, double duty=0.5f);
+    bool SetWaveParam(double frequency, WaveType type, double duty=0.5f);
+    bool SetSweepParam(double targetFrequency, double duration, bool enable=false);
     bool EnableSweep(void);
     void DisableSweep(void);
 
@@ -68,46 +64,46 @@ public:
     WaveGen  operator[](int);
 
     // Aliases
-    bool SetBaseFrequency(f64 frequency) { SetWaveFrequency(frequency); }
+    bool SetBaseFrequency(double frequency) { SetWaveFrequency(frequency); }
 
-    void GenerateValue(f64 buffer[], size_t n, f64 amplitude = 1.0f);
-    void GenerateValue(Container::Vector<f64>& buffer, size_t n, f64 amplitude = 1.0f);
+    void GenerateValue(double buffer[], size_t n, double amplitude = 1.0f);
+    void GenerateValue(Container::Vector<double>& buffer, size_t n, double amplitude = 1.0f);
 
 private:
 
     // GenerateOners
-    f64  Sine(f64);
-    f64  Sawtooth(f64);
-    f64  Triangle(f64);
-    f64  Square(f64);
-    f64  WaterSurface(f64);
-    f64  NoiseWhite(f64);
-    f64  NoisePink(f64);
-    f64  GenerateOne(f64);
-    f64  (WaveGen::*m_Generator)(f64);
+    double  Sine(double);
+    double  Sawtooth(double);
+    double  Triangle(double);
+    double  Square(double);
+    double  WaterSurface(double);
+    double  NoiseWhite(double);
+    double  NoisePink(double);
+    double  GenerateOne(double);
+    double  (WaveGen::*m_Generator)(double);
 
     // Updates the internal states.
-    static void Update(const f64& tick, f64& phase, f64& freq, const f64& factor);
+    static void Update(const double& tick, double& phase, double& freq, const double& factor);
 
     // Parameters for math
-    static const f64 g_Pi;
+    static const double g_Pi;
 
     // Parameters for quantizing
-    s32  m_SamplingRate;
-    f64  m_Tick;
+    int  m_SamplingRate;
+    double  m_Tick;
 
     // Parameters for generating waveform
     WaveType m_Type;
-    f64  m_Duty;
-    f64  m_FrequencyBase;
+    double  m_Duty;
+    double  m_FrequencyBase;
 
     bool m_SweepEnable;
-    f64  m_SweepFactor;
+    double  m_SweepFactor;
 
     // Working variables.
-    f64  m_FrequencyCurrent;
-    f64  m_PhaseCurrent;
-    f64  m_ValueCurrent;
+    double  m_FrequencyCurrent;
+    double  m_PhaseCurrent;
+    double  m_ValueCurrent;
 };
 
 #endif // #ifndef _WAVE_GEN_H_

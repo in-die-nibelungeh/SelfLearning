@@ -9,16 +9,14 @@
 
 #include "debug.h"
 
-#define DEFAULT_BASE_FREQUENCY 440
+#define DEFAULT_BASE_FREQUENCY 440.0f
 #define DEFAULT_SAMPLING_RATE  48000
+#define DEFAULT_DUTY 0.5f
 
-const f64 WaveGen::g_Pi(M_PI);
+const double WaveGen::g_Pi(M_PI);
 
 WaveGen::WaveGen()
-  : m_Type(WT_SINE),
-    m_Generator(&WaveGen::Sine),
-    m_Duty(0.5),
-    m_FrequencyBase(DEFAULT_BASE_FREQUENCY),
+  : m_FrequencyBase(DEFAULT_BASE_FREQUENCY),
     m_FrequencyCurrent(DEFAULT_BASE_FREQUENCY),
     m_SweepEnable(false),
     m_SweepFactor(1.0f),
@@ -27,10 +25,10 @@ WaveGen::WaveGen()
     m_SamplingRate(DEFAULT_SAMPLING_RATE),
     m_Tick(1.0f/DEFAULT_SAMPLING_RATE)
 {
-    m_ValueCurrent = GenerateOne(m_PhaseCurrent);
+    SetWaveType(WT_SINE, DEFAULT_DUTY);
 }
 
-WaveGen::WaveGen(s32 samplingRate, f64 frequency, WaveType type, f64 duty)
+WaveGen::WaveGen(int samplingRate, double frequency, WaveType type, double duty)
   : m_FrequencyBase(frequency),
     m_FrequencyCurrent(frequency),
     m_SweepEnable(false),
@@ -59,7 +57,7 @@ struct WaveGen::Variable WaveGen::GetVariable(void) const
     return var;
 }
 
-bool WaveGen::SetWaveType(WaveGen::WaveType type, f64 duty)
+bool WaveGen::SetWaveType(WaveGen::WaveType type, double duty)
 {
     bool ret = true;
     ASSERT(
@@ -91,13 +89,13 @@ bool WaveGen::SetWaveType(WaveGen::WaveType type, f64 duty)
     return true;
 }
 
-bool WaveGen::SetWaveParam(f64 base, WaveType type, f64 duty)
+bool WaveGen::SetWaveParam(double base, WaveType type, double duty)
 {
     SetWaveFrequency(base);
     return SetWaveType(type, duty);
 }
 
-void WaveGen::SetWaveFrequency(f64 base)
+void WaveGen::SetWaveFrequency(double base)
 {
     ASSERT(base > 0.0);
 
@@ -106,7 +104,7 @@ void WaveGen::SetWaveFrequency(f64 base)
     m_FrequencyCurrent = base;
 }
 
-bool WaveGen::SetPhase(f64 phase)
+bool WaveGen::SetPhase(double phase)
 {
     if (phase < 0.0f || phase >= 1.0)
     {
@@ -138,7 +136,7 @@ void WaveGen::DisableSweep(void)
     m_SweepEnable = false;
 }
 
-bool WaveGen::SetSweepParam(f64 targetFrequency, f64 duration, bool flag)
+bool WaveGen::SetSweepParam(double targetFrequency, double duration, bool flag)
 {
     ASSERT(duration > 0.0f);
     ASSERT(targetFrequency > 0.0f);
@@ -166,27 +164,26 @@ void WaveGen::Reset(void)
     m_ValueCurrent = GenerateOne(m_PhaseCurrent);
 }
 
-void WaveGen::SetSamplingRate(s32 fs)
+void WaveGen::SetSamplingRate(int fs)
 {
     ASSERT(fs > 0);
     m_SamplingRate = fs;
     m_Tick = 1.0f / fs;
 }
 
-f64 WaveGen::Sine(f64 nt)
+double WaveGen::Sine(double nt)
 {
     return sin(2 * g_Pi * nt);
 }
 
-f64 WaveGen::Sawtooth(f64 nt)
+double WaveGen::Sawtooth(double nt)
 {
-    //return nt;
     return (nt >= 0.5f) ? 2.0f * nt - 2.0f : 2.0f * nt;
 }
 
-f64 WaveGen::Triangle(f64 nt)
+double WaveGen::Triangle(double nt)
 {
-    f64 v = 4.0 * nt;
+    double v = 4.0 * nt;
     if ( nt >= 0.75)
     {
         v = 4.0 * nt - 4.0;
@@ -199,34 +196,35 @@ f64 WaveGen::Triangle(f64 nt)
     return v;
 }
 
-f64 WaveGen::Square(f64 nt)
+double WaveGen::Square(double nt)
 {
     ASSERT(0.0 < m_Duty && m_Duty < 1.0);
 
     return (nt >= m_Duty) ? -1.0f : 1.0f;
 }
 
-f64 WaveGen::WaterSurface(f64 t)
+double WaveGen::WaterSurface(double t)
 {
     return 0.0;
 }
 
-f64 WaveGen::NoiseWhite(f64 t)
+double WaveGen::NoiseWhite(double t)
 {
     return 0.0;
 }
 
-f64 WaveGen::NoisePink(f64 t)
+double WaveGen::NoisePink(double t)
 {
     return 0.0;
 }
 
-f64 WaveGen::GenerateOne(f64 p)
+double WaveGen::GenerateOne(double p)
 {
+    ASSERT(NULL != m_Generator);
     return (this->*m_Generator)(p);
 }
 
-void WaveGen::GenerateValue(Container::Vector<f64>& buffer, size_t n, f64 amp)
+void WaveGen::GenerateValue(Container::Vector<double>& buffer, size_t n, double amp)
 {
     buffer.Reallocate(n);
     for (int i = 0; i < n; ++i, ++(*this))
@@ -235,7 +233,7 @@ void WaveGen::GenerateValue(Container::Vector<f64>& buffer, size_t n, f64 amp)
     }
 }
 
-void WaveGen::GenerateValue(f64 buffer[], size_t n, f64 amp)
+void WaveGen::GenerateValue(double buffer[], size_t n, double amp)
 {
     for (int i = 0; i < n; ++i, ++(*this))
     {
@@ -258,10 +256,10 @@ WaveGen& WaveGen::operator++(void)
 
 WaveGen WaveGen::operator+(int c) const
 {
-    f64 tick = c * m_Tick;
-    f64 phase = m_PhaseCurrent;
-    f64 freq = m_FrequencyCurrent;
-    f64 factor = m_SweepEnable ? pow(m_SweepFactor, c) : 1.0f;
+    double tick = c * m_Tick;
+    double phase = m_PhaseCurrent;
+    double freq = m_FrequencyCurrent;
+    double factor = m_SweepEnable ? pow(m_SweepFactor, c) : 1.0f;
 
     Update(tick, phase, freq, factor);
 
@@ -274,8 +272,8 @@ WaveGen WaveGen::operator+(int c) const
 
 WaveGen& WaveGen::operator+=(int c)
 {
-    f64 tick = c * m_Tick;
-    f64 factor = m_SweepEnable ? pow(m_SweepFactor, c) : 1.0f;
+    double tick = c * m_Tick;
+    double factor = m_SweepEnable ? pow(m_SweepFactor, c) : 1.0f;
     Update(tick, m_PhaseCurrent, m_FrequencyCurrent, factor);
     m_ValueCurrent = GenerateOne(m_PhaseCurrent);
     return *this;
@@ -310,19 +308,19 @@ WaveGen  WaveGen::operator[](int c)
     return *this + c;
 }
 
-void WaveGen::Update(const f64& tick, f64& phase, f64& freq, const f64& factor)
+void WaveGen::Update(const double& tick, double& phase, double& freq, const double& factor)
 {
     phase += (tick * freq);
     phase -= static_cast<int>(phase);
     freq  *= factor;
 }
 
-f64 WaveGen::GetValue(void) const
+double WaveGen::GetValue(void) const
 {
     return m_ValueCurrent;
 }
 
-s32 WaveGen::GetSamplingRate(void) const
+int WaveGen::GetSamplingRate(void) const
 {
     return m_SamplingRate;
 }

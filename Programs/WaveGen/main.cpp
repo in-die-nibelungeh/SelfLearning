@@ -8,7 +8,7 @@
 static int test_wavetype(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     WaveGen::WaveType types[] =
@@ -19,7 +19,7 @@ static int test_wavetype(void)
         WaveGen::WT_SAWTOOTH
     };
 
-    f64 fs = wg.GetSamplingRate();
+    double fs = wg.GetSamplingRate();
     wg.SetWaveFrequency(440);
 
     for (j = 0; j < NUM_TYPES; ++j)
@@ -32,7 +32,7 @@ static int test_wavetype(void)
             buffer[j][i] = wg.GetValue();
         }
     }
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
     for (i = 0; i < NUM_SAMPLES; ++i)
     {
         printf("%d,%f,%f,%f,%f,%f\n",
@@ -51,7 +51,7 @@ static int test_wavetype(void)
 static int test_sweep(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg.SetWaveType(WaveGen::WT_SINE);
@@ -72,7 +72,7 @@ static int test_sweep(void)
             buffer[j+1][i] = var.frequency;
         }
     }
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
 
     for (i = 0; i < NUM_SAMPLES; ++i)
     {
@@ -93,7 +93,7 @@ static int test_sweep(void)
 static int test_invrev(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg.SetWaveType(WaveGen::WT_SAWTOOTH);
@@ -124,7 +124,7 @@ static int test_invrev(void)
         buffer[j][i] = -wg.GetValue();
     }
 
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
 
     printf("TI,Time,Normal,Decrement,Inverser,Dec&Inv\n");
     for (i = 0; i < NUM_SAMPLES; ++i)
@@ -145,7 +145,7 @@ static int test_invrev(void)
 static int test_opedec(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg.SetWaveType(WaveGen::WT_SAWTOOTH);
@@ -170,7 +170,7 @@ static int test_opedec(void)
             }
         }
     }
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
 
     printf("TI,Time,Normal,Decrement\n");
     for (i = 0; i < NUM_SAMPLES; ++i)
@@ -191,7 +191,7 @@ static int test_opedec(void)
 static int test_2incs(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg.SetWaveType(WaveGen::WT_SAWTOOTH);
@@ -225,7 +225,7 @@ static int test_2incs(void)
             result = false;
         }
     }
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
 
     printf("\"TI\",\"Time\",=\"++wg\",\"wg++\"\n");
     for (i = 0; i < NUM_SAMPLES; ++i)
@@ -249,7 +249,7 @@ static int test_2incs(void)
 static int test_indexing(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg.SetWaveType(WaveGen::WT_SAWTOOTH);
@@ -292,7 +292,7 @@ static int test_indexing(void)
         }
     }
 #endif
-    f64 dt = 1.0f / wg.GetSamplingRate();
+    double dt = 1.0f / wg.GetSamplingRate();
 
     printf("\"TI\",\"Time\",=\"++wg\",=\"(wg + i)\",\"wg += 1\"\n");
     for (i = 0; i < NUM_SAMPLES; ++i)
@@ -307,7 +307,7 @@ static int test_indexing(void)
 static int test_(void)
 {
     int i, j;
-    f64 buffer[NUM_TYPES][NUM_SAMPLES];
+    double buffer[NUM_TYPES][NUM_SAMPLES];
 
     WaveGen wg;
     wg = wg + 3;
@@ -319,12 +319,13 @@ static int test_(void)
 static void test_buffer(void)
 {
     float duration = 0.01;
-    s32 samplingRate = 48000;
-    f64 freq = 440;
-    WaveGen wg(samplingRate, freq, WaveGen::WT_SINE, 1.0);
+    int samplingRate = 48000;
+    double freq = 440;
+    WaveGen wg(samplingRate, freq, WaveGen::WT_SINE);
     int numData = static_cast<int>(duration * samplingRate);
+    wg.Reset();
 
-    Container::Vector<f64> buffer(numData);
+    Container::Vector<double> buffer(numData);
 
     wg.GenerateValue(buffer, numData);
 
