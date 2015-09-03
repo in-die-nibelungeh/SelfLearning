@@ -13,7 +13,7 @@ namespace Fft
 
 namespace
 {
-    static f64 g_Pi(M_PI);
+    static double g_Pi(M_PI);
     int Ilog2(int v)
     {
         for (int i = sizeof(v) * 8 - 1; i >= 0 ; --i)
@@ -45,14 +45,14 @@ namespace
     }
 }
 
-status_t Fft(f64 real[], f64 imag[], f64 td[], s32 n)
+status_t Fft(double real[], double imag[], double td[], int n)
 {
     if (Count1(n) != 1)
     {
         return -ERROR_ILLEGAL;
     }
 
-    s32 iter = Ilog2(n);
+    int iter = Ilog2(n);
 
     for (int i = 0; i < iter; ++i)
     {
@@ -63,16 +63,16 @@ status_t Fft(f64 real[], f64 imag[], f64 td[], s32 n)
     return NO_ERROR;
 }
 
-status_t Ifft(f64 td[], f64 real[], f64 imag[], s32 n)
+status_t Ifft(double td[], double real[], double imag[], int n)
 {
     return NO_ERROR;
 }
 
-status_t Ft(f64 real[], f64 imag[], const f64 td[], s32 n)
+status_t Ft(double real[], double imag[], const double td[], int n)
 {
     for (int i = 0; i < n; ++i)
     {
-        f64 df = (f64)i * g_Pi * 2/ n;
+        double df = (double)i * g_Pi * 2/ n;
         real[i] = 0.0;
         imag[i] = 0.0;
         for (int j = 0; j < n; ++j)
@@ -84,63 +84,96 @@ status_t Ft(f64 real[], f64 imag[], const f64 td[], s32 n)
     return NO_ERROR;
 }
 
-status_t Ft(Container::Matrix<f64>& fd, const Container::Vector<f64>& td)
+status_t Ft(Container::Matrix<double>& outFd, const Container::Vector<double>& inTd)
 {
-    ASSERT(fd.GetNumOfArray() >= 2);
-    ASSERT(td.GetNumOfData() == fd[0].GetNumOfData());
-    ASSERT(td.GetNumOfData() == fd[1].GetNumOfData());
-
-    Container::Vector<f64>& real = fd[0];
-    Container::Vector<f64>& imag = fd[1];
-    s32 n = td.GetNumOfData();
-    for (int i = 0; i < n; ++i)
+    if ( outFd.GetNumOfArray() < 2 )
     {
-        f64 df = (f64)i * g_Pi * 2/ n;
+        return -ERROR_ILLEGAL;
+    }
+
+    Container::Vector<double>& real = outFd[0];
+    Container::Vector<double>& imag = outFd[1];
+
+    for (int i = 0; i < outFd.GetNumOfData(); ++i)
+    {
+        int N = inTd.GetNumOfData();
+        double df = (double)i * g_Pi * 2 / N;
         real[i] = 0.0;
         imag[i] = 0.0;
-        for (int j = 0; j < n; ++j)
+        if (i < N)
         {
-            real[i] += (td[j] * cos(df * j));
-            imag[i] -= (td[j] * sin(df * j));
+            for (int j = 0; j < N; ++j)
+            {
+                real[i] += (inTd[j] * cos(df * j));
+                imag[i] -= (inTd[j] * sin(df * j));
+            }
         }
     }
     return NO_ERROR;
 }
 
-status_t Ift(f64 td[], const f64 real[], const f64 imag[], s32 n)
+status_t Ift(double td[], const double real[], const double imag[], int N)
 {
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < N; ++i)
     {
-        f64 df = (f64)i * g_Pi * 2/ n;
+        double df = (double)i * g_Pi * 2 / N;
         td[i] = 0.0;
-        for (int j = 0; j < n; ++j)
+        for (int j = 0; j < N; ++j)
         {
             td[i]  += (real[j] * cos(df * j) - imag[j] * sin(df * j));
         }
-        td[i] /= n;
+        td[i] /= N;
     }
     return NO_ERROR;
 }
 
-status_t Ift(Container::Vector<f64>& td, const Container::Matrix<f64>& fd)
+status_t Ift(Container::Vector<double>& outTd, const Container::Matrix<double>& inFd)
 {
-    ASSERT(fd.GetNumOfArray() >= 2);
-    ASSERT(td.GetNumOfData() == fd[0].GetNumOfData());
-    ASSERT(td.GetNumOfData() == fd[1].GetNumOfData());
-
-    Container::Vector<f64>& real = fd[0];
-    Container::Vector<f64>& imag = fd[1];
-    const s32 n = fd.GetNumOfData();
-
-    for (int i = 0; i < n; ++i)
+    if ( inFd.GetNumOfArray() < 2 )
     {
-        f64 df = (f64)i * g_Pi * 2/ n;
-        td[i] = 0.0;
-        for (int j = 0; j < n; ++j)
+        return -ERROR_ILLEGAL;
+    }
+    Container::Vector<double>& real = inFd[0];
+    Container::Vector<double>& imag = inFd[1];
+
+    for (int i = 0; i < outTd.GetNumOfData(); ++i)
+    {
+        const int N = inFd.GetNumOfData();
+        double df = (double)i * g_Pi * 2 / N;
+        outTd[i] = 0.0;
+        if (i < N)
         {
-            td[i]  += (real[j] * cos(df * j) - imag[j] * sin(df * j));
+            for (int j = 0; j < N; ++j)
+            {
+                outTd[i]  += (real[j] * cos(df * j) - imag[j] * sin(df * j));
+            }
+            outTd[i] /= N;
         }
-        td[i] /= n;
+    }
+    return NO_ERROR;
+}
+
+#define POW2(v) ((v)*(v))
+
+status_t ConvertToGainPhase(Container::Matrix<double>& gainPhase, const Container::Matrix<double>& complex)
+{
+    if ( gainPhase.GetNumOfArray() < 2
+         || complex.GetNumOfArray() < 2 )
+    {
+        return -ERROR_ILLEGAL;
+    }
+    Container::Vector<double>& gain  = gainPhase[0];
+    Container::Vector<double>& phase = gainPhase[1];
+    Container::Vector<double>& real  = complex[0];
+    Container::Vector<double>& imag  = complex[1];
+
+    for (int i = 0; i < complex.GetNumOfData()/2; ++i)
+    {
+        if (i < gainPhase.GetNumOfData())
+        {
+            gain[i] = 10 * log10(POW2(real[i]) + POW2(imag[i]));
+            phase[i] = atan(real[i]/imag[i]);
+        }
     }
     return NO_ERROR;
 }
