@@ -3,58 +3,91 @@
 #include "types.h"
 #include "debug.h"
 
-#include <stdlib.h>
-
 namespace Container {
+
+#define VECTOR_ITERATION(var, statement)        \
+    for (int var = 0; var < m_NumOfData; ++var) \
+    {                                           \
+        statement;                              \
+    }
 
 template <class T>
 class Vector
 {
-    T*     m_Address;
-    int    m_NumOfData;
-    inline int min(int a, int b) const { return (a > b) ? b : a; };
-
 public:
     template <class U>
-    Vector(Vector<U>& );
+    Vector(Vector<U>& vector);
 
-    Vector(int numData);
+    explicit Vector(const int numData);
     ~Vector();
 
     template <class U>
-    void Copy(Vector<U>& b);
+    void Copy(Vector<U>& vector);
 
-    T& operator[](int i) const
+    T& operator[](const int i) const
     {
         ASSERT(0 < m_NumOfData);
         ASSERT(NULL != m_Address);
-        int index = i;
-        if (0 > i)
+        if (0 <= i && i < m_NumOfData)
         {
-            index = 0;
+            return m_Address[i];
         }
-        else if (i >= m_NumOfData)
-        {
-            index = m_NumOfData - 1;
-        }
-        return m_Address[index];
+        *m_pZero = 0;
+        return *m_pZero;
+    }
+
+    operator void*() const
+    {
+        return reinterpret_cast<void*>(m_Address);
+    }
+
+    template<typename U> T& operator+=(U v) const { VECTOR_ITERATION(i, (*this)[i] += static_cast<T>(v)); }
+    template<typename U> T& operator-=(U v) const { VECTOR_ITERATION(i, (*this)[i] -= static_cast<T>(v)); }
+    template<typename U> T& operator*=(U v) const { VECTOR_ITERATION(i, (*this)[i] *= static_cast<T>(v)); }
+    template<typename U> T& operator/=(U v) const { VECTOR_ITERATION(i, (*this)[i] /= static_cast<T>(v)); }
+
+    template<typename U> T& operator+=(Vector<U>& v) const
+    {
+        const int iter = min(m_NumOfData, v.GetNumOfData());
+        for (int i = 0; i < iter; ++i) { (*this)[i] += static_cast<T>(v[i]); }
+    }
+    template<typename U> T& operator-=(Vector<U>& v) const
+    {
+        const int iter = min(m_NumOfData, v.GetNumOfData());
+        for (int i = 0; i < iter; ++i) { (*this)[i] -= static_cast<T>(v[i]); }
+    }
+    template<typename U> T& operator*=(Vector<U>& v) const
+    {
+        const int iter = min(m_NumOfData, v.GetNumOfData());
+        for (int i = 0; i < iter; ++i) { (*this)[i] *= static_cast<T>(v[i]); }
+    }
+    template<typename U> T& operator/=(Vector<U>& v) const
+    {
+        const int iter = min(m_NumOfData, v.GetNumOfData());
+        for (int i = 0; i < iter; ++i) { (*this)[i] /= static_cast<T>(v[i]); }
     }
 
     template <class U>
-    Vector<T>& operator=(Vector<U>& b);
+    Vector<T>& operator=(Vector<U>& vector);
 
-    int GetNumOfData(void) const
-    {
-        return m_NumOfData;
-    }
-    void Reallocate(size_t numData);
+    int GetNumOfData(void) const { return m_NumOfData; }
+    void Reallocate(const size_t numData);
+
+private:
+    T*     m_Address;
+    int    m_NumOfData;
+    T      m_Zero;
+    T*     m_pZero;
+    inline int min(int a, int b) const { return (a > b) ? b : a; };
 };
 
 template <class T>
 Vector<T>::Vector(int numData)
     :
     m_Address(PTR_CAST(T*, NULL)),
-    m_NumOfData(numData)
+    m_NumOfData(numData),
+    m_Zero(0),
+    m_pZero(&m_Zero)
 {
     if (m_NumOfData > 0)
     {
@@ -66,7 +99,9 @@ Vector<T>::Vector(int numData)
 template <class T>
 template <class U>
 Vector<T>::Vector(Vector<U>& b)
-  : m_Address(PTR_CAST(T*, NULL))
+  : m_Address(PTR_CAST(T*, NULL)),
+    m_Zero(0),
+    m_pZero(&m_Zero)
 {
     *this = b;
 }

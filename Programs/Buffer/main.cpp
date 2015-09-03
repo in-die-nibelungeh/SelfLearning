@@ -4,7 +4,7 @@
 
 using namespace Container;
 
-int main(void)
+static void test_vector(void)
 {
     int CheckPoint = 0;
     int numData = 8;
@@ -37,7 +37,12 @@ int main(void)
     {
         printf("%d: %f\n", i, iof32[i]);
     }
+}
 
+static void test_matrix(void)
+{
+    int numData = 8;
+    int CheckPoint = 0;
     printf("CheckPoint: %d\n", CheckPoint++);
     int numArray = 2;
     Matrix<f64> m1(numArray, numData);
@@ -93,5 +98,94 @@ int main(void)
     {
         printf("vec[%d]=%f\n", i, vec[i]);
     }
+    Vector<s16> zero(0);
+    Matrix<u16> zeros20(2, 0);
+    Matrix<u16> zeros03(0, 3);
+
+    /*
+    printf("CheckPoint: %d\n", __LINE__);
+    zero = zeros20[0];
+    printf("CheckPoint: %d\n", __LINE__);
+    zero = zeros20[1];
+    printf("CheckPoint: %d\n", __LINE__);
+    */
+}
+
+#define SHOW_IVALUE(v) \
+    do { for (int _i = 0; _i < v.GetNumOfData(); ++_i) { \
+        printf("%4i ", v[_i]); } printf("\n"); } while(0)
+
+#define SHOW_FVALUE(v) \
+    do { for (int _i = 0; _i < v.GetNumOfData(); ++_i) { \
+        printf("%f ", v[_i]); } printf("\n"); } while(0)
+
+#define ITER(_i, v, s) \
+    for (int _i = 0; _i < v.GetNumOfData(); ++_i) { s; }
+
+static void test_vector_outrange(void)
+{
+    int numData = 8;
+    Container::Vector<int> vec(numData);
+    int indices[] =
+    {
+        0, 1, 2, 6, 7, 8, 10000, -1, -1000
+    };
+
+    for (int i = 0; i < vec.GetNumOfData(); vec[i] = ++i);
+
+    for (int i = 0; i < sizeof(indices)/sizeof(int); ++i)
+    {
+        int index = indices[i];
+        printf("vec[%5d]=%d ... ", index, vec[index]);
+        vec[index] = index;
+        printf("vec[%5d]=%d\n", index, vec[index]);
+    }
+}
+
+
+static void test_vector_operation(void)
+{
+    int numData = 8;
+    Container::Vector<int> ivec(numData);
+
+    ITER(i, ivec, ivec[i] = i + 1);
+
+    SHOW_IVALUE(ivec);
+    ivec += 2;
+    SHOW_IVALUE(ivec);
+    ivec *= 2;
+    SHOW_IVALUE(ivec);
+    ivec -= 1;
+    SHOW_IVALUE(ivec);
+    ivec /= 2.0;
+    SHOW_IVALUE(ivec);
+
+    Container::Vector<int> ivec1(numData/2);
+    ITER(i, ivec1, ivec1[i] = (i+1)*100);
+    ivec += ivec1;
+    SHOW_IVALUE(ivec);
+
+    Container::Vector<int> ivec2(numData);
+    ITER(i, ivec2, ivec2[i] = (i+1)*10);
+    ivec -= ivec2;
+    SHOW_IVALUE(ivec);
+
+    Container::Vector<int> ivec3(numData);
+    ITER(i, ivec3, ivec3[i] = (i+1));
+    ivec *= ivec3;
+    SHOW_IVALUE(ivec);
+
+    Container::Vector<int> ivec4(numData);
+    ITER(i, ivec4, ivec4[i] = (2*i+1));
+    ivec /= ivec4;
+    SHOW_IVALUE(ivec);
+}
+
+int main(void)
+{
+    test_vector();
+    test_matrix();
+    test_vector_outrange();
+    test_vector_operation();
     return 0;
 }
