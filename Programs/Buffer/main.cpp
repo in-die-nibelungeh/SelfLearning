@@ -8,34 +8,33 @@ static void test_vector(void)
 {
     int CheckPoint = 0;
     int numData = 8;
-    Vector<f64> iof64(numData/2);
-    Vector<s16> ios16(numData);
+    DEBUG_LOG("Calling Vector<T> constructors");
+    Vector<double> iodouble(numData/2);
+    Vector<int16_t> ioint16_t(numData);
 
-    printf("CheckPoint: %d\n", CheckPoint++);
-    for (int i = 0; i < iof64.GetNumOfData(); ++i)
+    DEBUG_LOG("Initializing objects with using Vector<T>::operator[]");
+    for (int i = 0; i < iodouble.GetNumOfData(); ++i)
     {
-        iof64[i] = (i+1);
-        printf("%d: %f\n", i, iof64[i]);
+        iodouble[i] = (i+1);
+        printf("%d: %f\n", i, iodouble[i]);
     }
 
     // Substituting
-    ios16 = iof64;
+    DEBUG_LOG("Substituting with using Vector<T>::operator=");
+    ioint16_t = iodouble;
 
-    printf("CheckPoint: %d\n", CheckPoint++);
-    printf("ios16.GetNumOfData()=%d\n", ios16.GetNumOfData());
-    for (int i = 0; i < ios16.GetNumOfData(); ++i)
+    for (int i = 0; i < ioint16_t.GetNumOfData(); ++i)
     {
-        printf("%d: %d\n", i, ios16[i]);
+        printf("%d: %d\n", i, ioint16_t[i]);
     }
 
-    printf("CheckPoint: %d\n", CheckPoint++);
+    DEBUG_LOG("Substituting with using Vector<T>::copy-constructor");
     // Copy-constructor
-    Vector<f32> iof32(ios16);
+    Vector<float> iofloat(ioint16_t);
 
-    printf("CheckPoint: %d\n", CheckPoint++);
-    for (int i = 0; i < iof32.GetNumOfData(); ++i)
+    for (int i = 0; i < iofloat.GetNumOfData(); ++i)
     {
-        printf("%d: %f\n", i, iof32[i]);
+        printf("%d: %f\n", i, iofloat[i]);
     }
 }
 
@@ -43,9 +42,9 @@ static void test_matrix(void)
 {
     int numData = 8;
     int CheckPoint = 0;
-    printf("CheckPoint: %d\n", CheckPoint++);
     int numArray = 2;
-    Matrix<f64> m1(numArray, numData);
+    DEBUG_LOG("Calling Matrix<T> constructors");
+    Matrix<double> m1(numArray, numData);
 
     for (int i = 0; i < m1.GetNumOfArray(); ++i)
     {
@@ -56,23 +55,23 @@ static void test_matrix(void)
     }
 
 #define DUMP_MATRIX(m, t) \
+    do { printf("Dump " # m ":\n"); \
     for (int i = 0; i < m.GetNumOfArray(); ++i) \
     {\
         for (int j = 0; j < m.GetNumOfData(); ++j)\
         {\
-            printf(#m"[%d, %d] = "#t"\n", i, j, m[i][j]);\
+            printf("    "#m"[%d, %d] = "#t"\n", i, j, m[i][j]);\
         }\
-    }
+    } } while (0)
 
     DUMP_MATRIX(m1, %f);
 
-    printf("CheckPoint: %d\n", CheckPoint++);
-    Matrix<s16> m2(m1);
+    DEBUG_LOG("Substituting with using Matrix<T>::copy-constructor");
+    Matrix<int16_t> m2(m1);
 
-    printf("CheckPoint: %d\n", CheckPoint++);
     DUMP_MATRIX(m2, %d);
 
-    Matrix<f32> m3(numArray/2, numData*2);
+    Matrix<float> m3(numArray/2, numData*2);
 
     printf("CheckPoint: %d\n", CheckPoint++);
     for (int i = 0; i < m3.GetNumOfArray(); ++i)
@@ -84,25 +83,25 @@ static void test_matrix(void)
         }
     }
 
-    printf("CheckPoint: %d\n", __LINE__);
+    DEBUG_LOG("Substituting with using Matrix<T>::=");
     m2 = m3;
 
     printf("CheckPoint: %d\n", __LINE__);
     DUMP_MATRIX(m2, %d);
 
     printf("CheckPoint: %d\n", __LINE__);
-    Vector<f64> vec(m2[0]);
+    Vector<double> vec(m2[0]);
 
     printf("CheckPoint: %d\n", __LINE__);
     for (int i = 0; i < vec.GetNumOfData(); ++i)
     {
         printf("vec[%d]=%f\n", i, vec[i]);
     }
-    Vector<s16> zero(0);
-    Matrix<u16> zeros20(2, 0);
-    Matrix<u16> zeros03(0, 3);
-
     /*
+    Vector<int16_t> zero(0);
+    Matrix<uint16_t> zeros20(2, 0);
+    Matrix<uint16_t> zeros03(0, 3);
+
     printf("CheckPoint: %d\n", __LINE__);
     zero = zeros20[0];
     printf("CheckPoint: %d\n", __LINE__);
@@ -139,6 +138,41 @@ static void test_vector_outrange(void)
         printf("vec[%5d]=%d ... ", index, vec[index]);
         vec[index] = index;
         printf("vec[%5d]=%d\n", index, vec[index]);
+    }
+}
+
+static void test_matrix_outrange(void)
+{
+    int numArray = 2;
+    int numData = 8;
+    Container::Matrix<int> mat(numArray, numData);
+    int array_indices[] = { 0, 2, 100, -2};
+    int indices[] =
+    {
+        0, 1, 2, 6, 7, 8, 10000, -1, -1000
+    };
+
+    for (int a = 0; a < mat.GetNumOfArray(); ++a)
+    {
+        Vector<int>& vec = mat[a];
+        for (int i = 0; i < mat.GetNumOfData(); ++i)
+        {
+            vec[i] = (i+1) + (a+1)*10;
+            printf("mat[%5d][%5d]=%d (%d)\n", a, i, mat[a][i], vec[i]);
+        }
+    }
+
+    for (int a = 0; a < sizeof(array_indices)/sizeof(int); ++a)
+    {
+        int ai = array_indices[a];
+        Vector<int>& vec = mat[ai];
+        for (int i = 0; i < sizeof(indices)/sizeof(int); ++i)
+        {
+            int index = indices[i];
+            printf("mat[%5d][%5d]=%d ... ", ai, index, vec[index]);
+            vec[index] = index;
+            printf("mat[%5d][%5d]=%d\n", ai, index, vec[index]);
+        }
     }
 }
 
@@ -187,5 +221,6 @@ int main(void)
     test_matrix();
     test_vector_outrange();
     test_vector_operation();
+    test_matrix_outrange();
     return 0;
 }
