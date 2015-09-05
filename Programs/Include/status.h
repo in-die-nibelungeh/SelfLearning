@@ -7,5 +7,6 @@
 #define ERROR_UNKNOWN 3
 #define ERROR_ILLEGAL 4
 #define ERROR_CANNOT_ALLOCATE_MEMORY 5
+#define ERROR_NOT_ENOUGH 6
 
 #endif // #ifndef _STATUS_H_

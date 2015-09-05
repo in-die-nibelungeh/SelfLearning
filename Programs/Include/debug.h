@@ -6,11 +6,11 @@
 #if defined(DEBUG)
 
 #define LOG(...) printf(__VA_ARGS__)
-#define DEBUG_LOG(...) printf(__VA_ARGS__)
+#define DEBUG_LOG(...) printf("%s [%s at %d]: "__VA_ARGS__ "\n", __func__, __FILE__, __LINE__)
 #define ERROR_LOG(...) fprintf(stderr, __VA_ARGS__)
 
 #define CHECK(cond)                \
-    {                              \
+    do {                           \
         char r[3] = "OK";          \
         if (!(cond))               \
         {                          \
@@ -18,7 +18,7 @@
             r[1] = 'G';            \
         }                          \
         printf(#cond ": %s\n", r); \
-    }
+    } while (0)
 
 
 #define CHECK_VALUE_INT(var, ans)  \
@@ -31,11 +31,12 @@
 
 #ifndef ASSERT
 #define ASSERT(c) \
-    if (!(c)) \
+    do { if (!(c)) \
     {         \
         printf("ASSERT at %d in %s: " #c "\n", __LINE__, __FILE__); \
         *((int*)0) = 0; \
-    }
+    } } while (0)
+
 #endif // #ifndef ASSERT
 
 #else  // #if defined(DEBUG)
