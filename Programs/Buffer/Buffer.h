@@ -8,8 +8,8 @@ namespace Container {
 /*--------------------------------------------------------------------
  * Vector
  *--------------------------------------------------------------------*/
-#define VECTOR_ITERATION(var, statement)        \
-    for (int var = 0; var < m_NumOfData; ++var) \
+#define VECTOR_ITERATION(var, iter, statement)  \
+    for (int var = 0; var < iter; ++var)        \
     {                                           \
         statement;                              \
     }
@@ -48,37 +48,21 @@ public:
         return reinterpret_cast<void*>(m_Address);
     }
 
-    template<typename U> T& operator+=(U v) const { VECTOR_ITERATION(i, (*this)[i] += static_cast<T>(v)); }
-    template<typename U> T& operator-=(U v) const { VECTOR_ITERATION(i, (*this)[i] -= static_cast<T>(v)); }
-    template<typename U> T& operator*=(U v) const { VECTOR_ITERATION(i, (*this)[i] *= static_cast<T>(v)); }
-    template<typename U> T& operator/=(U v) const { VECTOR_ITERATION(i, (*this)[i] /= static_cast<T>(v)); }
+    template<typename U> T& operator+=(U v) const { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] += static_cast<T>(v)); }
+    template<typename U> T& operator-=(U v) const { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] -= static_cast<T>(v)); }
+    template<typename U> T& operator*=(U v) const { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] *= static_cast<T>(v)); }
+    template<typename U> T& operator/=(U v) const { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] /= static_cast<T>(v)); }
 
-    template<typename U> T& operator+=(Vector<U>& v) const
-    {
-        const int iter = min(m_NumOfData, v.GetNumOfData());
-        for (int i = 0; i < iter; ++i) { (*this)[i] += static_cast<T>(v[i]); }
-    }
-    template<typename U> T& operator-=(Vector<U>& v) const
-    {
-        const int iter = min(m_NumOfData, v.GetNumOfData());
-        for (int i = 0; i < iter; ++i) { (*this)[i] -= static_cast<T>(v[i]); }
-    }
-    template<typename U> T& operator*=(Vector<U>& v) const
-    {
-        const int iter = min(m_NumOfData, v.GetNumOfData());
-        for (int i = 0; i < iter; ++i) { (*this)[i] *= static_cast<T>(v[i]); }
-    }
-    template<typename U> T& operator/=(Vector<U>& v) const
-    {
-        const int iter = min(m_NumOfData, v.GetNumOfData());
-        for (int i = 0; i < iter; ++i) { (*this)[i] /= static_cast<T>(v[i]); }
-    }
+    template<typename U> T& operator+=(Vector<U>& v) const { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] += static_cast<T>(v[i])); }
+    template<typename U> T& operator-=(Vector<U>& v) const { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] -= static_cast<T>(v[i])); }
+    template<typename U> T& operator*=(Vector<U>& v) const { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] *= static_cast<T>(v[i])); }
+    template<typename U> T& operator/=(Vector<U>& v) const { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] /= static_cast<T>(v[i])); }
 
     template <class U>
     Vector<T>& operator=(Vector<U>& vector);
 
     int GetNumOfData(void) const { return m_NumOfData; }
-    void Reallocate(const size_t numData);
+    bool Reallocate(const size_t numData);
 
 private:
     T*     m_Address;
@@ -86,6 +70,7 @@ private:
     T      m_Zero;
     T*     m_pZero;
     inline int min(int a, int b) const { return (a > b) ? b : a; };
+    int    Smaller(int input) const { return m_NumOfData < input ? m_NumOfData : input; }
     //void   Allocate(void);
 };
 
@@ -110,7 +95,7 @@ Vector<T>::Vector(Vector<U>& v)
 {
     ASSERT(m_NumOfData > 0);
     ASSERT(NULL != m_Address);
-    VECTOR_ITERATION(i, (*this)[i] = static_cast<T>(v[i]));
+    VECTOR_ITERATION(i, m_NumOfData, (*this)[i] = static_cast<T>(v[i]));
 }
 
 template <class T>
@@ -140,8 +125,7 @@ template <class U>
 Vector<T>& Vector<T>::operator=(Vector<U>& v)
 {
     // m_NumOfData is updated in Reallocate().
-    Reallocate(v.GetNumOfData());
-    VECTOR_ITERATION(i, (*this)[i] = static_cast<T>(v[i]));
+    VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] = static_cast<T>(v[i]));
     return *this;
 }
 
@@ -156,7 +140,7 @@ void Vector<T>::Allocate(void)
 */
 
 template <class T>
-void Vector<T>::Reallocate(size_t numData)
+bool Vector<T>::Reallocate(size_t numData)
 {
     ASSERT(numData > 0);
     if (numData != m_NumOfData)
@@ -166,7 +150,9 @@ void Vector<T>::Reallocate(size_t numData)
         delete[] this->m_Address;
         m_Address = new T[m_NumOfData];
         ASSERT(NULL != m_Address);
+        return true;
     }
+    return false;
 }
 
 /*--------------------------------------------------------------------

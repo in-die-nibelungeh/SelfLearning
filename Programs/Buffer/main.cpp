@@ -8,11 +8,11 @@ static void test_vector(void)
 {
     int CheckPoint = 0;
     int numData = 8;
-    DEBUG_LOG("Calling Vector<T> constructors");
+    DEBUG_LOG("Calling Vector<T> constructors\n");
     Vector<double> iodouble(numData/2);
     Vector<int16_t> ioint16_t(numData);
 
-    DEBUG_LOG("Initializing objects with using Vector<T>::operator[]");
+    DEBUG_LOG("Initializing objects with using Vector<T>::operator[]\n");
     for (int i = 0; i < iodouble.GetNumOfData(); ++i)
     {
         iodouble[i] = (i+1);
@@ -20,7 +20,7 @@ static void test_vector(void)
     }
 
     // Substituting
-    DEBUG_LOG("Substituting with using Vector<T>::operator=");
+    DEBUG_LOG("Substituting with using Vector<T>::operator=\n");
     ioint16_t = iodouble;
 
     for (int i = 0; i < ioint16_t.GetNumOfData(); ++i)
@@ -28,7 +28,7 @@ static void test_vector(void)
         printf("%d: %d\n", i, ioint16_t[i]);
     }
 
-    DEBUG_LOG("Substituting with using Vector<T>::copy-constructor");
+    DEBUG_LOG("Substituting with using Vector<T>::copy-constructor\n");
     // Copy-constructor
     Vector<float> iofloat(ioint16_t);
 
@@ -41,9 +41,8 @@ static void test_vector(void)
 static void test_matrix(void)
 {
     int numData = 8;
-    int CheckPoint = 0;
     int numArray = 2;
-    DEBUG_LOG("Calling Matrix<T> constructors");
+    DEBUG_LOG("Calling Matrix<T> constructors\n");
     Matrix<double> m1(numArray, numData);
 
     for (int i = 0; i < m1.GetNumOfArray(); ++i)
@@ -66,14 +65,13 @@ static void test_matrix(void)
 
     DUMP_MATRIX(m1, %f);
 
-    DEBUG_LOG("Substituting with using Matrix<T>::copy-constructor");
+    DEBUG_LOG("Substituting with using Matrix<T>::copy-constructor\n");
     Matrix<int16_t> m2(m1);
 
     DUMP_MATRIX(m2, %d);
 
     Matrix<float> m3(numArray/2, numData*2);
 
-    printf("CheckPoint: %d\n", CheckPoint++);
     for (int i = 0; i < m3.GetNumOfArray(); ++i)
     {
         for (int j = 0; j < m3.GetNumOfData(); ++j)
@@ -83,16 +81,13 @@ static void test_matrix(void)
         }
     }
 
-    DEBUG_LOG("Substituting with using Matrix<T>::=");
+    DEBUG_LOG("Substituting with using Matrix<T>::=\n");
     m2 = m3;
 
-    printf("CheckPoint: %d\n", __LINE__);
     DUMP_MATRIX(m2, %d);
 
-    printf("CheckPoint: %d\n", __LINE__);
     Vector<double> vec(m2[0]);
 
-    printf("CheckPoint: %d\n", __LINE__);
     for (int i = 0; i < vec.GetNumOfData(); ++i)
     {
         printf("vec[%d]=%f\n", i, vec[i]);
