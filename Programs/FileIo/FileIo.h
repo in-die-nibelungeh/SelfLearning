@@ -40,8 +40,8 @@ public:
     status_t Read(const char* path, Container::Vector<int16_t>& buffer);
 
     // Write
-    status_t Write(const char* path, int16_t* buffer, size_t size);
-    status_t Write(const char* path, const Container::Vector<int16_t>& buffer);
+    status_t Write(const char* path, int16_t* buffer, size_t size) const;
+    status_t Write(const char* path, const Container::Vector<int16_t>& buffer) const;
 
     // Meta Data
     struct MetaData GetMetaData(void) const;
@@ -62,6 +62,7 @@ private:
     };
 
     status_t ReadMetaData(FILE*& fd, int& dataPosition, size_t& dataSize);
+    status_t WriteMetaData(FILE*& fd, size_t dataSize) const;
 
     PcmFormat m_Format;
     int32_t m_SamplingRate;

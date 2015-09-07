@@ -81,6 +81,7 @@ static void test_write(void)
     int32_t multi = 20;
     size_t size = duration * fs * ch * depth / 8;
     int16_t* buffer = (int16_t*)malloc(size);
+    Container::Vector<int16_t> bufferObj(size/sizeof(int16_t));
 
     wg.SetWaveType(WaveGen::WT_SINE);
     wg.SetSamplingRate(fs);
@@ -91,14 +92,16 @@ static void test_write(void)
     for (int i = 0; i < duration * fs; ++i, ++wg)
     {
         buffer[i] = static_cast<int16_t>(amp * wg.GetValue());
+        bufferObj[i] = buffer[i];
     }
 
     {
         char fname[256];
         FileIo wave(fs, ch, depth);
-        //wave.SetMetaData(fs, ch, depth);
         sprintf(fname, "sweep_%d-%d.wav", freq, freq*multi);
-        wave.Write(fname, buffer, size);
+        wave.Write(reinterpret_cast<const char*>(fname), buffer, size);
+        sprintf(fname, "sweep_%d-%d_buffer.wav", freq, freq*multi);
+        wave.Write(reinterpret_cast<const char*>(fname), bufferObj);
     }
     free(buffer);
 }
@@ -107,7 +110,7 @@ int main(void)
 {
     test_test();
     test_read();
-    //test_write();
+    test_write();
 
     return 0;
 }

@@ -219,17 +219,8 @@ struct FileIo::MetaData FileIo::GetMetaData(void) const
         fwrite(&tmp, sizeof(type), 1, fd); \
     }
 
-status_t FileIo::Write(const char* path, int16_t* buffer, size_t size)
+status_t FileIo::WriteMetaData(FILE*& fd, size_t size) const
 {
-    status_t ret = NO_ERROR;
-
-    FILE *fd = fopen(path, "w");
-
-    if (NULL == fd)
-    {
-        return -ERROR_NOT_FOUND;
-    }
-
     // 'RIFF'
     size_t riffSize = 4 + sizeof(WaveChunk) * 2 + 0x10 + size;
     FileWrite(fd, int32_t, CID_RIFF);
@@ -251,17 +242,50 @@ status_t FileIo::Write(const char* path, int16_t* buffer, size_t size)
     FileWrite(fd, int32_t, CID_DATA);
     FileWrite(fd, int32_t, size);
 
-    if (NULL != buffer)
+    return NO_ERROR;
+}
+
+status_t FileIo::Write(const char* path, int16_t* buffer, size_t size) const
+{
+    if (NULL == buffer)
     {
-        fwrite(buffer, 1, size, fd);
+        return -ERROR_NULL;
     }
-    else
+
+    FILE *fd = fopen(path, "w");
+    if (NULL == fd)
     {
-        ret = -ERROR_NULL;
+        return -ERROR_ILLEGAL_PERMISSION;
     }
+    WriteMetaData(fd, size);
+
+    fwrite(buffer, 1, size, fd);
 
     fclose(fd);
 
-    return ret;
+    return NO_ERROR;
+}
+
+status_t FileIo::Write(const char* path, const Container::Vector<int16_t>& buffer) const
+{
+    if (NULL == buffer)
+    {
+        return -ERROR_NULL;
+    }
+
+    FILE *fd = fopen(path, "w");
+    if (NULL == fd)
+    {
+        return -ERROR_ILLEGAL_PERMISSION;
+    }
+    size_t size = buffer.GetNumOfData() * sizeof(int16_t);
+
+    WriteMetaData(fd, size);
+
+    fwrite(buffer, 1, size, fd);
+
+    fclose(fd);
+
+    return NO_ERROR;
 }
 
