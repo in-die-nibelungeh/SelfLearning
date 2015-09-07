@@ -20,13 +20,11 @@ static void test_read(void)
     FileIo wave;
     wave.Read("ding.wav", &buffer, &size);
 
-    printf("Sizeof(PcmFormat)=%d\n", sizeof(FileIo::PcmFormat));
-    printf("Sizeof(MetaData)=%d\n", sizeof(FileIo::MetaData));
+    //printf("Sizeof(PcmFormat)=%d\n", sizeof(FileIo::PcmFormat));
+    //printf("Sizeof(MetaData)=%d\n", sizeof(FileIo::MetaData));
     {
         int32_t fs, ch, bit;
-
         wave.GetMetaData(&fs, &ch, &bit);
-
         CHECK_VALUE_INT( fs, 44100);
         CHECK_VALUE_INT( ch,     2);
         CHECK_VALUE_INT(bit,    16);
@@ -38,6 +36,36 @@ static void test_read(void)
         CHECK_VALUE_INT(metaData.samplingRate, 44100);
         CHECK_VALUE_INT(metaData.numChannels ,     2);
         CHECK_VALUE_INT(metaData.bitDepth    ,    16);
+        CHECK_VALUE_INT(size, 70016);
+    }
+
+    // îÒÉ[ÉçÇ≈Ç†ÇÍÇŒâΩÇ≈Ç‡ó«Ç¢ÅB
+    Container::Vector<int16_t> bufferObj(1);
+    FileIo waveBuf;
+    waveBuf.Read("ding.wav", bufferObj);
+    {
+        int32_t fs, ch, bit;
+        waveBuf.GetMetaData(&fs, &ch, &bit);
+        CHECK_VALUE_INT( fs, 44100);
+        CHECK_VALUE_INT( ch,     2);
+        CHECK_VALUE_INT(bit,    16);
+        CHECK_VALUE_INT(bufferObj.GetNumOfData(), 70016/2);
+    }
+
+    DEBUG_LOG("Comparing data buffer:\n");
+    int numUnequal = 0;
+    for ( int i = 0; i < bufferObj.GetNumOfData(); ++i )
+    {
+        if ( buffer[i] != bufferObj[i] )
+        {
+            ++numUnequal;
+            printf("Not equal at %5d: buffer=%d, bufferObj=%d\n",
+                i, buffer[i], bufferObj[i]);
+        }
+    }
+    if ( 0 == numUnequal )
+    {
+        DEBUG_LOG("Matched completely\n");
     }
 }
 
@@ -79,7 +107,7 @@ int main(void)
 {
     test_test();
     test_read();
-    test_write();
+    //test_write();
 
     return 0;
 }

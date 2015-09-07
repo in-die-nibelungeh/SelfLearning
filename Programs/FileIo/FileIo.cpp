@@ -45,15 +45,8 @@ status_t FileIo::Test(void)
     return NO_ERROR;
 }
 
-status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
+status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
 {
-    FILE* fd = fopen(path, "r");
-
-    if (NULL == fd)
-    {
-        return -ERROR_NOT_FOUND; // NOT_FOUND
-    }
-
     status_t ret = NO_ERROR;
     int32_t length = 0;
 
@@ -92,16 +85,9 @@ status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
             }
             case CID_DATA:
             {
-                *buffer = reinterpret_cast<int16_t*>(malloc(chunk.m_Size));
-
-                if (*buffer == NULL)
-                {
-                    ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
-                }
-                else
-                {
-                    fread(*buffer, sizeof(uint8_t), chunk.m_Size, fd);
-                }
+                pos = ftell(fd);
+                size = chunk.m_Size;
+                fseek(fd, size, SEEK_CUR);
                 break;
             }
             case CID_FACT:
@@ -128,6 +114,70 @@ status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
     if (length != 0)
     {
         m_Duration = (double)length / m_SamplingRate;
+    }
+
+    return ret;
+}
+
+status_t FileIo::Read(const char* path, Container::Vector<int16_t>& buffer)
+{
+    FILE* fd = fopen(path, "r");
+
+    if (NULL == fd)
+    {
+        return -ERROR_NOT_FOUND; // NOT_FOUND
+    }
+
+    size_t dataSize;
+    int dataPosition;
+
+    status_t ret = ReadMetaData(fd, dataPosition, dataSize);
+
+    if (NO_ERROR == ret)
+    {
+        if (false == buffer.Reallocate(dataSize/sizeof(int16_t)))
+        {
+            ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
+        }
+        else
+        {
+            fseek(fd, dataPosition, SEEK_SET);
+            int ret = fread(buffer, sizeof(uint8_t), dataSize, fd);
+        }
+    }
+    fclose(fd);
+
+    return ret;
+}
+
+
+status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
+{
+    FILE* fd = fopen(path, "r");
+
+    if (NULL == fd)
+    {
+        return -ERROR_NOT_FOUND; // NOT_FOUND
+    }
+
+    size_t dataSize;
+    int dataPosition;
+
+    status_t ret = ReadMetaData(fd, dataPosition, dataSize);
+
+    if (NO_ERROR == ret)
+    {
+        *buffer = reinterpret_cast<int16_t*>(malloc(dataSize));
+        *size = dataSize;
+        if (*buffer == NULL)
+        {
+            ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
+        }
+        else
+        {
+            fseek(fd, dataPosition, SEEK_SET);
+            fread(*buffer, sizeof(uint8_t), dataSize, fd);
+        }
     }
     fclose(fd);
 
