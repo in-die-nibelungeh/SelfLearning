@@ -3,6 +3,7 @@
 
 #include "Buffer.h"
 #include "Fir.h"
+#include "Window.h"
 
 static const double g_Pi(M_PI);
 
