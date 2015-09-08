@@ -1,16 +1,17 @@
 #include <math.h>
 #include "types.h"
+#include "Asp.h"
 
-namespace Asp {
+const double Asp::g_Pi(M_PI);
 
-void Sinc(f64 coef[], size_t N, f64 df)
+void Asp::Sinc(double coef[], size_t N, double df)
 {
     int offset = (N+1) & 1;
     for (int i = 0; i < N/2; ++i)
     {
         int idx = (i<<1) - N + offset;
-        f64 x = idx * df / 2.0;
-        f64 v = sin(x)/x;
+        double x = idx * df / 2.0;
+        double v = sin(x)/x;
         coef[i] = v;
         coef[N-i-1] = v;
     }
@@ -21,5 +22,5 @@ void Sinc(f64 coef[], size_t N, f64 df)
     return ;
 }
 
-
-} // namespace Asp {
+//void Asp::Lanczos(double coef[], size_t N, double df)
+//   Sinc(x) * Sinc(x/N)

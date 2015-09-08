@@ -1,9 +1,21 @@
 #pragma once
 
-#include "Window.h"
-#include <math.h>
+#include "types.h"
 
-namespace Asp {
-    static const f64 g_Pi(M_PI);
-    void Sinc(f64 coef[], size_t N, f64 df);
-} // namespace Asp {
+#include "Window.h"
+
+class Asp
+{
+public:
+    static const double g_Pi;
+    static void Sinc(double coef[], size_t N, double df);
+    static inline int GetNumTapps(double cutOff, double samplingRate)
+    {
+        int tapps = static_cast<int>((3.1f * samplingRate / cutOff) + 0.5 - 1);
+        if ( (tapps & 1) == 0)
+        {
+            ++tapps;
+        }
+        return tapps;
+    }
+};

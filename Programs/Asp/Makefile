@@ -1,10 +1,10 @@
 
 BIN=asp.exe
 LIB=libasp.a
-LIBS=-lwg -lfio
+LIBS=-lwg -lfio -lwin -lfir
 
-MODULE_HEADER=Asp.h Window.h
-MODULE_SRC=Asp.cpp Window.cpp
+MODULE_HEADER=Asp.h
+MODULE_SRC=Asp.cpp
 
 INC=$(MODULE_HEADER)
 
