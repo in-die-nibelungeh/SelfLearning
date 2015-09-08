@@ -6,7 +6,12 @@
 #if defined(DEBUG)
 
 #define LOG(...) printf(__VA_ARGS__)
-#define DEBUG_LOG(...) printf("%s [%s at %d]: "__VA_ARGS__ "\n", __func__, __FILE__, __LINE__)
+//#define DEBUG_LOG(fmt, ...) printf("%s [%s at %d]: " fmt "\n", __func__, __FILE__, __LINE__, __VA_ARGS__)
+
+#define TOSTR(n) TOSTR_(n)
+#define TOSTR_(n) #n
+#define DEBUG_LOG(...) printf("[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
+
 #define ERROR_LOG(...) fprintf(stderr, __VA_ARGS__)
 
 #define CHECK(cond)                \
