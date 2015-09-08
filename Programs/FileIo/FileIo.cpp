@@ -135,7 +135,7 @@ status_t FileIo::Read(const char* path, Container::Vector<int16_t>& buffer)
 
     if (NO_ERROR == ret)
     {
-        if (false == buffer.Reallocate(dataSize/sizeof(int16_t)))
+        if (false == buffer.Resize(dataSize/sizeof(int16_t)))
         {
             ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
         }

@@ -226,7 +226,7 @@ double WaveGen::GenerateOne(double p)
 
 void WaveGen::GenerateValue(Container::Vector<double>& buffer, size_t n, double amp)
 {
-    buffer.Reallocate(n);
+    buffer.Resize(n);
     for (int i = 0; i < n; ++i, ++(*this))
     {
         buffer[i] = amp * GetValue();

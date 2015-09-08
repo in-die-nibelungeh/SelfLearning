@@ -62,7 +62,7 @@ public:
     Vector<T>& operator=(Vector<U>& vector);
 
     int GetNumOfData(void) const { return m_NumOfData; }
-    bool Reallocate(const size_t numData);
+    bool Resize(const size_t numData);
 
 private:
     T*     m_Address;
@@ -124,7 +124,7 @@ template <class T>
 template <class U>
 Vector<T>& Vector<T>::operator=(Vector<U>& v)
 {
-    // m_NumOfData is updated in Reallocate().
+    // m_NumOfData is updated in Resize().
     VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] = static_cast<T>(v[i]));
     return *this;
 }
@@ -140,7 +140,7 @@ void Vector<T>::Allocate(void)
 */
 
 template <class T>
-bool Vector<T>::Reallocate(size_t numData)
+bool Vector<T>::Resize(size_t numData)
 {
     ASSERT(numData > 0);
     if (numData != m_NumOfData)
@@ -188,7 +188,7 @@ public:
 
     int GetNumOfArray(void) const { return m_NumOfArray; }
     int GetNumOfData(void) const { return m_NumOfData; }
-    void Reallocate(int, int);
+    void Resize(int, int);
 private:
     int m_NumOfArray;
     int m_NumOfData;
@@ -258,7 +258,7 @@ Matrix<T>::~Matrix()
 }
 
 template <class T>
-void Matrix<T>::Reallocate(int numArray, int numData)
+void Matrix<T>::Resize(int numArray, int numData)
 {
     if (numArray <= 0 || numData <= 0)
     {
@@ -302,7 +302,7 @@ template <class T>
 template <class U>
 Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
 {
-    Reallocate(m.GetNumOfArray(), m.GetNumOfData());
+    Resize(m.GetNumOfArray(), m.GetNumOfData());
     for (int i = 0; i < m_NumOfArray; ++i)
     {
         *m_Array[i] = m[i];

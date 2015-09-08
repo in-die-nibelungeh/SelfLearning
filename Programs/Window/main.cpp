@@ -27,12 +27,12 @@ static void test_hanning(void)
         printf("%d,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i]);
     }
     N = 25;
-    han.Reallocate(N);
-    ham.Reallocate(N);
-    b.Reallocate(N);
-    bh.Reallocate(N);
-    n.Reallocate(N);
-    k.Reallocate(N);
+    han.Resize(N);
+    ham.Resize(N);
+    b.Resize(N);
+    bh.Resize(N);
+    n.Resize(N);
+    k.Resize(N);
     masp::window::Hanning(coef, N);
     masp::window::Hanning(han);
     masp::window::Hamming(ham);
