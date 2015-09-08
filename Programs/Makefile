@@ -1,9 +1,5 @@
 
-SUBDIRS := Asp \
-	Buffer \
-	FFT \
-	FileIo \
-	WaveGen \
+SUBDIRS := $(filter-out Include Library Makefile, $(shell ls))
 
 $(MAKECMDGOALS) _root: $(SUBDIRS)
 
