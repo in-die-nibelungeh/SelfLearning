@@ -62,9 +62,18 @@ double Factorial(int n)
 double I0(double x)
 {
     double ans = 0.0;
-    for (int k = 0; k < 1000; ++k)
+    for (int k = 0; k < 50; ++k)
     {
+#if 1
         ans += pow(x/2, 2 * k) / POW2(Factorial(k));
+#else
+        double v = 1.0;
+        for (int j = 1; j < k; ++j)
+        {
+            v *= POW2( x / (2 * j) );
+        }
+        ans += v;
+#endif
     }
     return ans;
 }
