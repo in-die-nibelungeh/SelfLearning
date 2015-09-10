@@ -8,37 +8,48 @@
 namespace masp {
 namespace iir {
 
-enum FilterTypeId
+class Biquad
 {
-    FTI_LPF = 1,
-    FTI_HPF,
-    FTI_BPF,
-    FTI_BEF
+public:
+    enum FilterTypeId
+    {
+        FTI_LPF = 1,
+        FTI_HPF,
+        FTI_BPF,
+        FTI_BEF
+    };
+
+    struct Coefficients
+    {
+        double a[2];
+        double b[3];
+    };
+
+    struct Context
+    {
+        double x[2];
+        double y[2];
+    };
+
+    Biquad();
+    Biquad(double Q, double fc1, double fc2, int type, int samplingRate);
+    ~Biquad() {};
+
+    void Initialize(void);
+    void CalculateCoefficients(double Q, double fc1, double fc2, int type, int samplingRate);
+
+    const struct Coefficients& GetCoefficients(void) { return m_Coefficients; }
+    const struct Context& GetContext(void) { return m_Context; }
+
+    double ApplyFilter(double x0);
+
+    static double ConvertD2A(double fd, int fs);
+
+private:
+
+    struct Coefficients m_Coefficients;
+    struct Context m_Context;
 };
-
-enum FilterBaseId
-{
-    FBI_SINC = 1,
-    FBI_LANCZOS
-};
-
-//void GetCoefficients(double coef[], size_t N, double fe, int filterType, int functionId);
-//void HpfSinc(double coef[], size_t N, double fe);
-void FilterSinc(double coef[], size_t N, double fe);
-void FilterLanczos(double coef[], size_t N, double fe, double n);
-
-void GetCoefficientsLpfSinc(Container::Vector<double>& coef, double fe);
-void GetCoefficientsHpfSinc(Container::Vector<double>& coef, double fe);
-void GetCoefficientsBpfSinc(Container::Vector<double>& coef, double fe1, double fe2);
-void GetCoefficientsBefSinc(Container::Vector<double>& coef, double fe1, double fe2);
-void GetCoefficientsLpfLanczos(Container::Vector<double>& coef, double fe, double n);
-void GetCoefficientsHpfLanczos(Container::Vector<double>& coef, double fe, double n);
-void GetCoefficientsBpfLanczos(Container::Vector<double>& coef, double fe1, double fe2, double n);
-void GetCoefficientsBefLanczos(Container::Vector<double>& coef, double fe1, double fe2, double n);
-
-// This is for Hanning, not the others.
-size_t GetNumOfTapps(double cutOff, int samplingRate);
-
 
 } // namespace iir {
 } // namespace masp {
