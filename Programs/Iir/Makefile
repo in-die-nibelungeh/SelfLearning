@@ -1,7 +1,7 @@
 
 BIN=iir.exe
 LIB=libiir.a
-LIBS=-lwin -lfio
+LIBS=-lwin -lfio -lwg
 
 MODULE_HEADER=Iir.h
 MODULE_SRC=Iir.cpp

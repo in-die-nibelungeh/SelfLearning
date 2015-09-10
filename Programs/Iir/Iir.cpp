@@ -18,11 +18,11 @@ Biquad::Biquad()
     Initialize();
 };
 
-Biquad::Biquad(double Q, double fc1, double fc2, int type, int fs)
+Biquad::Biquad(double Q, double fc, int type, int fs)
 {
     Initialize();
 
-    CalculateCoefficients(Q, fc1, fc2, type, fs);
+    CalculateCoefficients(Q, fc, type, fs);
 }
 
 void Biquad::Initialize(void)
@@ -39,10 +39,9 @@ void Biquad::Initialize(void)
     a[0] = 0.0; a[1] = 0.0;
 }
 
-void Biquad::CalculateCoefficients(double Q, double _fc1, double _fc2, int type, int fs)
+void Biquad::CalculateCoefficients(double Q, double _fc, int type, int fs)
 {
-    double fc1 = ConvertD2A(_fc1, fs);
-    double fc2 = ConvertD2A(_fc2, fs);
+    double fc = ConvertD2A(_fc, fs);
 
     double* a = m_Coefficients.a;
     double* b = m_Coefficients.b;
@@ -50,30 +49,30 @@ void Biquad::CalculateCoefficients(double Q, double _fc1, double _fc2, int type,
     {
     case LPF:
         {
-            const double c = POW2(2.0 * g_Pi * fc1);
-            const double d = 1 + 2 * g_Pi * fc1 / Q + c;
+            const double c = POW2(2.0 * g_Pi * fc);
+            const double d = 1 + 2 * g_Pi * fc / Q + c;
             b[0] = c / d;
             b[1] = 2.0 * c / d;
             b[2] = c / d;
             a[0] = (2.0 * c - 2.0) / d;
-            a[1] = (1 - 2 * g_Pi * fc1 / Q + c) / d;
+            a[1] = (1 - 2 * g_Pi * fc / Q + c) / d;
         }
         break;
     case HPF:
         {
-            const double c = POW2(2.0 * g_Pi * fc1);
-            const double d = 1 + 2 * g_Pi * fc1 / Q + c;
+            const double c = POW2(2.0 * g_Pi * fc);
+            const double d = 1 + 2 * g_Pi * fc / Q + c;
             b[0] = 1.0 / d;
-            b[1] = -2.0 * c / d;
+            b[1] = -2.0 / d;
             b[2] = 1.0 / d;
             a[0] = (2.0 * c - 2.0) / d;
-            a[1] = (1 - 2 * g_Pi * fc1 / Q + c) / d;
+            a[1] = (1 - 2 * g_Pi * fc / Q + c) / d;
         }
         break;
     case BPF:
         {
-            const double c = POW2(2.0 * g_Pi) * fc1 * fc2;
-            const double d = 2.0 * g_Pi * (fc2 - fc1);
+            const double c = POW2(2.0 * g_Pi * fc);
+            const double d = 2 * g_Pi * fc / Q;
             const double e = 1 + d + c;
             b[0] = d / e;
             b[1] = 0.0;
@@ -84,8 +83,8 @@ void Biquad::CalculateCoefficients(double Q, double _fc1, double _fc2, int type,
         break;
     case BEF:
         {
-            const double c = POW2(2.0 * g_Pi) * fc1 * fc2;
-            const double d = 2.0 * g_Pi * (fc2 - fc1);
+            const double c = POW2(2.0 * g_Pi * fc);
+            const double d = 2 * g_Pi * fc / Q;
             const double e = 1 + d + c;
             b[0] = (c + 1.0) / e;
             b[1] = (2.0 * c - 2.0) / e;
@@ -112,7 +111,6 @@ double Biquad::ApplyFilter(double xn)
                - a[1] * y[1];
     y[1] = y[0];
     y[0] = yn;
-    x[2] = x[1];
     x[1] = x[0];
     x[0] = xn;
     return yn;

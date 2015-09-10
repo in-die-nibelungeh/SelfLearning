@@ -13,10 +13,10 @@ class Biquad
 public:
     enum FilterTypeId
     {
-        FTI_LPF = 1,
-        FTI_HPF,
-        FTI_BPF,
-        FTI_BEF
+        LPF = 1,
+        HPF,
+        BPF,
+        BEF
     };
 
     struct Coefficients
@@ -32,11 +32,11 @@ public:
     };
 
     Biquad();
-    Biquad(double Q, double fc1, double fc2, int type, int samplingRate);
+    Biquad(double Q, double fc, int type, int samplingRate);
     ~Biquad() {};
 
     void Initialize(void);
-    void CalculateCoefficients(double Q, double fc1, double fc2, int type, int samplingRate);
+    void CalculateCoefficients(double Q, double fc, int type, int samplingRate);
 
     const struct Coefficients& GetCoefficients(void) { return m_Coefficients; }
     const struct Context& GetContext(void) { return m_Context; }
