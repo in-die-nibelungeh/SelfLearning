@@ -72,7 +72,7 @@ static void test_ft_buffer(void)
 
     Container::Vector<double> buffer(n);
 
-    wg.GenerateValue(buffer, n);
+    wg.GenerateWaveform(buffer, n);
 
     Container::Matrix<double> fft(2, n);
 
