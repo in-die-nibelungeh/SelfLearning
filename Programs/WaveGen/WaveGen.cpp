@@ -224,16 +224,15 @@ double WaveGen::GenerateOne(double p)
     return (this->*m_Generator)(p);
 }
 
-void WaveGen::GenerateValue(Container::Vector<double>& buffer, size_t n, double amp)
+void WaveGen::GenerateWaveform(Container::Vector<double>& buffer, double amp)
 {
-    buffer.Resize(n);
-    for (int i = 0; i < n; ++i, ++(*this))
+    for (int i = 0; i < buffer.GetNumOfData(); ++i, ++(*this))
     {
         buffer[i] = amp * GetValue();
     }
 }
 
-void WaveGen::GenerateValue(double buffer[], size_t n, double amp)
+void WaveGen::GenerateWaveform(double buffer[], size_t n, double amp)
 {
     for (int i = 0; i < n; ++i, ++(*this))
     {

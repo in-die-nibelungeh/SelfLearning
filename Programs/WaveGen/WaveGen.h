@@ -66,8 +66,8 @@ public:
     // Aliases
     bool SetBaseFrequency(double frequency) { SetWaveFrequency(frequency); }
 
-    void GenerateValue(double buffer[], size_t n, double amplitude = 1.0f);
-    void GenerateValue(Container::Vector<double>& buffer, size_t n, double amplitude = 1.0f);
+    void GenerateWaveform(double buffer[], size_t n, double amplitude = 1.0f);
+    void GenerateWaveform(Container::Vector<double>& buffer, double amplitude = 1.0f);
 
 private:
 

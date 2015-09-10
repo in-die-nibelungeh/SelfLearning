@@ -327,7 +327,7 @@ static void test_buffer(void)
 
     Container::Vector<double> buffer(numData);
 
-    wg.GenerateValue(buffer, numData);
+    wg.GenerateWaveform(buffer, numData);
 
     for (int i = 0; i < numData; ++i)
     {
