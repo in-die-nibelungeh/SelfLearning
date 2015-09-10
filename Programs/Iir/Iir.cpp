@@ -48,18 +48,54 @@ void Biquad::CalculateCoefficients(double Q, double _fc1, double _fc2, int type,
     double* b = m_Coefficients.b;
     switch(type)
     {
-    case FTI_LPF:
+    case LPF:
         {
             const double c = POW2(2.0 * g_Pi * fc1);
-            b[0] = c / (1 + 2 * g_Pi * fc1 / Q + c);
-            b[1] = 2.0 * c / (1 + 2 * g_Pi * fc1 / Q + c);
-            b[2] = c / (1 + 2 * g_Pi * fc1 / Q + c);
-            a[0] = (2.0 * c - 2.0) / (1 + 2 * g_Pi * fc1 / Q + c);
-            a[1] = (1 - 2 * g_Pi * fc1 / Q + c) / (1 + 2 * g_Pi * fc1 / Q + c);
-            printf("b0=%f,b1=%f,b2=%f,a0=%f,a=%f\n", b[0], b[1], b[2], a[0], a[1]);
+            const double d = 1 + 2 * g_Pi * fc1 / Q + c;
+            b[0] = c / d;
+            b[1] = 2.0 * c / d;
+            b[2] = c / d;
+            a[0] = (2.0 * c - 2.0) / d;
+            a[1] = (1 - 2 * g_Pi * fc1 / Q + c) / d;
+        }
+        break;
+    case HPF:
+        {
+            const double c = POW2(2.0 * g_Pi * fc1);
+            const double d = 1 + 2 * g_Pi * fc1 / Q + c;
+            b[0] = 1.0 / d;
+            b[1] = -2.0 * c / d;
+            b[2] = 1.0 / d;
+            a[0] = (2.0 * c - 2.0) / d;
+            a[1] = (1 - 2 * g_Pi * fc1 / Q + c) / d;
+        }
+        break;
+    case BPF:
+        {
+            const double c = POW2(2.0 * g_Pi) * fc1 * fc2;
+            const double d = 2.0 * g_Pi * (fc2 - fc1);
+            const double e = 1 + d + c;
+            b[0] = d / e;
+            b[1] = 0.0;
+            b[2] = -d / e;
+            a[0] = (2.0 * c - 2.0) / e;
+            a[1] = (1 - d + c) / e;
+        }
+        break;
+    case BEF:
+        {
+            const double c = POW2(2.0 * g_Pi) * fc1 * fc2;
+            const double d = 2.0 * g_Pi * (fc2 - fc1);
+            const double e = 1 + d + c;
+            b[0] = (c + 1.0) / e;
+            b[1] = (2.0 * c - 2.0) / e;
+            b[2] = (c + 1.0) / e;
+            a[0] = (2.0 * c - 2.0) / e;
+            a[1] = (1 - d + c) / e;
         }
         break;
     }
+    printf("b0=%f,b1=%f,b2=%f,a0=%f,a1=%f\n", b[0], b[1], b[2], a[0], a[1]);
 }
 
 double Biquad::ApplyFilter(double xn)
