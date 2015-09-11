@@ -1,5 +1,5 @@
 
-SUBDIRS := $(filter-out Include Library Makefile, $(shell ls))
+SUBDIRS := $(filter-out Include Library Makefile Samples, $(shell ls))
 
 $(MAKECMDGOALS) _root: $(SUBDIRS)
 
