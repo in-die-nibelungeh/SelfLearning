@@ -69,7 +69,6 @@ private:
     int    m_NumOfData;
     T      m_Zero;
     T*     m_pZero;
-    inline int min(int a, int b) const { return (a > b) ? b : a; };
     int    Smaller(int input) const { return m_NumOfData < input ? m_NumOfData : input; }
     //void   Allocate(void);
 };
@@ -175,12 +174,12 @@ public:
         ASSERT(0 < m_NumOfArray);
         ASSERT(NULL != m_Array);
 
-        Vector<T>* p = *m_ppZero;
         if (0 <= i && i < m_NumOfArray)
         {
-            p = m_Array[i];
+            return *m_Array[i];
         }
-        return *p;
+        m_Zero[0] = 0;
+        return *m_pZero;
     }
 
     template <class U>
@@ -193,7 +192,6 @@ private:
     int m_NumOfArray;
     int m_NumOfData;
     Vector<T>** m_Array;
-    Vector<T>** m_ppZero;
     Vector<T>*  m_pZero;
     Vector<T>   m_Zero;
 };
@@ -203,7 +201,6 @@ Matrix<T>::Matrix(int numArray, int numData)
   : m_Array(new Vector<T>*[numArray]),
     m_NumOfData(numData),
     m_NumOfArray(numArray),
-    m_ppZero(&m_pZero),
     m_pZero(&m_Zero),
     m_Zero(1)
 {
@@ -225,7 +222,6 @@ Matrix<T>::Matrix(Matrix<U>& m)
   : m_Array(new Vector<T>*[m.GetNumOfArray()]),
     m_NumOfArray(m.GetNumOfArray()),
     m_NumOfData(m.GetNumOfData()),
-    m_ppZero(&m_pZero),
     m_pZero(&m_Zero),
     m_Zero(1)
 {
