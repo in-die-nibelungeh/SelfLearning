@@ -3,7 +3,7 @@
 #include "types.h"
 #include "debug.h"
 
-namespace container {
+namespace cod {
 
 #define VECTOR_ITERATION(var, iter, statement)  \
     for (int var = 0; var < iter; ++var)        \
@@ -57,6 +57,7 @@ public:
 
     template <class U>
     Vector<T>& operator=(Vector<U>& vector);
+    Vector<T>& operator=(Vector<T>& vector);
 
     int GetNumOfData(void) const { return m_NumOfData; }
     bool Resize(const size_t numData);
@@ -117,6 +118,14 @@ void Vector<T>::Copy(Vector<U>& v)
 */
 
 template <class T>
+Vector<T>& Vector<T>::operator=(Vector<T>& v)
+{
+    // m_NumOfData is updated in Resize().
+    VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] = v[i]);
+    return *this;
+}
+
+template <class T>
 template <class U>
 Vector<T>& Vector<T>::operator=(Vector<U>& v)
 {
@@ -151,4 +160,4 @@ bool Vector<T>::Resize(size_t numData)
     return false;
 }
 
-} // namespace container {
+} // namespace cod {

@@ -1,6 +1,6 @@
 BIN=buffer.exe
 
-MODULE_HEADER=Buffer.h
+MODULE_HEADER=Buffer.h Vector.h Matrix.h
 MODULE_SRC=
 
 INC=$(MODULE_HEADER)

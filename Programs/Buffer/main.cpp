@@ -1,5 +1,107 @@
 #include <stdio.h>
 
+#include "Matrix.h"
+
+template <class T>
+void DumpMatrix(cod::Matrix<T>&m, const char* fmt)
+{
+    for (int i = 0; i < m.GetNumOfArray(); ++i)
+    {
+        printf("| ");
+        for (int j = 0; j < m.GetNumOfData(); ++j)
+        {
+            printf(fmt, m[i][j]);
+            printf("\t");
+        }
+        printf(" |\n");
+    }
+}
+
+static void test_matrix_determinant(void)
+{
+    int numArray = 4;
+    int numData= 4;
+    cod::Matrix<double> mat1(numArray, numData);
+    mat1[0][0] = 1;
+    mat1[0][1] = 2;
+    mat1[0][2] = 1;
+    mat1[0][3] = 1;
+    mat1[1][0] = 3;
+    mat1[1][1] = 2;
+    mat1[1][2] = 4;
+    mat1[1][3] = 1;
+    mat1[2][0] = 5;
+    mat1[2][1] =-1;
+    mat1[2][2] = 3;
+    mat1[2][3] = 1;
+    mat1[3][0] = 1;
+    mat1[3][1] = 1;
+    mat1[3][2] = 1;
+    mat1[3][3] = 1;
+    printf("mat1:\n");
+    DumpMatrix(mat1, "%f");
+    CHECK_VALUE_FLT(mat1.Determinant(), 1);
+}
+
+static void test_matrix_inverse(void)
+{
+}
+
+static void test_matrix_multiply(void)
+{
+    int numArray = 3;
+    int numData= 4;
+    cod::Matrix<double> mat1(numArray, numData);
+    for (int c = 1, i = 0; i < numArray; ++i)
+    {
+        for (int j = 0; j < numData; ++j, ++c)
+        {
+            mat1[i][j] = c;
+        }
+    }
+    printf("mat1:\n");
+    DumpMatrix(mat1, "%f");
+
+    cod::Matrix<double> mat2(mat1);
+    mat2 = mat2.Transpose();
+    printf("mat2:\n");
+    DumpMatrix(mat2, "%f");
+
+    cod::Matrix<double> mat3(1, 1);
+
+    mat3 = mat1.Multiply(mat2);
+    printf("mat3:\n");
+    DumpMatrix(mat3, "%f");
+}
+
+static void test_transpose(void)
+{
+    int numArray = 3, numData= 5;
+    cod::Matrix<double> mat(numArray, numData);
+    for (int i = 0; i < numArray; ++i)
+    {
+        printf("mat [%d, 0 .. %d] ", i, numData-1);
+        for (int j = 0; j < numData; ++j)
+        {
+            mat[i][j] = (i+1)*10+(j+1);
+            printf("%f ", mat[i][j]);
+        }
+        printf("\n");
+    }
+
+    cod::Matrix<double> matt(1,1);
+    matt = mat.Transpose();
+    for (int i = 0; i < matt.GetNumOfArray(); ++i)
+    {
+        printf("mat [%d,0-%d] ", i, matt.GetNumOfData()-1);
+        for (int j = 0; j < matt.GetNumOfData(); ++j)
+        {
+            printf("%f ", matt[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 #include "Buffer.h"
 
 using namespace Container;
@@ -210,12 +312,48 @@ static void test_vector_operation(void)
     SHOW_IVALUE(ivec);
 }
 
+class Test
+{
+public:
+    Test()
+    {printf("%s\n", __func__);}
+    ~Test()
+    {printf("%s\n", __func__);}
+};
+
 int main(void)
 {
+#if 0
     test_vector();
     test_matrix();
     test_vector_outrange();
     test_vector_operation();
     test_matrix_outrange();
+#endif
+    /*
+    Test t;
+    //test_transpose();
+    cod::Matrix<double> m(2,2);
+#define dump() \
+    for ( int i = 0; i < 2; ++i)\
+    {\
+        for (int j = 0; j < 2; ++j)\
+        {\
+            printf("%d, %d: %p\n", i, j, &m[i][j]);\
+        }\
+    }
+    dump();
+    printf("**** mat2(m)\n");
+    cod::Matrix<double> mat2(m);
+    dump();
+    printf("**** Transpose\n");
+    mat2 = m.Transpose();
+    dump();
+    printf("**** Transpose2\n");
+    mat2 = m.Transpose();
+    dump();
+    */
+    //test_matrix_multiply();
+    test_matrix_determinant();
     return 0;
 }

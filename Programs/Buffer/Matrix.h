@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "Vector.h"
 
-namespace container {
+namespace cod {
 
 /*--------------------------------------------------------------------
  * Matrix
@@ -15,8 +15,10 @@ class Matrix
 public:
     Matrix(int ,int);
 
+    Matrix(const Matrix<T>& m);
+
     template <class U>
-    Matrix(Matrix<U>& m);
+    Matrix(const Matrix<U>& m);
 
     ~Matrix();
 
@@ -35,7 +37,12 @@ public:
     }
 
     template <class U>
-    Matrix<T>& operator=(Matrix<U>& b);
+    const Matrix<T>& operator=(const Matrix<U>& m);
+    const Matrix<T>& operator=(const Matrix<T>& m);
+
+    const Matrix<T> Transpose(void) const;
+    const Matrix<T> Multiply(const Matrix<T>& m) const ;
+    T Determinant(void) const;
 
     int GetNumOfArray(void) const { return m_NumOfArray; }
     int GetNumOfData(void) const { return m_NumOfData; }
@@ -69,8 +76,29 @@ Matrix<T>::Matrix(int numArray, int numData)
 }
 
 template <class T>
+Matrix<T>::Matrix(const Matrix<T>& m)
+  : m_Array(new Vector<T>*[m.GetNumOfArray()]),
+    m_NumOfArray(m.GetNumOfArray()),
+    m_NumOfData(m.GetNumOfData()),
+    m_pZero(&m_Zero),
+    m_Zero(1)
+{
+    ASSERT(m_NumOfArray > 0);
+    ASSERT(m_NumOfData > 0);
+    ASSERT(NULL != m_Array);
+
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        m_Array[i] = new Vector<T>(m_NumOfData);
+        ASSERT(m_Array[i] != NULL);
+        *m_Array[i] = m[i];
+    }
+    m_Zero[0] = 0;
+}
+
+template <class T>
 template <class U>
-Matrix<T>::Matrix(Matrix<U>& m)
+Matrix<T>::Matrix(const Matrix<U>& m)
   : m_Array(new Vector<T>*[m.GetNumOfArray()]),
     m_NumOfArray(m.GetNumOfArray()),
     m_NumOfData(m.GetNumOfData()),
@@ -147,8 +175,7 @@ void Matrix<T>::Resize(int numArray, int numData)
 }
 
 template <class T>
-template <class U>
-Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
+const Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 {
     Resize(m.GetNumOfArray(), m.GetNumOfData());
     for (int i = 0; i < m_NumOfArray; ++i)
@@ -158,4 +185,86 @@ Matrix<T>& Matrix<T>::operator=(Matrix<U>& m)
     return *this;
 }
 
-} // namespace container {
+template <class T>
+template <class U>
+const Matrix<T>& Matrix<T>::operator=(const Matrix<U>& m)
+{
+    Resize(m.GetNumOfArray(), m.GetNumOfData());
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        *m_Array[i] = m[i];
+    }
+    return *this;
+}
+
+template <class T>
+const Matrix<T> Matrix<T>::Transpose(void) const
+{
+    Matrix<T> transposed(GetNumOfData(), GetNumOfArray());
+    for (int i = 0; i < GetNumOfArray(); ++i)
+    {
+        for (int j = 0; j < GetNumOfData(); ++j)
+        {
+            transposed[j][i] = (*this)[i][j];
+        }
+    }
+    return transposed;
+}
+
+template <class T>
+const Matrix<T> Matrix<T>::Multiply(const Matrix<T>& m) const
+{
+    if ( GetNumOfData() != m.GetNumOfArray() )
+    {
+        return *this;
+    }
+    Matrix<T> multiplied(GetNumOfArray(), m.GetNumOfData());
+    for (int row = 0; row < multiplied.GetNumOfArray(); ++row)
+    {
+        for (int col = 0; col < multiplied.GetNumOfData(); ++col)
+        {
+            T v = 0;
+            for (int k = 0; k < GetNumOfData(); ++k)
+            {
+                v += (*this)[row][k] * m[k][col];
+            }
+            multiplied[row][col] = v;
+        }
+    }
+    return multiplied;
+}
+
+template <class T>
+T Matrix<T>::Determinant(void) const
+{
+    if ( GetNumOfData() != GetNumOfArray() )
+    {
+        return 0;
+    }
+    T ret = 0;
+
+    for (int col = 0; col < GetNumOfData(); ++col)
+    {
+        T v = 1;
+        int numCol = GetNumOfData();
+        for (int k = 0; k < GetNumOfArray(); ++k)
+        {
+            v *= (*this)[k][(k+col) % numCol];
+        }
+        ret += v;
+    }
+    for (int col = 0; col < GetNumOfData(); ++col)
+    {
+        T v = 1;
+        int numCol = GetNumOfData();
+        for (int k = 0; k < GetNumOfArray(); ++k)
+        {
+            v *= (*this)[k][(col-k+numCol) % numCol];
+        }
+        ret -= v;
+    }
+    return ret;
+}
+
+
+} // namespace cod {
