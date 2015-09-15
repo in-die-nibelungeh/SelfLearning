@@ -13,12 +13,22 @@ template <class T>
 class Matrix
 {
 public:
+    void DumpMatrix(const Matrix<T>&m, const char* fmt) const
+    {
+        for (int i = 0; i < m.GetNumOfArray(); ++i)
+        {
+            printf("| ");
+            for (int j = 0; j < m.GetNumOfData(); ++j)
+            {
+                printf(fmt, m[i][j]);
+                printf("\t");
+            }
+            printf(" |\n");
+        }
+    }
     Matrix(int ,int);
 
     Matrix(const Matrix<T>& m);
-
-    template <class U>
-    Matrix(const Matrix<U>& m);
 
     ~Matrix();
 
@@ -35,14 +45,27 @@ public:
         m_Zero[0] = 0;
         return *m_pZero;
     }
+    const Matrix<T> operator*(T v)
+    {
+        Matrix<T> m(*this);
+        for (int row = 0; row < GetNumOfArray(); ++row)
+        {
+            for (int col = 0; col < GetNumOfData(); ++col)
+            {
+                m[row][col] *= v;
+            }
+        }
+        return m;
+    }
 
-    template <class U>
-    const Matrix<T>& operator=(const Matrix<U>& m);
     const Matrix<T>& operator=(const Matrix<T>& m);
 
     const Matrix<T> Transpose(void) const;
     const Matrix<T> Multiply(const Matrix<T>& m) const ;
+    const Matrix<T> Inverse(void) const ;
     T Determinant(void) const;
+    const Matrix<T> GetCofactorMatrix(int row, int col) const;
+    T GetCofactor(int row, int col) const;
 
     int GetNumOfArray(void) const { return m_NumOfArray; }
     int GetNumOfData(void) const { return m_NumOfData; }
@@ -67,6 +90,7 @@ Matrix<T>::Matrix(int numArray, int numData)
     ASSERT(m_NumOfData > 0);
     ASSERT(NULL != m_Array);
 
+    printf("%s(int,int): Begin (%p)\n", __func__, this);
     for (int i = 0; i < m_NumOfArray; ++i)
     {
         m_Array[i] = new Vector<T>(m_NumOfData);
@@ -87,28 +111,7 @@ Matrix<T>::Matrix(const Matrix<T>& m)
     ASSERT(m_NumOfData > 0);
     ASSERT(NULL != m_Array);
 
-    for (int i = 0; i < m_NumOfArray; ++i)
-    {
-        m_Array[i] = new Vector<T>(m_NumOfData);
-        ASSERT(m_Array[i] != NULL);
-        *m_Array[i] = m[i];
-    }
-    m_Zero[0] = 0;
-}
-
-template <class T>
-template <class U>
-Matrix<T>::Matrix(const Matrix<U>& m)
-  : m_Array(new Vector<T>*[m.GetNumOfArray()]),
-    m_NumOfArray(m.GetNumOfArray()),
-    m_NumOfData(m.GetNumOfData()),
-    m_pZero(&m_Zero),
-    m_Zero(1)
-{
-    ASSERT(m_NumOfArray > 0);
-    ASSERT(m_NumOfData > 0);
-    ASSERT(NULL != m_Array);
-
+    printf("%s(Matrix): Begin (%p)\n", __func__, this);
     for (int i = 0; i < m_NumOfArray; ++i)
     {
         m_Array[i] = new Vector<T>(m_NumOfData);
@@ -122,6 +125,7 @@ template <class T>
 Matrix<T>::~Matrix()
 {
     ASSERT(m_Array != NULL);
+    printf("%s: Begin (%p)\n", __func__, this);
     for (int i = 0; i < m_NumOfArray; ++i)
     {
         ASSERT(PTR_CAST(Vector<T>*, NULL) != m_Array[i]);
@@ -186,32 +190,6 @@ const Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 }
 
 template <class T>
-template <class U>
-const Matrix<T>& Matrix<T>::operator=(const Matrix<U>& m)
-{
-    Resize(m.GetNumOfArray(), m.GetNumOfData());
-    for (int i = 0; i < m_NumOfArray; ++i)
-    {
-        *m_Array[i] = m[i];
-    }
-    return *this;
-}
-
-template <class T>
-const Matrix<T> Matrix<T>::Transpose(void) const
-{
-    Matrix<T> transposed(GetNumOfData(), GetNumOfArray());
-    for (int i = 0; i < GetNumOfArray(); ++i)
-    {
-        for (int j = 0; j < GetNumOfData(); ++j)
-        {
-            transposed[j][i] = (*this)[i][j];
-        }
-    }
-    return transposed;
-}
-
-template <class T>
 const Matrix<T> Matrix<T>::Multiply(const Matrix<T>& m) const
 {
     if ( GetNumOfData() != m.GetNumOfArray() )
@@ -235,36 +213,115 @@ const Matrix<T> Matrix<T>::Multiply(const Matrix<T>& m) const
 }
 
 template <class T>
+const Matrix<T> Matrix<T>::GetCofactorMatrix(int row, int col) const
+{
+    int rowCount = GetNumOfArray();
+    int colCount = GetNumOfData();
+    Matrix<T> cofactorMatrix(rowCount-1, colCount-1);
+
+    for (int r = 0, ri = 0; ri < rowCount; ++ri)
+    {
+        if (ri == row)
+        {
+            continue;
+        }
+        for (int c = 0, ci = 0; ci < colCount; ++ci)
+        {
+            if (ci != col)
+            {
+                cofactorMatrix[r][c] = (*this)[ri][ci];
+                ++c;
+            }
+        }
+        ++r;
+    }
+    return cofactorMatrix;
+}
+
+template <class T>
+T Matrix<T>::GetCofactor(int row, int col) const
+{
+    int sign = ( (row + col) & 1) ? -1 : 1;
+    return GetCofactorMatrix(row, col).Determinant() * sign;
+}
+
+template <class T>
 T Matrix<T>::Determinant(void) const
 {
     if ( GetNumOfData() != GetNumOfArray() )
     {
         return 0;
     }
-    T ret = 0;
+    int dimension = GetNumOfData();
+    T det = 0;
 
-    for (int col = 0; col < GetNumOfData(); ++col)
+    // Sarrus
+    if ( 3 == dimension )
     {
-        T v = 1;
-        int numCol = GetNumOfData();
-        for (int k = 0; k < GetNumOfArray(); ++k)
-        {
-            v *= (*this)[k][(k+col) % numCol];
-        }
-        ret += v;
+        const Matrix<T>&m = *this;
+        det = m[0][0] * m[1][1] * m[2][2]
+              + m[0][1] * m[1][2] * m[2][0]
+              + m[0][2] * m[1][0] * m[2][1]
+              - m[0][2] * m[1][1] * m[2][0]
+              - m[0][1] * m[1][0] * m[2][2]
+              - m[0][0] * m[1][2] * m[2][1];
     }
-    for (int col = 0; col < GetNumOfData(); ++col)
+    else if ( 2 == dimension )
     {
-        T v = 1;
-        int numCol = GetNumOfData();
-        for (int k = 0; k < GetNumOfArray(); ++k)
-        {
-            v *= (*this)[k][(col-k+numCol) % numCol];
-        }
-        ret -= v;
+        const Matrix<T>&m = *this;
+        det = m[0][0] * m[1][1]
+              - m[0][1] * m[1][0];
     }
-    return ret;
+    else if ( 1 == dimension )
+    {
+        const Matrix<T>&m = *this;
+        det = m[0][0];
+    }
+    else
+    {
+        for (int row = 0; row < GetNumOfArray(); ++row)
+        {
+            //Matrix<T> m(CoFactor(row, 0));
+            //DumpMatrix(m, "%f");
+            //double v = m.Determinant() * sign * (*this)[row][0];
+            det += GetCofactor(row, 0) * (*this)[row][0];
+        }
+    }
+    return det;
 }
 
+template <class T>
+const Matrix<T> Matrix<T>::Inverse(void) const
+{
+    if ( GetNumOfData() != GetNumOfArray() )
+    {
+        return *this;
+    }
+
+    T det = Determinant();
+    if ( 0 == det )
+    {
+        printf("Det=Zero\n");
+        return *this;
+    }
+    printf("Determinant=%f\n", det);
+    int rowCount = GetNumOfArray();
+    int colCount = GetNumOfData();
+    Matrix<T> inversed(rowCount, colCount);
+
+    for (int row = 0; row < rowCount; ++row)
+    {
+        for (int col = 0; col < colCount; ++col)
+        {
+            int sign = ((row + col) & 1) ? -1 : 1;
+            Matrix<T> m(GetCofactorMatrix(row, col));
+            printf("cof[%d, %d]\n", row, col);
+            //DumpMatrix(m, "%f");
+            inversed[col][row] = GetCofactor(row, col) / det;
+            printf("det=%f\n", inversed[row][col]);
+        }
+    }
+    return inversed;
+}
 
 } // namespace cod {

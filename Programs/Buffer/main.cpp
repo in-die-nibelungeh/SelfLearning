@@ -45,6 +45,54 @@ static void test_matrix_determinant(void)
 
 static void test_matrix_inverse(void)
 {
+    int numArray = 4;
+    int numData= 4;
+    cod::Matrix<double> mat1(numArray, numData);
+#if 0
+    mat1[0][0] = 1;
+    mat1[0][1] = 2;
+    mat1[0][2] = 1;
+    mat1[0][3] = 1;
+    mat1[1][0] = 3;
+    mat1[1][1] = 2;
+    mat1[1][2] = 4;
+    mat1[1][3] = 1;
+    mat1[2][0] = 5;
+    mat1[2][1] =-1;
+    mat1[2][2] = 3;
+    mat1[2][3] = 1;
+    mat1[3][0] = 1;
+    mat1[3][1] = 2;
+    mat1[3][2] = 3;
+    mat1[3][3] =-1;
+#else
+    mat1[0][0] = 3;
+    mat1[0][1] = 2;
+    mat1[0][2] = 1;
+    mat1[0][3] = 0;
+    mat1[1][0] = 1;
+    mat1[1][1] = 2;
+    mat1[1][2] = 3;
+    mat1[1][3] = 4;
+    mat1[2][0] = 2;
+    mat1[2][1] = 1;
+    mat1[2][2] = 0;
+    mat1[2][3] = 1;
+    mat1[3][0] = 2;
+    mat1[3][1] = 0;
+    mat1[3][2] = 2;
+    mat1[3][3] = 1;
+#endif
+    printf("mat1:\n");
+    DumpMatrix(mat1, "%f");
+    cod::Matrix<double> mat2(1,1), mat3(1, 1);
+    mat2 = mat1.Inverse();
+    printf("mat2:\n");
+    DumpMatrix(mat2, "%f");
+    mat3 = mat1.Multiply(mat2);
+    printf("mat3:\n");
+    DumpMatrix(mat3, "%f");
+
 }
 
 static void test_matrix_multiply(void)
@@ -354,6 +402,7 @@ int main(void)
     dump();
     */
     //test_matrix_multiply();
-    test_matrix_determinant();
+    //test_matrix_determinant();
+    test_matrix_inverse();
     return 0;
 }

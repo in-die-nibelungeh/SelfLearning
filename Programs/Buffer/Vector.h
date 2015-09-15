@@ -17,9 +17,9 @@ class Vector
 public:
 
     explicit Vector(const int numData);
-
+    Vector(const Vector<T>& vector);
     template <class U>
-    Vector(Vector<U>& vector);
+    Vector(const Vector<U>& vector);
 
     ~Vector();
 
@@ -59,6 +59,7 @@ public:
     Vector<T>& operator=(Vector<U>& vector);
     Vector<T>& operator=(Vector<T>& vector);
 
+    int GetLength(void) const { return GetNumOfData(); }
     int GetNumOfData(void) const { return m_NumOfData; }
     bool Resize(const size_t numData);
 
@@ -83,8 +84,20 @@ Vector<T>::Vector(int numData)
 }
 
 template <class T>
+Vector<T>::Vector(const Vector<T>& v)
+  : m_NumOfData(v.GetNumOfData()),
+    m_Address(new T[v.GetNumOfData()]),
+    m_Zero(0),
+    m_pZero(&m_Zero)
+{
+    ASSERT(m_NumOfData > 0);
+    ASSERT(NULL != m_Address);
+    VECTOR_ITERATION(i, m_NumOfData, (*this)[i] = static_cast<T>(v[i]));
+}
+
+template <class T>
 template <class U>
-Vector<T>::Vector(Vector<U>& v)
+Vector<T>::Vector(const Vector<U>& v)
   : m_NumOfData(v.GetNumOfData()),
     m_Address(new T[v.GetNumOfData()]),
     m_Zero(0),
