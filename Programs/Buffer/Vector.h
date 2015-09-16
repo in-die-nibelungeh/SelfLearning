@@ -21,6 +21,7 @@ public:
     template <typename U> Vector(const Vector<U>& v);
     ~Vector();
 
+    // For const object
     const T& operator[](const int i) const
     {
         if (0 <= i && i < m_NumOfData)
@@ -28,10 +29,9 @@ public:
             ASSERT(NULL != m_Address);
             return m_Address[i];
         }
-        *m_pZero = 0;
-        return *m_pZero;
+        return m_Zero;
     }
-
+    // For non-const object
     T& operator[](const int i)
     {
         if (0 <= i && i < m_NumOfData)
@@ -39,22 +39,14 @@ public:
             ASSERT(NULL != m_Address);
             return m_Address[i];
         }
-        *m_pZero = 0;
-        return *m_pZero;
+        m_Zero = 0;
+        return m_Zero;
     }
 
     // Copy is to copy available data from src to dest without resizing the dest.
-    const Vector<T>& Copy(Vector<T>& vector);
+    const Vector<T>& Copy(const Vector<T>& vector);
     // operator= make the same vector as the input vector.
-    Vector<T>& operator=(Vector<T>& vector);
-
-    template <typename U>
-    operator U() const
-    {
-        Vector<U> v;
-        VECTOR_ITERATION(i, GetLength(), v[i] = static_cast<U>((*this)[i]));
-        return v;
-    }
+    Vector<T>& operator=(const Vector<T>& vector);
 
     operator void*() const
     {
@@ -68,30 +60,30 @@ public:
     const Vector<T> operator *(T v) const { Vector<T> vec(*this);  vec *= v; return vec; }
     const Vector<T> operator /(T v) const { Vector<T> vec(*this);  vec /= v; return vec; }
 
-    const Vector<T> operator +(Vector<T> v) const { Vector<T> vec(*this);  vec += v; return vec; }
-    const Vector<T> operator -(Vector<T> v) const { Vector<T> vec(*this);  vec -= v; return vec; }
-    const Vector<T> operator *(Vector<T> v) const { Vector<T> vec(*this);  vec *= v; return vec; }
-    const Vector<T> operator /(Vector<T> v) const { Vector<T> vec(*this);  vec /= v; return vec; }
+    const Vector<T> operator +(const Vector<T>& v) const { Vector<T> vec(*this);  vec += v; return vec; }
+    const Vector<T> operator -(const Vector<T>& v) const { Vector<T> vec(*this);  vec -= v; return vec; }
+    const Vector<T> operator *(const Vector<T>& v) const { Vector<T> vec(*this);  vec *= v; return vec; }
+    const Vector<T> operator /(const Vector<T>& v) const { Vector<T> vec(*this);  vec /= v; return vec; }
 
     Vector<T>& operator+=(T v) { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] += v); return *this; }
     Vector<T>& operator-=(T v) { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] -= v); return *this; }
     Vector<T>& operator*=(T v) { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] *= v); return *this; }
     Vector<T>& operator/=(T v) { VECTOR_ITERATION(i, m_NumOfData, (*this)[i] /= v); return *this; }
 
-    Vector<T>& operator+=(Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] += v[i]); return *this; }
-    Vector<T>& operator-=(Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] -= v[i]); return *this; }
-    Vector<T>& operator*=(Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] *= v[i]); return *this; }
-    Vector<T>& operator/=(Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] /= v[i]); return *this; }
+    Vector<T>& operator+=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] += v[i]); return *this; }
+    Vector<T>& operator-=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] -= v[i]); return *this; }
+    Vector<T>& operator*=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] *= v[i]); return *this; }
+    Vector<T>& operator/=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] /= v[i]); return *this; }
 
     int GetLength(void) const { return GetNumOfData(); }
     int GetNumOfData(void) const { return m_NumOfData; }
+
     bool Resize(const size_t numData);
 
 private:
     T*     m_Address;
     int    m_NumOfData;
     T      m_Zero;
-    T*     m_pZero;
     int    Smaller(int input) const { return m_NumOfData < input ? m_NumOfData : input; }
     void   Allocate(int);
 };
@@ -111,8 +103,7 @@ template <class T>
 Vector<T>::Vector(int numData)
     : m_Address(NULL),
     m_NumOfData(numData),
-    m_Zero(0),
-    m_pZero(&m_Zero)
+    m_Zero(0)
 {
     Allocate(numData);
 }
@@ -121,8 +112,7 @@ template <class T>
 Vector<T>::Vector(const Vector<T>& v)
   : m_NumOfData(v.GetNumOfData()),
     m_Address(PTR_CAST(T*, NULL)),
-    m_Zero(0),
-    m_pZero(&m_Zero)
+    m_Zero(0)
 {
     Allocate(v.GetNumOfData());
     VECTOR_ITERATION(i, m_NumOfData, (*this)[i] = v[i]);
@@ -133,8 +123,7 @@ template <typename U>
 Vector<T>::Vector(const Vector<U>& v)
   : m_NumOfData(v.GetNumOfData()),
     m_Address(PTR_CAST(T*, NULL)),
-    m_Zero(0),
-    m_pZero(&m_Zero)
+    m_Zero(0)
 {
     Allocate(v.GetNumOfData());
     VECTOR_ITERATION(i, m_NumOfData, (*this)[i] = static_cast<T>(v[i]));
@@ -152,14 +141,14 @@ Vector<T>::~Vector()
 }
 
 template <class T>
-const Vector<T>& Vector<T>::Copy(Vector<T>& v)
+const Vector<T>& Vector<T>::Copy(const Vector<T>& v)
 {
     VECTOR_ITERATION(i, Smaller(v.GetNumOfData()), (*this)[i] = v[i]);
     return *this;
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator=(Vector<T>& v)
+Vector<T>& Vector<T>::operator=(const Vector<T>& v)
 {
     // m_NumOfData is updated in Resize().
     Resize(v.GetLength());
