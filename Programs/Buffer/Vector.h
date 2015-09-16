@@ -53,6 +53,28 @@ public:
         return reinterpret_cast<void*>(m_Address);
     }
 
+    Vector<T> operator()(int offset, int length) const
+    {
+        ASSERT( 0 <= offset && offset < GetLength() && 0 < length );
+        Vector<T> carveout(length);
+        for (int i = offset; i < Smaller(offset + length); ++i)
+        {
+            carveout[i-offset] = (*this)[i];
+        }
+        return carveout;
+    }
+
+    T Fifo(T v)
+    {
+        T ret = (*this)[0];
+        for (int i = 0; i < GetLength(); ++i)
+        {
+            (*this)[i] = (*this)[i+1];
+        }
+        (*this)[GetLength()-1] = v;
+        return ret;
+    }
+
     Vector<T>& operator =(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i]  = v); return *this; };
 
     const Vector<T> operator +(T v) const { Vector<T> vec(*this);  vec += v; return vec; }
