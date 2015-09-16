@@ -32,7 +32,7 @@ public:
 
     ~Matrix();
 
-    Vector<T>& operator[](int i) const
+    const Vector<T>& operator[](int i) const
     {
         ASSERT(0 < m_NumOfData);
         ASSERT(0 < m_NumOfArray);
@@ -42,9 +42,22 @@ public:
         {
             return *m_Array[i];
         }
-        m_Zero[0] = 0;
-        return *m_pZero;
+        return m_Zero;
     }
+
+    Vector<T>& operator[](int i)
+    {
+        ASSERT(0 < m_NumOfData);
+        ASSERT(0 < m_NumOfArray);
+        ASSERT(NULL != m_Array);
+
+        if (0 <= i && i < m_NumOfArray)
+        {
+            return *m_Array[i];
+        }
+        return m_Zero;
+    }
+
     const Matrix<T> operator*(T v)
     {
         Matrix<T> m(*this);
@@ -74,7 +87,6 @@ private:
     int m_NumOfArray;
     int m_NumOfData;
     Vector<T>** m_Array;
-    Vector<T>*  m_pZero;
     Vector<T>   m_Zero;
 };
 
@@ -83,8 +95,7 @@ Matrix<T>::Matrix(int numArray, int numData)
   : m_Array(new Vector<T>*[numArray]),
     m_NumOfData(numData),
     m_NumOfArray(numArray),
-    m_pZero(&m_Zero),
-    m_Zero(1)
+    m_Zero(0)
 {
     ASSERT(m_NumOfArray > 0);
     ASSERT(m_NumOfData > 0);
@@ -96,7 +107,6 @@ Matrix<T>::Matrix(int numArray, int numData)
         m_Array[i] = new Vector<T>(m_NumOfData);
         ASSERT(m_Array[i] != NULL);
     }
-    m_Zero[0] = 0;
 }
 
 template <class T>
@@ -104,8 +114,7 @@ Matrix<T>::Matrix(const Matrix<T>& m)
   : m_Array(new Vector<T>*[m.GetNumOfArray()]),
     m_NumOfArray(m.GetNumOfArray()),
     m_NumOfData(m.GetNumOfData()),
-    m_pZero(&m_Zero),
-    m_Zero(1)
+    m_Zero(0)
 {
     ASSERT(m_NumOfArray > 0);
     ASSERT(m_NumOfData > 0);
@@ -118,7 +127,6 @@ Matrix<T>::Matrix(const Matrix<T>& m)
         ASSERT(m_Array[i] != NULL);
         *m_Array[i] = m[i];
     }
-    m_Zero[0] = 0;
 }
 
 template <class T>
