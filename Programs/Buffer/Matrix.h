@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "Vector.h"
 
-namespace cod {
+namespace mcon {
 
 /*--------------------------------------------------------------------
  * Matrix
@@ -324,4 +324,4 @@ const Matrix<T> Matrix<T>::Inverse(void) const
     return inversed;
 }
 
-} // namespace cod {
+} // namespace mcon {

@@ -1,9 +1,10 @@
 #include <stdio.h>
+#include <math.h>
 
 #include "Matrix.h"
 
 template <class T>
-void DumpMatrix(cod::Matrix<T>&m, const char* fmt)
+void DumpMatrix(mcon::Matrix<T>&m, const char* fmt)
 {
     for (int i = 0; i < m.GetNumOfArray(); ++i)
     {
@@ -17,11 +18,227 @@ void DumpMatrix(cod::Matrix<T>&m, const char* fmt)
     }
 }
 
+static void test_vector_api(void)
+{
+    const int lower = -2, upper = 8;
+
+    // Empty vector.
+    mcon::Vector<double> dvec;
+
+    // Zero length
+    CHECK_VALUE(dvec.GetLength(), 0);
+
+    // Accesses to out-of-range area.
+    for (int i = lower; i <= upper; ++i)
+    {
+        CHECK_VALUE(dvec[i], 0);
+    }
+    // Resize
+    int length = 6;
+    dvec.Resize(length);
+    CHECK_VALUE(dvec.GetLength(), length);
+
+    for (int i = lower; i <= upper; ++i)
+    {
+        dvec[i] = i;//cos(2*M_PI*i/upper);
+    }
+    for (int i = lower; i <= upper; ++i)
+    {
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec[i], i);//cos(2*M_PI*i/upper));
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+
+    // operator+=(T)
+    dvec += 1;
+    for (int i = lower; i <= upper; ++i)
+    {
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec[i], i+1);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    // operator*=(T)
+    dvec *= 10;
+    for (int i = lower; i <= upper; ++i)
+    {
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec[i], (i+1)*10);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    // operator/=(T)
+    dvec /= 5;
+    for (int i = lower; i <= upper; ++i)
+    {
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec[i], (i+1)*2);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    // operator-=(T)
+    dvec -= 5;
+    for (int i = lower; i <= upper; ++i)
+    {
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec[i], (i+1)*2-5);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    mcon::Vector<double> dvec2(length*2);
+
+    for (int i = 0; i < dvec2.GetLength(); ++i)
+    {
+        dvec2[i] = -(i+1);
+    }
+    // Copy
+    dvec2.Copy(dvec);
+    for (int i = lower; i <= length*2+1; ++i)
+    {
+        //printf("%d\n", i);
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec2[i], (i+1)*2-5);
+        }
+        else if (length <= i && i < length*2)
+        {
+            CHECK_VALUE(dvec2[i], -(i+1));
+        }
+        else
+        {
+            CHECK_VALUE(dvec2[i], 0);
+        }
+    }
+    // Substitution
+    dvec2 = dvec;
+    for (int i = lower; i <= length; ++i)
+    {
+        //printf("%d\n", i);
+        if (0 <= i && i < length)
+        {
+            CHECK_VALUE(dvec2[i], (i+1)*2-5);
+        }
+        else
+        {
+            CHECK_VALUE(dvec2[i], 0);
+        }
+    }
+    dvec = 10;
+    for (int i = 0; i < dvec2.GetLength(); ++i)
+    {
+        dvec2[i] = i + 1;
+    }
+
+    dvec += dvec2;
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < dvec.GetLength())
+        {
+            CHECK_VALUE(dvec[i], (i+1) + 10);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+
+    for (int i = 0; i < dvec2.GetLength(); ++i)
+    {
+        dvec2[i] = (i & 1) ? 1.0 : 2.0;
+    }
+
+    dvec *= dvec2;
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < dvec.GetLength())
+        {
+            CHECK_VALUE(dvec[i], ((i+1) + 10) * ((i & 1) ? 1.0 : 2.0));
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    dvec /= dvec2;
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < dvec.GetLength())
+        {
+            CHECK_VALUE(dvec[i], (i+1) + 10);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    for (int i = 0; i < dvec2.GetLength(); ++i)
+    {
+        dvec2[i] = i + 1;
+    }
+    dvec -= dvec2;
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < dvec.GetLength())
+        {
+            CHECK_VALUE(dvec[i], 10);
+        }
+        else
+        {
+            CHECK_VALUE(dvec[i], 0);
+        }
+    }
+    // cast
+    mcon::Vector<int> ivec(dvec);
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < ivec.GetLength())
+        {
+            CHECK_VALUE(ivec[i], 10);
+        }
+        else
+        {
+            CHECK_VALUE(ivec[i], 0);
+        }
+    }
+
+    /*
+    mcon::Vector<int> ivec;
+    static_cast<int>(dvec);
+    ivec.Resize(dvec.GetLength());
+    for (int i = 0; i < ivec.GetLength(); ++i)
+    {
+        ivec[i] = static_cast<int>(dvec[i]);
+    }
+    */
+    printf("END\n");
+}
+
 static void test_matrix_determinant(void)
 {
     int numArray = 4;
     int numData= 4;
-    cod::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<double> mat1(numArray, numData);
     mat1[0][0] = 1;
     mat1[0][1] = 2;
     mat1[0][2] = 1;
@@ -47,7 +264,7 @@ static void test_matrix_inverse(void)
 {
     int numArray = 4;
     int numData= 4;
-    cod::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<double> mat1(numArray, numData);
 #if 0
     mat1[0][0] = 1;
     mat1[0][1] = 2;
@@ -85,7 +302,7 @@ static void test_matrix_inverse(void)
 #endif
     printf("mat1:\n");
     DumpMatrix(mat1, "%f");
-    cod::Matrix<double> mat2(1,1), mat3(1, 1);
+    mcon::Matrix<double> mat2(1,1), mat3(1, 1);
     mat2 = mat1.Inverse();
     printf("mat2:\n");
     DumpMatrix(mat2, "%f");
@@ -99,7 +316,7 @@ static void test_matrix_multiply(void)
 {
     int numArray = 3;
     int numData= 4;
-    cod::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<double> mat1(numArray, numData);
     for (int c = 1, i = 0; i < numArray; ++i)
     {
         for (int j = 0; j < numData; ++j, ++c)
@@ -110,12 +327,12 @@ static void test_matrix_multiply(void)
     printf("mat1:\n");
     DumpMatrix(mat1, "%f");
 
-    cod::Matrix<double> mat2(mat1);
+    mcon::Matrix<double> mat2(mat1);
     mat2 = mat2.Transpose();
     printf("mat2:\n");
     DumpMatrix(mat2, "%f");
 
-    cod::Matrix<double> mat3(1, 1);
+    mcon::Matrix<double> mat3(1, 1);
 
     mat3 = mat1.Multiply(mat2);
     printf("mat3:\n");
@@ -125,7 +342,7 @@ static void test_matrix_multiply(void)
 static void test_transpose(void)
 {
     int numArray = 3, numData= 5;
-    cod::Matrix<double> mat(numArray, numData);
+    mcon::Matrix<double> mat(numArray, numData);
     for (int i = 0; i < numArray; ++i)
     {
         printf("mat [%d, 0 .. %d] ", i, numData-1);
@@ -137,7 +354,7 @@ static void test_transpose(void)
         printf("\n");
     }
 
-    cod::Matrix<double> matt(1,1);
+    mcon::Matrix<double> matt(1,1);
     matt = mat.Transpose();
     for (int i = 0; i < matt.GetNumOfArray(); ++i)
     {
@@ -381,7 +598,7 @@ int main(void)
     /*
     Test t;
     //test_transpose();
-    cod::Matrix<double> m(2,2);
+    mcon::Matrix<double> m(2,2);
 #define dump() \
     for ( int i = 0; i < 2; ++i)\
     {\
@@ -392,7 +609,7 @@ int main(void)
     }
     dump();
     printf("**** mat2(m)\n");
-    cod::Matrix<double> mat2(m);
+    mcon::Matrix<double> mat2(m);
     dump();
     printf("**** Transpose\n");
     mat2 = m.Transpose();
@@ -403,6 +620,7 @@ int main(void)
     */
     //test_matrix_multiply();
     //test_matrix_determinant();
-    test_matrix_inverse();
+    test_vector_api();
+    //test_matrix_inverse();
     return 0;
 }
