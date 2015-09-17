@@ -112,6 +112,12 @@ public:
         MCON_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
         return m;
     }
+    Matrix<Type> ToMatrix(void) const
+    {
+        Matrix<Type> m(1, GetLength());
+        m[0] = *this;
+        return m;
+    }
 
     int GetLength(void) const { return m_Length; }
     bool IsNull(void) const { return m_Length == 0; }
