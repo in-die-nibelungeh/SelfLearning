@@ -253,6 +253,12 @@ static void test_vector_api(void)
             CHECK_VALUE(dvec2[i], 0);
         }
     }
-
+    // Cast (default function?)
+    ivec = static_cast< mcon::Vector<int> >(dvec);
+    for (int i = 0; i < ivec.GetLength(); ++i)
+    {
+        CHECK_VALUE(ivec[i], i+1);
+        CHECK_VALUE(dvec[i], i+1);
+    }
     printf("END\n");
 }

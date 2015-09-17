@@ -50,6 +50,24 @@ public:
     // operator= make the same vector as the input vector.
     Vector<Type>& operator=(const Vector<Type>& vector);
 
+    // Casts doesn't seem called... Why?
+    // Are default ones already defined and called?
+    template <typename U>
+    operator Vector<U>() const
+    {
+        ASSERT(0);
+        Vector<U> v(GetLength());
+        MCON_ITERATION(i, m_Length, v[i] = static_cast<U>((*this)[i]));
+        return v;
+    }
+    operator Vector<Type>() const
+    {
+        ASSERT(0);
+        Vector<Type> v(GetLength());
+        MCON_ITERATION(i, m_Length, v[i] = (*this)[i]);
+        return v;
+    }
+
     operator void*() const
     {
         return reinterpret_cast<void*>(m_Address);
