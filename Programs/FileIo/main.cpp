@@ -40,7 +40,7 @@ static void test_read(void)
     }
 
     // îÒÉ[ÉçÇ≈Ç†ÇÍÇŒâΩÇ≈Ç‡ó«Ç¢ÅB
-    Container::Vector<int16_t> bufferObj(1);
+    mcon::Vector<int16_t> bufferObj(1);
     FileIo waveBuf;
     waveBuf.Read("ding.wav", bufferObj);
     {
@@ -49,12 +49,12 @@ static void test_read(void)
         CHECK_VALUE_INT( fs, 44100);
         CHECK_VALUE_INT( ch,     2);
         CHECK_VALUE_INT(bit,    16);
-        CHECK_VALUE_INT(bufferObj.GetNumOfData(), 70016/2);
+        CHECK_VALUE_INT(bufferObj.GetLength(), 70016/2);
     }
 
     DEBUG_LOG("Comparing data buffer:\n");
     int numUnequal = 0;
-    for ( int i = 0; i < bufferObj.GetNumOfData(); ++i )
+    for ( int i = 0; i < bufferObj.GetLength(); ++i )
     {
         if ( buffer[i] != bufferObj[i] )
         {
@@ -81,7 +81,7 @@ static void test_write(void)
     int32_t multi = 20;
     size_t size = duration * fs * ch * depth / 8;
     int16_t* buffer = (int16_t*)malloc(size);
-    Container::Vector<int16_t> bufferObj(size/sizeof(int16_t));
+    mcon::Vector<int16_t> bufferObj(size/sizeof(int16_t));
 
     wg.SetWaveType(WaveGen::WT_SINE);
     wg.SetSamplingRate(fs);

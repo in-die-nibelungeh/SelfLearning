@@ -4,7 +4,7 @@
 
 #include "types.h"
 #include "status.h"
-#include "Buffer.h"
+#include "Vector.h"
 
 #define C4TOI(c0, c1, c2, c3) \
     ( ((c3 << 24) & 0xff000000) | \
@@ -37,11 +37,11 @@ public:
 
     // Read
     status_t Read(const char* path, int16_t ** pBuffer, size_t* size);
-    status_t Read(const char* path, Container::Vector<int16_t>& buffer);
+    status_t Read(const char* path, mcon::Vector<int16_t>& buffer);
 
     // Write
     status_t Write(const char* path, int16_t* buffer, size_t size) const;
-    status_t Write(const char* path, const Container::Vector<int16_t>& buffer) const;
+    status_t Write(const char* path, const mcon::Vector<int16_t>& buffer) const;
 
     // Meta Data
     struct MetaData GetMetaData(void) const;

@@ -119,7 +119,7 @@ status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     return ret;
 }
 
-status_t FileIo::Read(const char* path, Container::Vector<int16_t>& buffer)
+status_t FileIo::Read(const char* path, mcon::Vector<int16_t>& buffer)
 {
     FILE* fd = fopen(path, "r");
 
@@ -266,7 +266,7 @@ status_t FileIo::Write(const char* path, int16_t* buffer, size_t size) const
     return NO_ERROR;
 }
 
-status_t FileIo::Write(const char* path, const Container::Vector<int16_t>& buffer) const
+status_t FileIo::Write(const char* path, const mcon::Vector<int16_t>& buffer) const
 {
     if (NULL == buffer)
     {
@@ -278,7 +278,7 @@ status_t FileIo::Write(const char* path, const Container::Vector<int16_t>& buffe
     {
         return -ERROR_ILLEGAL_PERMISSION;
     }
-    size_t size = buffer.GetNumOfData() * sizeof(int16_t);
+    size_t size = buffer.GetLength() * sizeof(int16_t);
 
     WriteMetaData(fd, size);
 
