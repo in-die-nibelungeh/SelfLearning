@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "Vector.h"
 #include "Matrix.h"
 
 template <class T>
@@ -19,6 +20,7 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt)
 }
 
 #include "test_vector.cpp"
+#include "test_matrix.cpp"
 
 static void test_matrix_determinant(void)
 {
@@ -397,10 +399,11 @@ int main(void)
     */
     //test_matrix_multiply();
     //test_matrix_determinant();
-    test_vector_api();
+    //test_vector_api();
     //test_matrix_inverse();
     //mcon::Matrix<double> m(mcon::Matrix<double>::Identify(5));
     //DumpMatrix(m, "%f");
+    test_matrix_api();
 
     return 0;
 }

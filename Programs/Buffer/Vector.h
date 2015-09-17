@@ -5,6 +5,8 @@
 
 namespace mcon {
 
+template <class T> class Matrix;
+
 #define MCON_VECTOR_ITERATION(var, iter, statement)  \
     do {                                             \
         for (int var = 0; var < iter; ++var)         \
@@ -98,6 +100,13 @@ public:
     Vector<T>& operator-=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
     Vector<T>& operator*=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
     Vector<T>& operator/=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
+
+    Matrix<T> Transpose(void) const
+    {
+        Matrix<T> m(GetLength(), 1);
+        MCON_VECTOR_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
+        return m;
+    }
 
     int GetLength(void) const { return m_Length; }
 
