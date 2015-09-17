@@ -6,6 +6,17 @@
 
 namespace mcon {
 
+template <class T> class Vector;
+
+#define MCON_ITERATION(var, iter, statement)  \
+    do {                                             \
+        for (int var = 0; var < iter; ++var)         \
+        {                                            \
+            statement;                               \
+        }                                            \
+    } while(0)
+
+
 /*--------------------------------------------------------------------
  * Matrix
  *--------------------------------------------------------------------*/
@@ -26,18 +37,15 @@ public:
             printf(" |\n");
         }
     }
-    Matrix(int ,int);
+    Matrix(int rowLength = 0, int columnLength = 0);
     Matrix(const Matrix<T>& m);
     template <typename U>
     Matrix(const Matrix<U>& m);
+
     ~Matrix();
 
     const Vector<T>& operator[](int i) const
     {
-        ASSERT(0 < m_NumOfData);
-        ASSERT(0 < m_NumOfArray);
-        ASSERT(NULL != m_Array);
-
         if (0 <= i && i < m_NumOfArray)
         {
             return *m_Array[i];
@@ -47,10 +55,6 @@ public:
 
     Vector<T>& operator[](int i)
     {
-        ASSERT(0 < m_NumOfData);
-        ASSERT(0 < m_NumOfArray);
-        ASSERT(NULL != m_Array);
-
         if (0 <= i && i < m_NumOfArray)
         {
             return *m_Array[i];
@@ -58,36 +62,36 @@ public:
         return m_Zero;
     }
 
-    Matrix<T>& operator+=(T v) { for (int i = 0; i < GetNumOfArray(); ++i) { (*this)[i] += v; } return *this; }
-    Matrix<T>& operator-=(T v) { (*this) += (-v); return *this; }
-    Matrix<T>& operator*=(T v) { for (int i = 0; i < GetNumOfArray(); ++i) { (*this)[i] *= v; } }
-    Matrix<T>& operator/=(T v) { (*this) *= (1/v); return *this; }
+    Matrix<T>& operator=(const Matrix<T>& m);
 
-    const Matrix<T> operator+(const Matrix<T>& m) const { Matrix<T> mat(*this); for (int i = 0; i < GetNumOfArray(); ++i) { mat[i] += m[i]; } return mat; }
-    const Matrix<T> operator-(const Matrix<T>& m) const { Matrix<T> mat(*this); for (int i = 0; i < GetNumOfArray(); ++i) { mat[i] -= m[i]; } return mat; }
+    const Matrix<T> operator+(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] += v); return mat; }
+    const Matrix<T> operator-(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] -= v); return mat; }
+    const Matrix<T> operator*(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] *= v); return mat; }
+    const Matrix<T> operator/(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] /= v); return mat; }
 
-    const Matrix<T> operator*(T v)
-    {
-        Matrix<T> m(*this);
-        for (int row = 0; row < GetNumOfArray(); ++row)
-        {
-            for (int col = 0; col < GetNumOfData(); ++col)
-            {
-                m[row][col] *= v;
-            }
-        }
-        return m;
-    }
+    const Matrix<T> operator+(const Matrix<T>& m) const { Matrix<T> mat(*this); mat += m; return mat; }
+    const Matrix<T> operator-(const Matrix<T>& m) const { Matrix<T> mat(*this); mat -= m; return mat; }
+    const Matrix<T> operator*(const Matrix<T>& m) const { Matrix<T> mat(*this); mat *= m; return mat; }
+    const Matrix<T> operator/(const Matrix<T>& m) const { Matrix<T> mat(*this); mat /= m; return mat; }
 
-    const Matrix<T>& operator=(const Matrix<T>& m);
+    Matrix<T>& operator+=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] += v); return *this; }
+    Matrix<T>& operator-=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] -= v); return *this; }
+    Matrix<T>& operator*=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] *= v); return *this; }
+    Matrix<T>& operator/=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] /= v); return *this; }
+
+    Matrix<T>& operator+=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] += m[i]); return *this; }
+    Matrix<T>& operator-=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] -= m[i]); return *this; }
+    Matrix<T>& operator*=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] *= m[i]); return *this; }
+    Matrix<T>& operator/=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] /= m[i]); return *this; }
 
     const Matrix<T> Transpose(void) const;
-    const Matrix<T> Multiply(const Matrix<T>& m) const ;
-    const Matrix<T> Inverse(void) const ;
+    const Matrix<T> Multiply(const Matrix<T>& m) const;
+    const Matrix<T> Inverse(void) const;
     T Determinant(void) const;
     const Matrix<T> GetCofactorMatrix(int row, int col) const;
     T GetCofactor(int row, int col) const;
 
+    inline Matrix<T> E(int size) { return Identify(size); }
     static Matrix<T> Identify(int size)
     {
         Matrix<T> I(size, size);
@@ -102,29 +106,45 @@ public:
         return I;
     }
 
+    bool IsNull(void) const { return m_NumOfArray == 0; }
     int GetNumOfArray(void) const { return m_NumOfArray; }
     int GetNumOfData(void) const { return m_NumOfData; }
-    void Resize(int, int);
+    bool Resize(int, int);
 private:
+    // Member functions (private).
+    void AllocateRow   (void);
+    void AllocateColumn(void);
+    void Allocate      (void);
+    int Smaller(int length) const { return (length > m_NumOfArray) ? m_NumOfArray : length; };
+
+    // Member variables (private).
     int m_NumOfArray;
     int m_NumOfData;
     Vector<T>** m_Array;
     Vector<T>   m_Zero;
-    void Allocate(int size);
 };
 
-template <class T>
-Matrix<T>::Matrix(int numArray, int numData)
-  : m_Array(new Vector<T>*[numArray]),
-    m_NumOfData(numData),
-    m_NumOfArray(numArray),
-    m_Zero(0)
-{
-    ASSERT(m_NumOfArray > 0);
-    ASSERT(m_NumOfData > 0);
-    ASSERT(NULL != m_Array);
 
-    printf("%s(int,int): Begin (%p)\n", __func__, this);
+template <class T>
+void Matrix<T>::Allocate(void)
+{
+    AllocateRow();
+    AllocateColumn();
+}
+
+template <class T>
+void Matrix<T>::AllocateRow(void)
+{
+    if (0 < m_NumOfArray)
+    {
+        m_Array = new Vector<T>*[m_NumOfArray];
+        ASSERT(NULL != m_Array);
+    }
+}
+
+template <class T>
+void Matrix<T>::AllocateColumn(void)
+{
     for (int i = 0; i < m_NumOfArray; ++i)
     {
         m_Array[i] = new Vector<T>(m_NumOfData);
@@ -133,84 +153,120 @@ Matrix<T>::Matrix(int numArray, int numData)
 }
 
 template <class T>
+Matrix<T>::Matrix(int numArray, int numData)
+  : m_Array(NULL),
+    m_NumOfData(numData),
+    m_NumOfArray(numArray),
+    m_Zero(0)
+{
+    Allocate();
+}
+
+template <class T>
 Matrix<T>::Matrix(const Matrix<T>& m)
-  : m_Array(new Vector<T>*[m.GetNumOfArray()]),
+  : m_Array(NULL),
     m_NumOfArray(m.GetNumOfArray()),
     m_NumOfData(m.GetNumOfData()),
     m_Zero(0)
 {
-    ASSERT(m_NumOfArray > 0);
-    ASSERT(m_NumOfData > 0);
-    ASSERT(NULL != m_Array);
-
-    printf("%s(Matrix): Begin (%p)\n", __func__, this);
+    AllocateRow();
     for (int i = 0; i < m_NumOfArray; ++i)
     {
-        m_Array[i] = new Vector<T>(m_NumOfData);
+        m_Array[i] = new Vector<T>(m[i]);
         ASSERT(m_Array[i] != NULL);
-        *m_Array[i] = m[i];
+    }
+}
+
+template <class T>
+template <typename U>
+Matrix<T>::Matrix(const Matrix<U>& m)
+  : m_Array(NULL),
+    m_NumOfArray(m.GetNumOfArray()),
+    m_NumOfData(m.GetNumOfData()),
+    m_Zero(0)
+{
+    AllocateRow();
+    for (int i = 0; i < m_NumOfArray; ++i)
+    {
+        m_Array[i] = new Vector<T>(m[i]);
+        ASSERT(m_Array[i] != NULL);
     }
 }
 
 template <class T>
 Matrix<T>::~Matrix()
 {
-    ASSERT(m_Array != NULL);
-    printf("%s: Begin (%p)\n", __func__, this);
-    for (int i = 0; i < m_NumOfArray; ++i)
+    if (m_Array != NULL)
     {
-        ASSERT(PTR_CAST(Vector<T>*, NULL) != m_Array[i]);
-        delete m_Array[i];
+        for (int i = 0; i < m_NumOfArray; ++i)
+        {
+            delete m_Array[i];
+        }
+        delete[] m_Array;
     }
-    delete[] m_Array;
     m_Array = PTR_CAST(Vector<T>**, NULL);
     m_NumOfArray = 0;
     m_NumOfData = 0;
 }
 
 template <class T>
-void Matrix<T>::Resize(int numArray, int numData)
+bool Matrix<T>::Resize(int numArray, int numData)
 {
-    if (numArray <= 0 || numData <= 0)
+    if (numArray < 0 || numData < 0)
     {
-        return ;
+        return false;
     }
-    ASSERT(m_NumOfArray > 0);
+
     if (numArray != m_NumOfArray)
     {
+        Vector<T>** ptr = NULL;
+        if (numArray > 0)
+        {
+            ptr = new Vector<T>*[numArray];
+            ASSERT(NULL != ptr);
+            for (int i = 0; i < numArray; ++i)
+            {
+                ptr[i] = NULL;
+            }
+        }
+
+        for (int i = 0; i < Smaller(numArray); ++i)
+        {
+            ptr[i] = m_Array[i];
+            m_Array[i] = NULL;
+        }
+        for (int i = 0; i < numArray; ++i)
+        {
+            if (ptr[i] == NULL)
+            {
+                ptr[i] = new Vector<T>(numData);
+                ASSERT(ptr[i] != NULL);
+            }
+        }
         for (int i = 0; i < m_NumOfArray; ++i)
         {
-            ASSERT(NULL != m_Array[i]);
-            delete m_Array[i];
+            if (m_Array[i] != NULL)
+            {
+                delete m_Array[i];
+                m_Array[i] = NULL;
+            }
         }
         delete[] m_Array;
+        m_Array = ptr;
         m_NumOfArray = numArray;
-        m_NumOfData = numData;
-
-        m_Array = new Vector<T>*[m_NumOfArray];
-        ASSERT(NULL != m_Array);
-        for (int i = 0; i < m_NumOfArray; ++i)
-        {
-            m_Array[i] = new Vector<T>(m_NumOfData);
-            ASSERT(NULL != m_Array[i]);
-        }
     }
-    else if (numData != m_NumOfData)
+    m_NumOfData = numData;
+
+    bool status = true;
+    for (int i = 0; i < m_NumOfArray; ++i)
     {
-        m_NumOfData = numData;
-
-        for (int i = 0; i < m_NumOfArray; ++i)
-        {
-            ASSERT(NULL != m_Array[i]);
-            delete m_Array[i];
-            m_Array[i] = new Vector<T>(m_NumOfData);
-            ASSERT(m_Array[i] != PTR_CAST(Vector<T>*, NULL));
-        }
+        status &= (*m_Array[i]).Resize(m_NumOfData);
     }
+    return status;
 }
 
 template <class T>
-const Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
+Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 {
     Resize(m.GetNumOfArray(), m.GetNumOfData());
     for (int i = 0; i < m_NumOfArray; ++i)
