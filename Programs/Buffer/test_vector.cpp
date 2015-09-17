@@ -207,6 +207,26 @@ static void test_vector_api(void)
     {
         dvec[i] = i + 1;
     }
+    dvec2 = dvec(0, 0);
+    CHECK_VALUE(dvec2.IsNull(), true);
+    dvec2 = dvec(-1, 1);
+    CHECK_VALUE(dvec2.IsNull(), true);
+    dvec2 = dvec(dvec.GetLength(), 1);
+    CHECK_VALUE(dvec2.IsNull(), true);
+    dvec2 = dvec(dvec.GetLength()-1, 5);
+    CHECK_VALUE(dvec2.IsNull(), false);
+    for (int i = lower; i < upper; ++i)
+    {
+        if (i == 0)
+        {
+            CHECK_VALUE(dvec2[i], 6);
+        }
+        else
+        {
+            CHECK_VALUE(dvec2[i], 0);
+        }
+    }
+
     dvec2 = dvec(1, 3);
     for (int i = lower; i < upper; ++i)
     {

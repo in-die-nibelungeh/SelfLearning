@@ -5,9 +5,9 @@
 
 namespace mcon {
 
-template <class T> class Matrix;
+template <class Type> class Matrix;
 
-#define MCON_VECTOR_ITERATION(var, iter, statement)  \
+#define MCON_ITERATION(var, iter, statement)  \
     do {                                             \
         for (int var = 0; var < iter; ++var)         \
         {                                            \
@@ -15,32 +15,30 @@ template <class T> class Matrix;
         }                                            \
     } while(0)
 
-template <class T>
+template <class Type>
 class Vector
 {
 public:
 
     explicit Vector(const int length = 0);
-    Vector(const Vector<T>& v);
+    Vector(const Vector<Type>& v);
     template <typename U> Vector(const Vector<U>& v);
     ~Vector();
 
     // For const object
-    const T& operator[](const int i) const
+    const Type& operator[](const int i) const
     {
         if (0 <= i && i < m_Length)
         {
-            ASSERT(NULL != m_Address);
             return m_Address[i];
         }
         return m_Zero;
     }
     // For non-const object
-    T& operator[](const int i)
+    Type& operator[](const int i)
     {
         if (0 <= i && i < m_Length)
         {
-            ASSERT(NULL != m_Address);
             return m_Address[i];
         }
         m_Zero = 0;
@@ -48,19 +46,25 @@ public:
     }
 
     // Copy is to copy available data from src to dest without resizing the dest.
-    const Vector<T>& Copy(const Vector<T>& vector);
+    const Vector<Type>& Copy(const Vector<Type>& vector);
     // operator= make the same vector as the input vector.
-    Vector<T>& operator=(const Vector<T>& vector);
+    Vector<Type>& operator=(const Vector<Type>& vector);
 
     operator void*() const
     {
         return reinterpret_cast<void*>(m_Address);
     }
 
-    Vector<T> operator()(int offset, int length) const
+    Vector<Type> operator()(int offset, int length) const
     {
-        ASSERT( 0 <= offset && offset < GetLength() && 0 < length );
-        Vector<T> carveout(length);
+        Vector<Type> carveout;
+        if (offset < 0 || GetLength() <= offset || length < 0)
+        {
+            // Null object.
+            return carveout;
+        }
+        // Smaller value as length
+        carveout.Resize( Smaller(GetLength() - offset, length) );
         for (int i = offset; i < Smaller(offset + length); ++i)
         {
             carveout[i-offset] = (*this)[i];
@@ -68,9 +72,9 @@ public:
         return carveout;
     }
 
-    T Fifo(T v)
+    Type Fifo(Type v)
     {
-        T ret = (*this)[0];
+        Type ret = (*this)[0];
         for (int i = 0; i < GetLength(); ++i)
         {
             (*this)[i] = (*this)[i+1];
@@ -79,119 +83,126 @@ public:
         return ret;
     }
 
-    Vector<T>& operator =(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i]  = v); return *this; };
+    Vector<Type>& operator=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] = v); return *this; };
 
-    const Vector<T> operator +(T v) const { Vector<T> vec(*this);  vec += v; return vec; }
-    const Vector<T> operator -(T v) const { Vector<T> vec(*this);  vec -= v; return vec; }
-    const Vector<T> operator *(T v) const { Vector<T> vec(*this);  vec *= v; return vec; }
-    const Vector<T> operator /(T v) const { Vector<T> vec(*this);  vec /= v; return vec; }
+    const Vector<Type> operator+(Type v) const { Vector<Type> vec(*this);  vec += v; return vec; }
+    const Vector<Type> operator-(Type v) const { Vector<Type> vec(*this);  vec -= v; return vec; }
+    const Vector<Type> operator*(Type v) const { Vector<Type> vec(*this);  vec *= v; return vec; }
+    const Vector<Type> operator/(Type v) const { Vector<Type> vec(*this);  vec /= v; return vec; }
 
-    const Vector<T> operator +(const Vector<T>& v) const { Vector<T> vec(*this);  vec += v; return vec; }
-    const Vector<T> operator -(const Vector<T>& v) const { Vector<T> vec(*this);  vec -= v; return vec; }
-    const Vector<T> operator *(const Vector<T>& v) const { Vector<T> vec(*this);  vec *= v; return vec; }
-    const Vector<T> operator /(const Vector<T>& v) const { Vector<T> vec(*this);  vec /= v; return vec; }
+    const Vector<Type> operator+(const Vector<Type>& v) const { Vector<Type> vec(*this);  vec += v; return vec; }
+    const Vector<Type> operator-(const Vector<Type>& v) const { Vector<Type> vec(*this);  vec -= v; return vec; }
+    const Vector<Type> operator*(const Vector<Type>& v) const { Vector<Type> vec(*this);  vec *= v; return vec; }
+    const Vector<Type> operator/(const Vector<Type>& v) const { Vector<Type> vec(*this);  vec /= v; return vec; }
 
-    Vector<T>& operator+=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
-    Vector<T>& operator-=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
-    Vector<T>& operator*=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
-    Vector<T>& operator/=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
+    Vector<Type>& operator+=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
+    Vector<Type>& operator-=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
+    Vector<Type>& operator*=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
+    Vector<Type>& operator/=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
 
-    Vector<T>& operator+=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
-    Vector<T>& operator-=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
-    Vector<T>& operator*=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
-    Vector<T>& operator/=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
+    Vector<Type>& operator+=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
+    Vector<Type>& operator-=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
+    Vector<Type>& operator*=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
+    Vector<Type>& operator/=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
 
-    Matrix<T> Transpose(void) const
+    inline Matrix<Type> T(void) const { return Transpose(); }
+    Matrix<Type> Transpose(void) const
     {
-        Matrix<T> m(GetLength(), 1);
-        MCON_VECTOR_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
+        Matrix<Type> m(GetLength(), 1);
+        MCON_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
         return m;
     }
 
     int GetLength(void) const { return m_Length; }
-
-    bool Resize(const size_t length);
+    bool IsNull(void) const { return m_Length == 0; }
+    bool Resize(int length);
 
 private:
-    T*     m_Address;
-    int    m_Length;
-    T      m_Zero;
+    // Private member functions.
+    int    Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
     int    Smaller(int input) const { return m_Length < input ? m_Length : input; }
-    void   Allocate(int);
+    int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
+    int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
+    void   Allocate(void);
+
+    // Private member variables.
+    Type*     m_Address;
+    int    m_Length;
+    Type      m_Zero;
 };
 
-template <class T>
-void Vector<T>::Allocate(int length)
+template <class Type>
+void Vector<Type>::Allocate(void)
 {
-    m_Address = PTR_CAST(T*, NULL);
-    if (length > 0)
+    m_Address = PTR_CAST(Type*, NULL);
+    if (m_Length > 0)
     {
-        m_Address = new T[length];
+        m_Address = new Type[m_Length];
         ASSERT(NULL != m_Address);
     }
 }
 
-template <class T>
-Vector<T>::Vector(int length)
+template <class Type>
+Vector<Type>::Vector(int length)
     : m_Address(NULL),
     m_Length(length),
     m_Zero(0)
 {
-    Allocate(length);
+    Allocate();
 }
 
-template <class T>
-Vector<T>::Vector(const Vector<T>& v)
+template <class Type>
+Vector<Type>::Vector(const Vector<Type>& v)
   : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(T*, NULL)),
+    m_Address(PTR_CAST(Type*, NULL)),
     m_Zero(0)
 {
-    Allocate(v.GetLength());
-    MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] = v[i]);
+    Allocate();
+    MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
 }
 
-template <class T>
+template <class Type>
 template <typename U>
-Vector<T>::Vector(const Vector<U>& v)
+Vector<Type>::Vector(const Vector<U>& v)
   : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(T*, NULL)),
+    m_Address(PTR_CAST(Type*, NULL)),
     m_Zero(0)
 {
-    Allocate(v.GetLength());
-    MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] = static_cast<T>(v[i]));
+    Allocate();
+    MCON_ITERATION(i, m_Length, (*this)[i] = static_cast<Type>(v[i]));
 }
 
-template <class T>
-Vector<T>::~Vector()
+template <class Type>
+Vector<Type>::~Vector()
 {
     if (NULL != m_Address)
     {
         delete[] m_Address;
-        m_Address = PTR_CAST(T*, NULL);
+        m_Address = PTR_CAST(Type*, NULL);
     }
     m_Length = 0;
 }
 
-template <class T>
-const Vector<T>& Vector<T>::Copy(const Vector<T>& v)
+template <class Type>
+const Vector<Type>& Vector<Type>::Copy(const Vector<Type>& v)
 {
-    MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
+    MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
     return *this;
 }
 
-template <class T>
-Vector<T>& Vector<T>::operator=(const Vector<T>& v)
+template <class Type>
+Vector<Type>& Vector<Type>::operator=(const Vector<Type>& v)
 {
     // m_Length is updated in Resize().
     Resize(v.GetLength());
-    MCON_VECTOR_ITERATION(i, v.GetLength(), (*this)[i] = v[i]);
+    MCON_ITERATION(i, v.GetLength(), (*this)[i] = v[i]);
     return *this;
 }
 
-template <class T>
-bool Vector<T>::Resize(size_t length)
+template <class Type>
+bool Vector<Type>::Resize(int length)
 {
-    if (length <= 0)
+    if (length < 0)
     {
         return false;
     }
@@ -202,13 +213,11 @@ bool Vector<T>::Resize(size_t length)
     if (NULL != m_Address)
     {
         delete[] m_Address;
+        m_Address = NULL;
     }
     m_Length = length;
-    m_Address = new T[length];
-    if (NULL == m_Address)
-    {
-        return false;
-    }
+    m_Address = new Type[length];
+    ASSERT (NULL != m_Address);
     return true;
 }
 
