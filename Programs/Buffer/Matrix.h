@@ -27,9 +27,9 @@ public:
         }
     }
     Matrix(int ,int);
-
     Matrix(const Matrix<T>& m);
-
+    template <typename U>
+    Matrix(const Matrix<U>& m);
     ~Matrix();
 
     const Vector<T>& operator[](int i) const
@@ -58,6 +58,14 @@ public:
         return m_Zero;
     }
 
+    Matrix<T>& operator+=(T v) { for (int i = 0; i < GetNumOfArray(); ++i) { (*this)[i] += v; } return *this; }
+    Matrix<T>& operator-=(T v) { (*this) += (-v); return *this; }
+    Matrix<T>& operator*=(T v) { for (int i = 0; i < GetNumOfArray(); ++i) { (*this)[i] *= v; } }
+    Matrix<T>& operator/=(T v) { (*this) *= (1/v); return *this; }
+
+    const Matrix<T> operator+(const Matrix<T>& m) const { Matrix<T> mat(*this); for (int i = 0; i < GetNumOfArray(); ++i) { mat[i] += m[i]; } return mat; }
+    const Matrix<T> operator-(const Matrix<T>& m) const { Matrix<T> mat(*this); for (int i = 0; i < GetNumOfArray(); ++i) { mat[i] -= m[i]; } return mat; }
+
     const Matrix<T> operator*(T v)
     {
         Matrix<T> m(*this);
@@ -80,6 +88,20 @@ public:
     const Matrix<T> GetCofactorMatrix(int row, int col) const;
     T GetCofactor(int row, int col) const;
 
+    static Matrix<T> Identify(int size)
+    {
+        Matrix<T> I(size, size);
+        for (int i = 0; i < size; ++i)
+        {
+            I[i] = 0;
+        }
+        for (int i = 0; i < size; ++i)
+        {
+            I[i][i] = 1;
+        }
+        return I;
+    }
+
     int GetNumOfArray(void) const { return m_NumOfArray; }
     int GetNumOfData(void) const { return m_NumOfData; }
     void Resize(int, int);
@@ -88,6 +110,7 @@ private:
     int m_NumOfData;
     Vector<T>** m_Array;
     Vector<T>   m_Zero;
+    void Allocate(int size);
 };
 
 template <class T>
@@ -195,6 +218,20 @@ const Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
         *m_Array[i] = m[i];
     }
     return *this;
+}
+
+template <class T>
+const Matrix<T> Matrix<T>::Transpose(void) const
+{
+    Matrix<T> transposed(GetNumOfData(), GetNumOfArray());
+    for (int i = 0; i < GetNumOfArray(); ++i)
+    {
+        for (int j = 0; j < GetNumOfData(); ++j)
+        {
+            transposed[j][i] = (*this)[i][j];
+        }
+    }
+    return transposed;
 }
 
 template <class T>
@@ -312,11 +349,13 @@ const Matrix<T> Matrix<T>::Inverse(void) const
         printf("Det=Zero\n");
         return *this;
     }
+    // Calculate Inversed-Matrix by Cofactors.
     printf("Determinant=%f\n", det);
     int rowCount = GetNumOfArray();
     int colCount = GetNumOfData();
     Matrix<T> inversed(rowCount, colCount);
 
+#if 0
     for (int row = 0; row < rowCount; ++row)
     {
         for (int col = 0; col < colCount; ++col)
@@ -329,6 +368,71 @@ const Matrix<T> Matrix<T>::Inverse(void) const
             printf("det=%f\n", inversed[row][col]);
         }
     }
+#else
+    // Calculate by Wipe-out
+    static const T threshold = 1.0e-10; // TBD
+
+    Matrix<T> m(rowCount, colCount*2);
+    for (int row = 0; row < rowCount; ++row)
+    {
+        for (int col = 0; col < colCount; ++col)
+        {
+            m[row][col] = (*this)[row][col];
+        }
+    }
+    for (int row = 0; row < rowCount; ++row)
+    {
+        for (int col = colCount; col < colCount*2; ++col)
+        {
+            if (row == (col - colCount))
+            {
+                m[row][col] = 1.0;
+            }
+            else
+            {
+                m[row][col] = 0.0;
+            }
+        }
+    }
+    for (int iter = 0; iter < rowCount; ++iter)
+    {
+        // Find a row which m[row][i] is zero.
+        bool isFound = false;
+        for (int i = iter; i < rowCount; ++i)
+        {
+            if (fabs(m[i][iter]) > threshold)
+            {
+                Vector<T> vec(m[i]);
+                m[i] = m[iter];
+                vec /= vec[iter];
+                m[iter] = vec;
+                isFound = true;
+                break;
+            }
+        }
+        // Give-up...
+        if (false == isFound)
+        {
+            return *this;
+        }
+        for (int i = 0; i < rowCount; ++i)
+        {
+            if (i != iter)
+            {
+                Vector<T> vec(m[iter]);
+                vec *= m[i][iter];
+                m[i] -= vec;
+            }
+        }
+    }
+    for (int row = 0; row < rowCount; ++row)
+    {
+        for (int col = 0; col < colCount; ++col)
+        {
+            inversed[row][col] = m[row][col+colCount];
+        }
+    }
+#endif
     return inversed;
 }
 
