@@ -5,11 +5,13 @@
 
 namespace mcon {
 
-#define VECTOR_ITERATION(var, iter, statement)  \
-    for (int var = 0; var < iter; ++var)        \
-    {                                           \
-        statement;                              \
-    }
+#define MCON_VECTOR_ITERATION(var, iter, statement)  \
+    do {                                             \
+        for (int var = 0; var < iter; ++var)         \
+        {                                            \
+            statement;                               \
+        }                                            \
+    } while(0)
 
 template <class T>
 class Vector
@@ -75,7 +77,7 @@ public:
         return ret;
     }
 
-    Vector<T>& operator =(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i]  = v); return *this; };
+    Vector<T>& operator =(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i]  = v); return *this; };
 
     const Vector<T> operator +(T v) const { Vector<T> vec(*this);  vec += v; return vec; }
     const Vector<T> operator -(T v) const { Vector<T> vec(*this);  vec -= v; return vec; }
@@ -87,15 +89,15 @@ public:
     const Vector<T> operator *(const Vector<T>& v) const { Vector<T> vec(*this);  vec *= v; return vec; }
     const Vector<T> operator /(const Vector<T>& v) const { Vector<T> vec(*this);  vec /= v; return vec; }
 
-    Vector<T>& operator+=(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
-    Vector<T>& operator-=(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
-    Vector<T>& operator*=(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
-    Vector<T>& operator/=(T v) { VECTOR_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
+    Vector<T>& operator+=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
+    Vector<T>& operator-=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
+    Vector<T>& operator*=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
+    Vector<T>& operator/=(T v) { MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
 
-    Vector<T>& operator+=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
-    Vector<T>& operator-=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
-    Vector<T>& operator*=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
-    Vector<T>& operator/=(const Vector<T>& v) { VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
+    Vector<T>& operator+=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
+    Vector<T>& operator-=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
+    Vector<T>& operator*=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
+    Vector<T>& operator/=(const Vector<T>& v) { MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
 
     int GetLength(void) const { return m_Length; }
 
@@ -136,7 +138,7 @@ Vector<T>::Vector(const Vector<T>& v)
     m_Zero(0)
 {
     Allocate(v.GetLength());
-    VECTOR_ITERATION(i, m_Length, (*this)[i] = v[i]);
+    MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] = v[i]);
 }
 
 template <class T>
@@ -147,7 +149,7 @@ Vector<T>::Vector(const Vector<U>& v)
     m_Zero(0)
 {
     Allocate(v.GetLength());
-    VECTOR_ITERATION(i, m_Length, (*this)[i] = static_cast<T>(v[i]));
+    MCON_VECTOR_ITERATION(i, m_Length, (*this)[i] = static_cast<T>(v[i]));
 }
 
 template <class T>
@@ -164,7 +166,7 @@ Vector<T>::~Vector()
 template <class T>
 const Vector<T>& Vector<T>::Copy(const Vector<T>& v)
 {
-    VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
+    MCON_VECTOR_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
     return *this;
 }
 
@@ -173,7 +175,7 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& v)
 {
     // m_Length is updated in Resize().
     Resize(v.GetLength());
-    VECTOR_ITERATION(i, v.GetLength(), (*this)[i] = v[i]);
+    MCON_VECTOR_ITERATION(i, v.GetLength(), (*this)[i] = v[i]);
     return *this;
 }
 
