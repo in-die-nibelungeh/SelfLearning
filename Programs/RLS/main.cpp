@@ -126,56 +126,76 @@ static void test_RLS(void)
     int fs;
     mcon::Vector<int16_t> reference;
     mcon::Vector<int16_t> audioIn;
-    mcon::Vector<int16_t> iIr;
-    status_t status = GetIr(iIr, fs);
-    if (NO_ERROR != status)
     {
-        printf("An error occured: err=%d\n", status);
-        return ;
+        const char* file = "sweep_440-3520_conv.wav";
+        FileIo waveAudioIn;
+        status_t status = waveAudioIn.Read(file, audioIn);
+        if (NO_ERROR != status)
+        {
+            printf("Failed in reading %s: error=%d\n", file, status);
+            return ;
+        }
+        FileIo::MetaData metaData = waveAudioIn.GetMetaData();
+        printf("fs=%d\n", metaData.samplingRate);
+        fs = metaData.samplingRate;
     }
 
-    static const int n = iIr.GetLength();
+    {
+        const char* file = "sweep_440-3520.wav";
+        FileIo waveReference;
+        status_t status = waveReference.Read(file, reference);
+        if (NO_ERROR != status)
+        {
+            printf("Failed in reading %s: error=%d\n", file, status);
+            return ;
+        }
+        FileIo::MetaData metaData = waveReference.GetMetaData();
+        printf("fs=%d\n", metaData.samplingRate);
 
-    mcon::Vector<double> dIr(iIr);
-    mcon::Matrix<double> mIr(1, n);
-    mIr[0] = dIr;
-
+        if ( fs != metaData.samplingRate )
+        {
+            printf("fs doesn't match: %d != %d\n", fs, metaData.samplingRate);
+        }
+    }
+    static const int n = audioIn.GetLength();
     static const int M = 256; // a design parameter.
     double c = 0.5; // an appropriately small number
     mcon::Matrix<double> Phi(M, M);
     mcon::Matrix<double> P(M, M);
     mcon::Matrix<double> h(M, 1);
-    mcon::Matrix<double> u(mIr.Transpose());
-    mcon::Vector<double> d(n);
+    //mcon::Matrix<double> u(audioIn.Transpose());
+    //mcon::Vector<double> d(reference);
 
-    // Impluse is a desired one.
-    memset(d, 0, d.GetLength() * sizeof(double));
-    d[0] = 1;
-    d[1] = 1;
-    printf("Dimension of u: %d, %d\n", u.GetNumOfArray(), u.GetNumOfData());
-
-    return ;
     Phi *= c;
     P /= c;
     h[0] = 0;
-
+    printf("Start (n=%d)\n", n);
     for (int i = 1; i < n; ++i)
     {
+        mcon::Matrix<double> u = audioIn(i, M).Transpose();
+        // Calling template <typename U> operator Vector<U>() const
+        mcon::Vector<double> d = reference(i, M);
         mcon::Matrix<double> k(P.Multiply(u)); // numerator
         double denom = 1.0;
         mcon::Matrix<double> denominator = u.Transpose().Multiply(P).Multiply(u);
-        ASSERT(denominator.GetNumOfArray() == 1 && denominator.GetNumOfData() == 1);
+        ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
         denom = denominator[0][0] + 1;
         k /= denom;
 
         mcon::Matrix<double> m = u.Transpose().Multiply(h);
-        ASSERT(m.GetNumOfArray() == 1 && m.GetNumOfData() == 1);
+        ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
         double eta = d[i] - m[0][0];
 
         h = h + k * eta;
 
         P = P - k.Multiply(u.Transpose()).Multiply(P);
+        if ( (i % 100) == 0 )
+        {
+            printf("%4.1f [%%]\n", i*100.0/n);
+        }
     }
+    FileIo filter(fs, 1, 16);
+    filter.Write("rls_taps_coefficients.wav", (h.Transpose())[0]);
     h.DumpMatrix(h, "%f");
 }
 
@@ -199,8 +219,8 @@ static void test_IR(void)
 
 int main(void)
 {
-    MakeTestWave();
-    //test_RLS();
+    //MakeTestWave();
+    test_RLS();
 
     return 0;
 }
