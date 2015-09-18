@@ -5,17 +5,17 @@
 
 namespace mcon {
 
-template <class Type> class Matrix;
+template <typename Type> class Matrix;
 
 #define MCON_ITERATION(var, iter, statement)  \
-    do {                                             \
-        for (int var = 0; var < iter; ++var)         \
-        {                                            \
-            statement;                               \
-        }                                            \
+    do {                                      \
+        for (int var = 0; var < iter; ++var)  \
+        {                                     \
+            statement;                        \
+        }                                     \
     } while(0)
 
-template <class Type>
+template <typename Type>
 class Vector
 {
 public:
@@ -155,7 +155,7 @@ private:
     Type      m_Zero;
 };
 
-template <class Type>
+template <typename Type>
 void Vector<Type>::Allocate(void)
 {
     m_Address = PTR_CAST(Type*, NULL);
@@ -166,7 +166,7 @@ void Vector<Type>::Allocate(void)
     }
 }
 
-template <class Type>
+template <typename Type>
 Vector<Type>::Vector(int length)
     : m_Address(NULL),
     m_Length(length),
@@ -175,7 +175,7 @@ Vector<Type>::Vector(int length)
     Allocate();
 }
 
-template <class Type>
+template <typename Type>
 Vector<Type>::Vector(const Vector<Type>& v)
   : m_Length(v.GetLength()),
     m_Address(PTR_CAST(Type*, NULL)),
@@ -185,7 +185,7 @@ Vector<Type>::Vector(const Vector<Type>& v)
     MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
 }
 
-template <class Type>
+template <typename Type>
 template <typename U>
 Vector<Type>::Vector(const Vector<U>& v)
   : m_Length(v.GetLength()),
@@ -196,7 +196,7 @@ Vector<Type>::Vector(const Vector<U>& v)
     MCON_ITERATION(i, m_Length, (*this)[i] = static_cast<Type>(v[i]));
 }
 
-template <class Type>
+template <typename Type>
 Vector<Type>::~Vector()
 {
     if (NULL != m_Address)
@@ -207,14 +207,14 @@ Vector<Type>::~Vector()
     m_Length = 0;
 }
 
-template <class Type>
+template <typename Type>
 const Vector<Type>& Vector<Type>::Copy(const Vector<Type>& v)
 {
     MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
     return *this;
 }
 
-template <class Type>
+template <typename Type>
 Vector<Type>& Vector<Type>::operator=(const Vector<Type>& v)
 {
     // m_Length is updated in Resize().
@@ -223,7 +223,7 @@ Vector<Type>& Vector<Type>::operator=(const Vector<Type>& v)
     return *this;
 }
 
-template <class Type>
+template <typename Type>
 bool Vector<Type>::Resize(int length)
 {
     if (length < 0)
