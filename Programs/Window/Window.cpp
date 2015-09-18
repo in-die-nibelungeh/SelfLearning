@@ -1,13 +1,10 @@
 #include <math.h>
 
-#include "Buffer.h"
-#include "Window.h"
+#include "Vector.h"
 
 #define POW2(x) ((x)*(x))
 
-
-namespace masp {
-namespace window {
+namespace masp { namespace window {
 
 enum WindowFunctionId
 {
@@ -17,7 +14,8 @@ enum WindowFunctionId
     WFI_BLACKMAN,
     WFI_BLACKMAN_HARRIS,
     WFI_NUTTALL,
-    WFI_KAISER
+    WFI_KAISER,
+    WFI_FLATTOP
 };
 
 static const double g_Pi(M_PI);
@@ -88,6 +86,12 @@ double NuttallFunction(int i, double dt, double arg)
     return 0.355768 - 0.487396 * cos( (2*i+1) * dt / 2.0) + 0.144232 * cos( (2*i+1) * dt) - 0.012604 * cos((2*i+1) * dt * 1.5);
 }
 
+double FlattopFunction(int i, double dt, double arg)
+{
+    const double f = 1 + 1.93 + 1.29 + 0.388 + 0.032;
+    return (1 - 1.93 * cos((2*i+1) * dt / 2.0) + 1.29 * cos((2*i+1) * dt) - 0.388 * cos((2*i+1) * dt * 1.5) + 0.032 * cos(2.0 * (2*i+1) * dt)) / f;
+}
+
 WindowFunctionType GetWindowFunction(int type)
 {
     WindowFunctionType function = reinterpret_cast<WindowFunctionType>(NULL);
@@ -100,6 +104,7 @@ WindowFunctionType GetWindowFunction(int type)
     case WFI_BLACKMAN_HARRIS:     function = BlackmanHarrisFunction; break;
     case WFI_NUTTALL:             function = NuttallFunction; break;
     case WFI_KAISER:              function = KaiserFunction; break;
+    case WFI_FLATTOP:             function = FlattopFunction; break;
     }
     return function;
 }
@@ -115,9 +120,9 @@ void GenerateWindow(double w[], size_t N, int type, double arg)
     }
 }
 
-void GenerateWindow(Container::Vector<double>& w, int type, double arg)
+void GenerateWindow(mcon::Vector<double>& w, int type, double arg)
 {
-    const size_t N = w.GetNumOfData();
+    const size_t N = w.GetLength();
     WindowFunctionType function = GetWindowFunction(type);
     ASSERT(function != NULL);
 
@@ -128,20 +133,21 @@ void GenerateWindow(Container::Vector<double>& w, int type, double arg)
     }
 }
 
-void Hanning(double w[], size_t N)          { GenerateWindow(w, N, WFI_HANNING , 0.0); }
-void Hanning(Container::Vector<double>& w)  { GenerateWindow(w,    WFI_HANNING , 0.0); }
-void Hamming(double w[], size_t N)          { GenerateWindow(w, N, WFI_HAMMING , 0.0); }
-void Hamming(Container::Vector<double>& w)  { GenerateWindow(w,    WFI_HAMMING , 0.0); }
-void GeneralizedHamming(double w[], size_t N, double a)          { GenerateWindow(w, N, WFI_GENERALIZED_HAMMING , a); }
-void GeneralizedHamming(Container::Vector<double>& w, double a)  { GenerateWindow(w,    WFI_GENERALIZED_HAMMING , a); }
-void Blackman(double w[], size_t N)         { GenerateWindow(w, N, WFI_BLACKMAN, 0.0); }
-void Blackman(Container::Vector<double>& w) { GenerateWindow(w,    WFI_BLACKMAN, 0.0); }
-void BlackmanHarris(double w[], size_t N)         { GenerateWindow(w, N, WFI_BLACKMAN_HARRIS, 0.0); }
-void BlackmanHarris(Container::Vector<double>& w) { GenerateWindow(w,    WFI_BLACKMAN_HARRIS, 0.0); }
-void Nuttall(double w[], size_t N)          { GenerateWindow(w, N, WFI_NUTTALL, 0.0); }
-void Nuttall(Container::Vector<double>& w)  { GenerateWindow(w,    WFI_NUTTALL, 0.0); }
-void Kaiser(double w[], size_t N, double a)           { GenerateWindow(w, N, WFI_KAISER, a); }
-void Kaiser(Container::Vector<double>& w, double a)   { GenerateWindow(w,    WFI_KAISER, a); }
+void Hanning(double w[], size_t N)            { GenerateWindow(w, N, WFI_HANNING , 0.0); }
+void Hanning(mcon::Vector<double>& w)         { GenerateWindow(w,    WFI_HANNING , 0.0); }
+void Hamming(double w[], size_t N)            { GenerateWindow(w, N, WFI_HAMMING , 0.0); }
+void Hamming(mcon::Vector<double>& w)         { GenerateWindow(w,    WFI_HAMMING , 0.0); }
+void GeneralizedHamming(double w[], size_t N, double a)     { GenerateWindow(w, N, WFI_GENERALIZED_HAMMING , a); }
+void GeneralizedHamming(mcon::Vector<double>& w, double a)  { GenerateWindow(w,    WFI_GENERALIZED_HAMMING , a); }
+void Blackman(double w[], size_t N)           { GenerateWindow(w, N, WFI_BLACKMAN, 0.0); }
+void Blackman(mcon::Vector<double>& w)        { GenerateWindow(w,    WFI_BLACKMAN, 0.0); }
+void BlackmanHarris(double w[], size_t N)     { GenerateWindow(w, N, WFI_BLACKMAN_HARRIS, 0.0); }
+void BlackmanHarris(mcon::Vector<double>& w)  { GenerateWindow(w,    WFI_BLACKMAN_HARRIS, 0.0); }
+void Nuttall(double w[], size_t N)            { GenerateWindow(w, N, WFI_NUTTALL, 0.0); }
+void Nuttall(mcon::Vector<double>& w)         { GenerateWindow(w,    WFI_NUTTALL, 0.0); }
+void Kaiser(double w[], size_t N, double a)   { GenerateWindow(w, N, WFI_KAISER, a); }
+void Kaiser(mcon::Vector<double>& w, double a){ GenerateWindow(w,    WFI_KAISER, a); }
+void Flattop(double w[], size_t N)            { GenerateWindow(w, N, WFI_FLATTOP, 0.0); }
+void Flattop(mcon::Vector<double>& w)         { GenerateWindow(w,    WFI_FLATTOP, 0.0); }
 
-} // namespace window {
-} // namespace masp {
+}} // namespace masp { namespace window {

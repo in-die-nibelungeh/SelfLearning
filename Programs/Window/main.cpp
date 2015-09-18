@@ -1,9 +1,8 @@
 #include <stdio.h>
 
-#include "debug.h"
 #include "Window.h"
 
-static void test_hanning(void)
+static void test_window(void)
 {
     int SamplingRate = 8000;
     int PassBand = 500;
@@ -13,7 +12,7 @@ static void test_hanning(void)
     double coef[256];
     size_t N = 24;
 
-    Container::Vector<double> han(N), ham(N), b(N), bh(N), n(N), k(N);
+    mcon::Vector<double> han(N), ham(N), b(N), bh(N), n(N), k(N), f(N);
     masp::window::Hanning(coef, N);
     masp::window::Hanning(han);
     masp::window::Hamming(ham);
@@ -21,10 +20,11 @@ static void test_hanning(void)
     masp::window::BlackmanHarris(bh);
     masp::window::Nuttall(n);
     masp::window::Kaiser(k, 3.0);
-    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser\n");
+    masp::window::Flattop(f);
+    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop\n");
     for (int i = 0; i < N; ++i)
     {
-        printf("%d,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i]);
+        printf("%d,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i]);
     }
     N = 25;
     han.Resize(N);
@@ -33,6 +33,7 @@ static void test_hanning(void)
     bh.Resize(N);
     n.Resize(N);
     k.Resize(N);
+    f.Resize(N);
     masp::window::Hanning(coef, N);
     masp::window::Hanning(han);
     masp::window::Hamming(ham);
@@ -40,16 +41,18 @@ static void test_hanning(void)
     masp::window::BlackmanHarris(bh);
     masp::window::Nuttall(n);
     masp::window::Kaiser(k, 3.0);
-    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser\n");
+    masp::window::Flattop(f);
+    printf("\n");
+    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop\n");
     for (int i = 0; i < N; ++i)
     {
-        printf("%d,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i]);
+        printf("%d,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i]);
     }
     return ;
 }
 
 int main(void)
 {
-    test_hanning();
+    test_window();
     return 0;
 }
