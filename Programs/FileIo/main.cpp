@@ -10,7 +10,7 @@ static void test_test(void)
 {
     FileIo wave;
 
-    wave.Test();
+    wave.Check();
 }
 
 static void test_read(void)

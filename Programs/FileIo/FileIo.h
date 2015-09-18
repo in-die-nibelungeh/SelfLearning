@@ -45,13 +45,25 @@ public:
 
     // Meta Data
     struct MetaData GetMetaData(void) const;
+    inline int GetSamplingRate(void) const
+    {
+        return static_cast<int>(m_SamplingRate);
+    }
+    inline int GetBitDepth(void) const
+    {
+        return static_cast<int>(m_BitDepth);
+    }
+    inline int GetNumChannels(void) const
+    {
+        return static_cast<int>(m_NumChannels);
+    }
     status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth) const;
     status_t SetMetaData(struct MetaData& meta);
     status_t SetMetaData(int samplingRate, int numChannels, int bitDepth);
     double   GetDuration(void) const { m_Duration; }
 
     // TBD
-    status_t Test(void);
+    status_t Check(void);
 private:
     enum ChunkID
     {
@@ -68,6 +80,5 @@ private:
     int32_t m_SamplingRate;
     int16_t m_NumChannels;
     int16_t m_BitDepth;
-
     double  m_Duration;
 };

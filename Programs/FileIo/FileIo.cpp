@@ -6,7 +6,6 @@
 #include "debug.h"
 #include "status.h"
 #include "types.h"
-
 #include "FileIo.h"
 
 struct WaveChunk
@@ -19,10 +18,13 @@ struct WaveChunk
     uint32_t  m_Size;
 };
 
-
 FileIo::FileIo()
+ : m_Format(PF_LPCM),
+   m_SamplingRate(0),
+   m_NumChannels(0),
+   m_BitDepth(0),
+   m_Duration(0.0)
 {
-    FileIo(0, 0, 0);
 }
 
 FileIo::FileIo(int fs, int ch, int depth)
@@ -37,7 +39,7 @@ FileIo::~FileIo()
 {
 }
 
-status_t FileIo::Test(void)
+status_t FileIo::Check(void)
 {
     CHECK(8 == sizeof(WaveChunk));
     CHECK(4 == sizeof(int32_t));
