@@ -158,23 +158,25 @@ static void test_RLS(void)
         }
     }
     static const int n = audioIn.GetLength();
-    static const int M = 256; // a design parameter.
+    static const int M = 64; // a design parameter.
     double c = 0.5; // an appropriately small number
-    mcon::Matrix<double> Phi(M, M);
-    mcon::Matrix<double> P(M, M);
+    mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
     mcon::Matrix<double> h(M, 1);
     //mcon::Matrix<double> u(audioIn.Transpose());
-    //mcon::Vector<double> d(reference);
+    mcon::Vector<double> d(reference);
+    mcon::Vector<double> uv(M);
 
-    Phi *= c;
     P /= c;
     h[0] = 0;
+    uv = 0;
+
     printf("Start (n=%d)\n", n);
-    for (int i = 1; i < n; ++i)
+    for (int i = 0; i < n; ++i)
     {
-        mcon::Matrix<double> u = audioIn(i, M).Transpose();
+        uv.Fifo(audioIn[i]);
+        mcon::Matrix<double> u = uv.Transpose();
         // Calling template <typename U> operator Vector<U>() const
-        mcon::Vector<double> d = reference(i, M);
+        //mcon::Vector<double> d = reference(i, M);
         mcon::Matrix<double> k(P.Multiply(u)); // numerator
         double denom = 1.0;
         mcon::Matrix<double> denominator = u.Transpose().Multiply(P).Multiply(u);
@@ -189,13 +191,23 @@ static void test_RLS(void)
         h = h + k * eta;
 
         P = P - k.Multiply(u.Transpose()).Multiply(P);
-        if ( (i % 100) == 0 )
+        if ( (i % 10) == 0 )
         {
-            printf("%4.1f [%%]\n", i*100.0/n);
+            printf("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
         }
     }
+    printf("\n");
+    double max = 0.0;
+    for (int i = 0; i < h.GetRowLength(); ++i)
+    {
+        if (max < fabs(h[i][0]))
+        {
+            max = fabs(h[i][0]);
+        }
+    }
+    mcon::Vector<int16_t> coefs(h.Transpose()[0] * (32767.0/max));
     FileIo filter(fs, 1, 16);
-    filter.Write("rls_taps_coefficients.wav", (h.Transpose())[0]);
+    filter.Write("rls_taps_coefficients.wav", coefs);
     h.DumpMatrix(h, "%f");
 }
 
