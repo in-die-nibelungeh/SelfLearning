@@ -8,14 +8,15 @@
 #include "debug.h"
 #include "Matrix.h"
 #include "FileIo.h"
-#include "Buffer.h"
 
-static status_t GetIr(mcon::Vector<int16_t>& ir, int& fs)
+#define POW2(x) ((x)*(x))
+
+static status_t GetIr(const char* name, mcon::Vector<double>& ir, int& fs)
 {
     FileIo wave;
     mcon::Vector<int16_t> pcm;
-    status_t status = wave.Read("Trig Room.wav", pcm);
 
+    status_t status = wave.Read(name, pcm);
     if ( NO_ERROR != status )
     {
         return status;
@@ -27,14 +28,28 @@ static status_t GetIr(mcon::Vector<int16_t>& ir, int& fs)
     printf("Channels: %d\n", metaData.numChannels);
     printf("Length=%d\n", pcm.GetLength() / metaData.numChannels);
 
-    fs = metaData.samplingRate;
+    fs = wave.GetSamplingRate();
     ir.Resize(pcm.GetLength() / metaData.numChannels);
 
+    // Only left channel is picked up.
     int ch = metaData.numChannels;
+    double energy = 0.0;
     for (int i = 0; i < pcm.GetLength(); ++i)
     {
-        ir[i] = pcm[2*i];
+        ir[i] = static_cast<double>(pcm[ch*i]);
+        energy += POW2(ir[i]);
     }
+    // ir.GetLength() で割ると一要素あたりのエネルギになる。
+    // 全区間にわたるエネルギで正規化しておきたい (畳み込みの結果が範囲内に収まるように)。
+    //
+    energy = sqrt(energy);// / ir.GetLength();
+    printf("Energy: %f (length=%d)\n", energy, ir.GetLength());
+    // Normalizing
+    for (int i = 0; i < pcm.GetLength(); ++i)
+    {
+        ir[i] /= energy;
+    }
+
     return NO_ERROR;
 }
 
@@ -57,13 +72,63 @@ static status_t GetAudioIn(mcon::Vector<int16_t>& audioIn)
     return status;
 }
 
+static status_t MakeTestIr(void)
+{
+    static const int ir_length = 64;
+
+    mcon::Vector<double> impluse;
+    int fs = 0;
+
+    int status = GetIr("Trig Room.wav", impluse, fs);
+
+    if ( NO_ERROR != status )
+    {
+        return status;
+    }
+    // インパルス長が 64 になるように調整
+    const int x = impluse.GetLength() / ir_length;
+
+    mcon::Vector<double> ir_arranged(ir_length);
+
+    double energy = 0.0;
+    for (int i = 0; i < impluse.GetLength(); ++i)
+    {
+        ir_arranged[i] = impluse[i*x];
+        energy += POW2(ir_arranged[i]);
+    }
+    energy = sqrt(energy);
+
+    printf("Energy: %g\n", energy);
+    // 区間のエネルギで割る
+    ir_arranged /= energy;
+
+    // int16_t に合わせるため
+    ir_arranged *= 32767;
+
+    mcon::Vector<int16_t> ir_arranged_int(ir_arranged);
+    FileIo ir(fs, 1, 16);
+
+    const char* name = "ir_test.wav";
+    status = ir.Write(name, ir_arranged_int);
+
+    if (status != NO_ERROR)
+    {
+        printf("Failed in writing %s...\n", name);
+    }
+}
+
 static status_t MakeTestWave(void)
 {
-    mcon::Vector<int16_t> impluse;
+    mcon::Vector<double> impluse;
     mcon::Vector<int16_t> audioIn;
     int fs = 0;
 
-    int status = GetIr(impluse, fs);
+    int status = GetIr("ir_test.wav", impluse, fs);
+    // return NO_ERROR;
+    // TBD
+    // 範囲を超えないように調整
+    // →どうするべき？
+    impluse *= 0.3;
     if ( NO_ERROR != status )
     {
         return status;
@@ -80,7 +145,7 @@ static status_t MakeTestWave(void)
 
     int len = impluse.GetLength();
     printf("Convolution\n");
-    for (int dgain = 10, exit = 0; ; --dgain)
+    for (int dgain = 10, exit = 0; dgain >= 0 ; --dgain)
     {
         exit = 1;
         for (int i = 0; i < audioIn.GetLength(); ++i)
@@ -90,16 +155,16 @@ static status_t MakeTestWave(void)
             {
                 sum += (audioIn[i + k - len] * impluse[len - k]);
             }
-            sum /= (1L << (15+tapps_log2-dgain));
+            //sum /= (1L << (15+tapps_log2-dgain));
             if (sum < -32768 || 32767 < sum)
             {
-                printf("Failed at gain=%d\n", dgain);
+                printf("Failed at gain=%d (sum=%f)\n", dgain, sum);
                 exit = 0;
                 break;
             }
             if ( (i % 4000) == 0 )
             {
-                printf("%4.1f [%%] out[%d]=%f\n", i*100.0/audioIn.GetLength(),i, sum);
+                printf("%4.1f [%%] out[%d]=%f\r", i*100.0/audioIn.GetLength(),i, sum);
             }
             audioOut[i] = static_cast<int16_t>(sum);
         }
@@ -174,23 +239,23 @@ static void test_RLS(void)
     for (int i = 0; i < n; ++i)
     {
         uv.Fifo(audioIn[i]);
-        mcon::Matrix<double> u = uv.Transpose();
+        const mcon::Matrix<double>& u = uv.Transpose();
         // Calling template <typename U> operator Vector<U>() const
         //mcon::Vector<double> d = reference(i, M);
         mcon::Matrix<double> k(P.Multiply(u)); // numerator
         double denom = 1.0;
-        mcon::Matrix<double> denominator = u.Transpose().Multiply(P).Multiply(u);
+        const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
         ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
         denom = denominator[0][0] + 1;
         k /= denom;
 
-        mcon::Matrix<double> m = u.Transpose().Multiply(h);
+        const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
         ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
         double eta = d[i] - m[0][0];
 
-        h = h + k * eta;
+        h += k * eta;
 
-        P = P - k.Multiply(u.Transpose()).Multiply(P);
+        P -= k.Multiply(u.Transpose()).Multiply(P);
         if ( (i % 10) == 0 )
         {
             printf("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
@@ -231,6 +296,7 @@ static void test_IR(void)
 
 int main(void)
 {
+    //MakeTestIr();
     //MakeTestWave();
     test_RLS();
 
