@@ -14,6 +14,12 @@ ENTRY_SRC ?= main.cpp
 MODULE_BUILD ?= Debug
 OUTDIR ?= .
 
+ifneq ($(MODULE_BUILD),Debug)
+ifneq ($(MODULE_BUILD),Release)
+$(error Invalid build target: $(MODULE_BUILD))
+endif
+endif
+
 ifeq ($(MODULE_BUILD),Debug)
     CPPFLAGS += -DDEBUG
 endif
@@ -35,7 +41,8 @@ all: $(BIN)
 	@echo Succeeded in building $(BIN).
 
 run: $(BIN)
-	./$(BIN)
+	@echo Running $(BIN) ...
+	@./$(BIN)
 
 build: $(BIN) lib
 
