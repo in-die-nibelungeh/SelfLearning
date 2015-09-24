@@ -155,25 +155,26 @@ status_t Ift(mcon::Vector<double>& outTd, const mcon::Matrix<double>& inFd)
 
 #define POW2(v) ((v)*(v))
 
+//status_t ConvertToRadAng(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
 status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
 {
-    if ( gainPhase.GetRowLength() < 2
-         || complex.GetRowLength() < 2 )
+    if ( complex.GetRowLength() < 2 )
     {
         return -ERROR_ILLEGAL;
+    }
+    if (gainPhase.GetRowLength() < 2)
+    {
+        gainPhase.Resize(2, complex.GetColumnLength());
     }
     mcon::Vector<double>& gain  = gainPhase[0];
     mcon::Vector<double>& phase = gainPhase[1];
     const mcon::Vector<double>& real  = complex[0];
     const mcon::Vector<double>& imag  = complex[1];
 
-    for (int i = 0; i < complex.GetColumnLength()/2; ++i)
+    for (int i = 0; i < complex.GetColumnLength(); ++i)
     {
-        if (i < gainPhase.GetColumnLength())
-        {
-            gain[i] = 10 * log10(POW2(real[i]) + POW2(imag[i]));
-            phase[i] = atan(real[i]/imag[i]);
-        }
+        gain[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
+        phase[i] = atan(imag[i]/real[i]);
     }
     return NO_ERROR;
 }
