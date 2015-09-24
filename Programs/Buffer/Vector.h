@@ -137,6 +137,32 @@ public:
         return m;
     }
 
+    inline Type GetMaximum(void) const
+    {
+        Type max = (*this)[0];
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            if (max < (*this)[i])
+            {
+                max = (*this)[i];
+            }
+        }
+        return max;
+    }
+
+    inline Type GetMinimum(void) const
+    {
+        Type min = (*this)[0];
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            if (min > (*this)[i])
+            {
+                min = (*this)[i];
+            }
+        }
+        return min;
+    }
+
     int GetLength(void) const { return m_Length; }
     bool IsNull(void) const { return m_Length == 0; }
     bool Resize(int length);
