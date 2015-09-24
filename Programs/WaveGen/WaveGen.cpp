@@ -1,12 +1,6 @@
-
-//#ifdef __cplusplus
-//#include <math>
-//#else
 #include <math.h>
-//#endif /* __cplusplus */
 
 #include "WaveGen.h"
-
 #include "debug.h"
 
 #define DEFAULT_BASE_FREQUENCY 440.0f
@@ -224,9 +218,9 @@ double WaveGen::GenerateOne(double p)
     return (this->*m_Generator)(p);
 }
 
-void WaveGen::GenerateWaveform(Container::Vector<double>& buffer, double amp)
+void WaveGen::GenerateWaveform(mcon::Vector<double>& buffer, double amp)
 {
-    for (int i = 0; i < buffer.GetNumOfData(); ++i, ++(*this))
+    for (int i = 0; i < buffer.GetLength(); ++i, ++(*this))
     {
         buffer[i] = amp * GetValue();
     }

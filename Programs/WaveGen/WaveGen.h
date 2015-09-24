@@ -3,15 +3,7 @@
 #define _WAVE_GEN_H_
 
 #include "types.h"
-#include "Buffer.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#include "Vector.h"
 
 class WaveGen
 {
@@ -67,10 +59,23 @@ public:
     bool SetBaseFrequency(double frequency) { SetWaveFrequency(frequency); }
 
     void GenerateWaveform(double buffer[], size_t n, double amplitude = 1.0f);
-    void GenerateWaveform(Container::Vector<double>& buffer, double amplitude = 1.0f);
+    void GenerateWaveform(mcon::Vector<double>& buffer, double amplitude = 1.0f);
 
 private:
+    /*
+     * Period Generator
+    class PeriGen
+    {
+        // Parameters for quantizing
+        int  m_SamplingRate;
+        double  m_Tick;
+        double  m_FrequencyBase;
 
+        // Working variables.
+        double  m_FrequencyCurrent;
+        double  m_PhaseCurrent;
+    };
+     */
     // GenerateOners
     double  Sine(double);
     double  Sawtooth(double);

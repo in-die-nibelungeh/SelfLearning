@@ -325,7 +325,7 @@ static void test_buffer(void)
     int numData = static_cast<int>(duration * samplingRate);
     wg.Reset();
 
-    Container::Vector<double> buffer(numData);
+    mcon::Vector<double> buffer(numData);
 
     wg.GenerateWaveform(buffer, numData);
 
