@@ -70,17 +70,17 @@ static void test_ft_buffer(void)
     wg.Reset();
     wg.SetSweepParam(FREQ_BASE*20, (double)n/fs, true);
 
-    Container::Vector<double> buffer(n);
+    mcon::Vector<double> buffer(n);
 
-    wg.GenerateWaveform(buffer, n);
+    wg.GenerateWaveform(buffer);
 
-    Container::Matrix<double> fft(2, n);
+    mcon::Matrix<double> fft(2, n);
 
     Fft::Ft(fft, buffer);
 
     {
         double df = (double)fs/n;
-        Container::Matrix<double> gp(2, n/2);
+        mcon::Matrix<double> gp(2, n/2);
 
         Fft::ConvertToGainPhase(gp, fft);
 
@@ -90,7 +90,7 @@ static void test_ft_buffer(void)
             printf("%f,%f,%f\n", i*df, gp[0][i], gp[1][i]);
         }
     }
-    Container::Vector<double> ifft(n);
+    mcon::Vector<double> ifft(n);
     Fft::Ift(ifft, fft);
     {
         printf("time,orig,td,td1\n");

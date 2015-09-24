@@ -2,7 +2,7 @@
 
 #include "types.h"
 #include "status.h"
-#include "Buffer.h"
+#include "Matrix.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -84,19 +84,19 @@ status_t Ft(double real[], double imag[], const double td[], int n)
     return NO_ERROR;
 }
 
-status_t Ft(Container::Matrix<double>& outFd, const Container::Vector<double>& inTd)
+status_t Ft(mcon::Matrix<double>& outFd, const mcon::Vector<double>& inTd)
 {
-    if ( outFd.GetNumOfArray() < 2 )
+    if ( outFd.GetRowLength() < 2 )
     {
         return -ERROR_ILLEGAL;
     }
 
-    Container::Vector<double>& real = outFd[0];
-    Container::Vector<double>& imag = outFd[1];
+    mcon::Vector<double>& real = outFd[0];
+    mcon::Vector<double>& imag = outFd[1];
 
-    for (int i = 0; i < outFd.GetNumOfData(); ++i)
+    for (int i = 0; i < outFd.GetColumnLength(); ++i)
     {
-        int N = inTd.GetNumOfData();
+        int N = inTd.GetLength();
         double df = (double)i * g_Pi * 2 / N;
         real[i] = 0.0;
         imag[i] = 0.0;
@@ -127,18 +127,18 @@ status_t Ift(double td[], const double real[], const double imag[], int N)
     return NO_ERROR;
 }
 
-status_t Ift(Container::Vector<double>& outTd, const Container::Matrix<double>& inFd)
+status_t Ift(mcon::Vector<double>& outTd, const mcon::Matrix<double>& inFd)
 {
-    if ( inFd.GetNumOfArray() < 2 )
+    if ( inFd.GetRowLength() < 2 )
     {
         return -ERROR_ILLEGAL;
     }
-    Container::Vector<double>& real = inFd[0];
-    Container::Vector<double>& imag = inFd[1];
+    const mcon::Vector<double>& real = inFd[0];
+    const mcon::Vector<double>& imag = inFd[1];
 
-    for (int i = 0; i < outTd.GetNumOfData(); ++i)
+    for (int i = 0; i < outTd.GetLength(); ++i)
     {
-        const int N = inFd.GetNumOfData();
+        const int N = inFd.GetColumnLength();
         double df = (double)i * g_Pi * 2 / N;
         outTd[i] = 0.0;
         if (i < N)
@@ -155,21 +155,21 @@ status_t Ift(Container::Vector<double>& outTd, const Container::Matrix<double>& 
 
 #define POW2(v) ((v)*(v))
 
-status_t ConvertToGainPhase(Container::Matrix<double>& gainPhase, const Container::Matrix<double>& complex)
+status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
 {
-    if ( gainPhase.GetNumOfArray() < 2
-         || complex.GetNumOfArray() < 2 )
+    if ( gainPhase.GetRowLength() < 2
+         || complex.GetRowLength() < 2 )
     {
         return -ERROR_ILLEGAL;
     }
-    Container::Vector<double>& gain  = gainPhase[0];
-    Container::Vector<double>& phase = gainPhase[1];
-    Container::Vector<double>& real  = complex[0];
-    Container::Vector<double>& imag  = complex[1];
+    mcon::Vector<double>& gain  = gainPhase[0];
+    mcon::Vector<double>& phase = gainPhase[1];
+    const mcon::Vector<double>& real  = complex[0];
+    const mcon::Vector<double>& imag  = complex[1];
 
-    for (int i = 0; i < complex.GetNumOfData()/2; ++i)
+    for (int i = 0; i < complex.GetColumnLength()/2; ++i)
     {
-        if (i < gainPhase.GetNumOfData())
+        if (i < gainPhase.GetColumnLength())
         {
             gain[i] = 10 * log10(POW2(real[i]) + POW2(imag[i]));
             phase[i] = atan(real[i]/imag[i]);
