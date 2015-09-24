@@ -107,9 +107,9 @@ void GetCoefficients(double coef[], size_t _N, double fe1, double fe2, double ar
     }
 }
 
-void GetCoefficients(Container::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
+void GetCoefficients(mcon::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
 {
-    const int N = coef.GetNumOfData();
+    const int N = coef.GetLength();
     BaseFunction baseFunction = GetBaseFunction(functionId);
     ASSERT(NULL != baseFunction);
     FilterFunction filterFunction = GetFilterFunction(typeId);
@@ -123,42 +123,42 @@ void GetCoefficients(Container::Vector<double>& coef, double fe1, double fe2, do
     }
 }
 
-void GetCoefficientsLpfSinc(Container::Vector<double>& coef, double fe)
+void GetCoefficientsLpfSinc(mcon::Vector<double>& coef, double fe)
 {
     GetCoefficients(coef, fe, 0.0, 0.0, FTI_LPF, FBI_SINC);
 }
 
-void GetCoefficientsHpfSinc(Container::Vector<double>& coef, double fe)
+void GetCoefficientsHpfSinc(mcon::Vector<double>& coef, double fe)
 {
     GetCoefficients(coef, fe, 0.0, 0.0, FTI_HPF, FBI_SINC);
 }
 
-void GetCoefficientsBpfSinc(Container::Vector<double>& coef, double fe1, double fe2)
+void GetCoefficientsBpfSinc(mcon::Vector<double>& coef, double fe1, double fe2)
 {
     GetCoefficients(coef, fe1, fe2, 0.0, FTI_BPF, FBI_SINC);
 }
 
-void GetCoefficientsBefSinc(Container::Vector<double>& coef, double fe1, double fe2)
+void GetCoefficientsBefSinc(mcon::Vector<double>& coef, double fe1, double fe2)
 {
     GetCoefficients(coef, fe1, fe2, 0.0, FTI_BEF, FBI_SINC);
 }
 
-void GetCoefficientsLpfLanczos(Container::Vector<double>& coef, double fe, double n)
+void GetCoefficientsLpfLanczos(mcon::Vector<double>& coef, double fe, double n)
 {
     GetCoefficients(coef, fe, 0.0, n, FTI_LPF, FBI_LANCZOS);
 }
 
-void GetCoefficientsHpfLanczos(Container::Vector<double>& coef, double fe, double n)
+void GetCoefficientsHpfLanczos(mcon::Vector<double>& coef, double fe, double n)
 {
     GetCoefficients(coef, fe, 0.0, n, FTI_HPF, FBI_LANCZOS);
 }
 
-void GetCoefficientsBpfLanczos(Container::Vector<double>& coef, double fe1, double fe2, double n)
+void GetCoefficientsBpfLanczos(mcon::Vector<double>& coef, double fe1, double fe2, double n)
 {
     GetCoefficients(coef, fe1, fe2, n, FTI_BPF, FBI_LANCZOS);
 }
 
-void GetCoefficientsBefLanczos(Container::Vector<double>& coef, double fe1, double fe2, double n)
+void GetCoefficientsBefLanczos(mcon::Vector<double>& coef, double fe1, double fe2, double n)
 {
     GetCoefficients(coef, fe1, fe2, n, FTI_BEF, FBI_LANCZOS);
 }

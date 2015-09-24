@@ -20,7 +20,7 @@ static void test_sinc(void)
     double scoef[256];
     double lcoef[256];
     size_t N = 24;
-    Container::Vector<double> slpf(N), shpf(N), sbpf(N), sbef(N), han(N);
+    mcon::Vector<double> slpf(N), shpf(N), sbpf(N), sbef(N), han(N);
     masp::window::Hanning(han);
     masp::fir::FilterSinc(scoef, N, fe);
     masp::fir::GetCoefficientsLpfSinc(slpf, fe);
