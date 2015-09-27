@@ -17,8 +17,7 @@
 #define POW2(x) ((x)*(x))
 
 //static const char* fname_body = "sweep_440-8800";
-static const char* fname_body = "sweep_440-3520_10s";
-
+static const char* fname_body = "sweep_440-3520_1s";
 
 static status_t GetIr(const char* name, mcon::Vector<double>& ir, int& fs)
 {
@@ -445,6 +444,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
         audioIn = audioIn_int;
         LOG("Done\n");
 
+#if 0
         LOG("Normalizing audio-in ... ");
         if (1)
         {
@@ -456,6 +456,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
             audioIn /= max;
         }
         LOG("Done\n");
+#endif
 /*
         // Normalizing
         mcon::Matrix<double> complex(2, audioIn.GetLength());
@@ -529,7 +530,11 @@ status_t RLS(const char* audioInFile, const char* irFile)
 
             Fft::Ft(complex, coefs);
             Fft::ConvertToGainPhase(coefs_gp, complex);
-            FILE* fp = fopen("ir_vs_coefs.csv", "w");
+            std::string fname("ir_vs_coefs_");
+            fname += std::string(audioInFile);
+            fname.erase( fname.length()-4, 4);
+            fname += std::string(".csv");
+            FILE* fp = fopen(fname.c_str(), "w");
             if (NULL != fp)
             {
                 double df = 1.0  * fs / M;
@@ -582,13 +587,19 @@ status_t RLS(const char* audioInFile, const char* irFile)
     return NO_ERROR;
 }
 
-int main(void)
+int main(int argc, char* argv[])
 {
     //MakeTestIr();
     //MakeTestWave();
     //test_RLS();
-    std::string audioIn = std::string(fname_body) + std::string(".wav");
+    std::string fbody("sweep_440-3520_1s");
+    if (argc > 1)
+    {
+        fbody = std::string(argv[1]);
+    }
+    printf("Proccessing for %s.wav\n", fbody.c_str());
+    std::string audioIn = fbody + std::string(".wav");
     RLS(audioIn.c_str(), "ir_test.wav");
-
+    printf("Done\n\n");
     return 0;
 }
