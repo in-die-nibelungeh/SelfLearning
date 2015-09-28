@@ -480,6 +480,13 @@ status_t RLS(const char* audioInFile, const char* irFile)
     }
 
     {
+#if 0
+        // From IR
+        audioIn = ir;
+        audioInConv = ir;
+        audioInConv = 0;
+        audioInConv[0] = 1.0;
+#endif
         static const int n = audioIn.GetLength();
         static const int M = ir.GetLength(); /// a design parameter.
         double c = 0.5; // an appropriately small number
@@ -493,14 +500,13 @@ status_t RLS(const char* audioInFile, const char* irFile)
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
 
-
         P /= c;
         uv = 0;
 
         LOG("Now executing RLS with %d samples.\n", n);
         for (int i = 0; i < n; ++i)
         {
-            uv.Fifo(audioIn[i]);
+            uv.Unshift(audioIn[i]);
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
             double denom = 1.0;
@@ -526,15 +532,6 @@ status_t RLS(const char* audioInFile, const char* irFile)
         LOG("\n");
         {
             mcon::Vector<double> coefs(h.Transpose()[0]);
-            // Needed to be reversed?
-            for (int i = 0; i < coefs.GetLength()/2; ++i)
-            {
-                const int len = coefs.GetLength();
-                double tmp = coefs[i];
-                coefs[i] = coefs[len - i - 1];
-                coefs[len - i - 1] = tmp;
-            }
-
             mcon::Matrix<double> complex(2, ir.GetLength());
             mcon::Matrix<double> ir_gp(2, ir.GetLength());
             mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
