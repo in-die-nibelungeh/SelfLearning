@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <math.h>
+#include <typeinfo>
 
 #include "Vector.h"
 #include "Matrix.h"
 
 template <class T>
-void DumpMatrix(mcon::Matrix<T>&m, const char* fmt)
+void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
 {
-    for (int i = 0; i < m.GetNumOfArray(); ++i)
+    if (typeid(int) == typeid(T))
+    {
+    }
+    else if (typeid(double) == typeid(T))
+    {
+    }
+    for (int i = 0; i < m.GetRowLength(); ++i)
     {
         printf("| ");
-        for (int j = 0; j < m.GetNumOfData(); ++j)
+        for (int j = 0; j < m.GetColumnLength(); ++j)
         {
-            printf(fmt, m[i][j]);
+            printf("%g", static_cast<double>(m[i][j]));
             printf("\t");
         }
         printf(" |\n");
@@ -21,6 +28,7 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt)
 
 #include "test_vector.cpp"
 #include "test_matrix.cpp"
+#include "benchmark_vector.cpp"
 
 static void test_matrix_determinant(void)
 {
@@ -144,10 +152,10 @@ static void test_transpose(void)
 
     mcon::Matrix<double> matt(1,1);
     matt = mat.Transpose();
-    for (int i = 0; i < matt.GetNumOfArray(); ++i)
+    for (int i = 0; i < matt.GetRowLength(); ++i)
     {
-        printf("mat [%d,0-%d] ", i, matt.GetNumOfData()-1);
-        for (int j = 0; j < matt.GetNumOfData(); ++j)
+        printf("mat [%d,0-%d] ", i, matt.GetColumnLength()-1);
+        for (int j = 0; j < matt.GetColumnLength(); ++j)
         {
             printf("%f ", matt[i][j]);
         }
@@ -400,10 +408,15 @@ int main(void)
     //test_matrix_multiply();
     //test_matrix_determinant();
     //test_vector_api();
+    benchmark_vector_api();
+    //test_matrix_api();
     //test_matrix_inverse();
     //mcon::Matrix<double> m(mcon::Matrix<double>::Identify(5));
     //DumpMatrix(m, "%f");
-    test_matrix_api();
+    mcon::Matrix<double> dm;
+    mcon::Matrix<int> im;
+    DumpMatrix(dm, "%f");
+    DumpMatrix(im, "%d");
 
     return 0;
 }

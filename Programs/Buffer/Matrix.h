@@ -6,7 +6,7 @@
 
 namespace mcon {
 
-template <class T> class Vector;
+template <class Type> class Vector;
 
 #define MCON_ITERATION(var, iter, statement)  \
     do {                                             \
@@ -20,16 +20,16 @@ template <class T> class Vector;
 /*--------------------------------------------------------------------
  * Matrix
  *--------------------------------------------------------------------*/
-template <class T>
+template <class Type>
 class Matrix
 {
 public:
-    void DumpMatrix(const Matrix<T>&m, const char* fmt) const
+    void DumpMatrix(const Matrix<Type>&m, const char* fmt) const
     {
-        for (int i = 0; i < m.GetNumOfArray(); ++i)
+        for (int i = 0; i < m.GetRowLength(); ++i)
         {
             printf("| ");
-            for (int j = 0; j < m.GetNumOfData(); ++j)
+            for (int j = 0; j < m.GetColumnLength(); ++j)
             {
                 printf(fmt, m[i][j]);
                 printf("\t");
@@ -38,63 +38,67 @@ public:
         }
     }
     Matrix(int rowLength = 0, int columnLength = 0);
-    Matrix(const Matrix<T>& m);
+    Matrix(const Matrix<Type>& m);
     template <typename U>
     Matrix(const Matrix<U>& m);
 
     ~Matrix();
 
-    const Vector<T>& operator[](int i) const
+    const Vector<Type>& operator[](int i) const
     {
-        if (0 <= i && i < m_NumOfArray)
+        if (0 <= i && i < m_RowLength)
         {
             return *m_Array[i];
         }
         return m_Zero;
     }
 
-    Vector<T>& operator[](int i)
+    Vector<Type>& operator[](int i)
     {
-        if (0 <= i && i < m_NumOfArray)
+        if (0 <= i && i < m_RowLength)
         {
             return *m_Array[i];
         }
         return m_Zero;
     }
 
-    Matrix<T>& operator=(const Matrix<T>& m);
+    Matrix<Type>& operator=(const Matrix<Type>& m);
 
-    const Matrix<T> operator+(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] += v); return mat; }
-    const Matrix<T> operator-(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] -= v); return mat; }
-    const Matrix<T> operator*(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] *= v); return mat; }
-    const Matrix<T> operator/(T v) const { Matrix<T> mat(*this); MCON_ITERATION( i, GetNumOfArray(), mat[i] /= v); return mat; }
+    const Matrix<Type> operator+(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
+    const Matrix<Type> operator-(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] -= v); return mat; }
+    const Matrix<Type> operator*(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] *= v); return mat; }
+    const Matrix<Type> operator/(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] /= v); return mat; }
 
-    const Matrix<T> operator+(const Matrix<T>& m) const { Matrix<T> mat(*this); mat += m; return mat; }
-    const Matrix<T> operator-(const Matrix<T>& m) const { Matrix<T> mat(*this); mat -= m; return mat; }
-    const Matrix<T> operator*(const Matrix<T>& m) const { Matrix<T> mat(*this); mat *= m; return mat; }
-    const Matrix<T> operator/(const Matrix<T>& m) const { Matrix<T> mat(*this); mat /= m; return mat; }
+    const Matrix<Type> operator+(const Matrix<Type>& m) const { Matrix<Type> mat(*this); mat += m; return mat; }
+    const Matrix<Type> operator-(const Matrix<Type>& m) const { Matrix<Type> mat(*this); mat -= m; return mat; }
+    const Matrix<Type> operator*(const Matrix<Type>& m) const { Matrix<Type> mat(*this); mat *= m; return mat; }
+    const Matrix<Type> operator/(const Matrix<Type>& m) const { Matrix<Type> mat(*this); mat /= m; return mat; }
 
-    Matrix<T>& operator+=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] += v); return *this; }
-    Matrix<T>& operator-=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] -= v); return *this; }
-    Matrix<T>& operator*=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] *= v); return *this; }
-    Matrix<T>& operator/=(T v) { MCON_ITERATION( i, GetNumOfArray(), (*this)[i] /= v); return *this; }
+    Matrix<Type>& operator+=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] += v); return *this; }
+    Matrix<Type>& operator-=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] -= v); return *this; }
+    Matrix<Type>& operator*=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] *= v); return *this; }
+    Matrix<Type>& operator/=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] /= v); return *this; }
 
-    Matrix<T>& operator+=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] += m[i]); return *this; }
-    Matrix<T>& operator-=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] -= m[i]); return *this; }
-    Matrix<T>& operator*=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] *= m[i]); return *this; }
-    Matrix<T>& operator/=(const Matrix<T>& m) { MCON_ITERATION( i, Smaller(m.GetNumOfArray()), (*this)[i] /= m[i]); return *this; }
+    Matrix<Type>& operator+=(const Matrix<Type>& m) { MCON_ITERATION( i, Smaller(m.GetRowLength()), (*this)[i] += m[i]); return *this; }
+    Matrix<Type>& operator-=(const Matrix<Type>& m) { MCON_ITERATION( i, Smaller(m.GetRowLength()), (*this)[i] -= m[i]); return *this; }
+    Matrix<Type>& operator*=(const Matrix<Type>& m) { MCON_ITERATION( i, Smaller(m.GetRowLength()), (*this)[i] *= m[i]); return *this; }
+    Matrix<Type>& operator/=(const Matrix<Type>& m) { MCON_ITERATION( i, Smaller(m.GetRowLength()), (*this)[i] /= m[i]); return *this; }
 
-    const Matrix<T> Transpose(void) const;
-    const Matrix<T> Multiply(const Matrix<T>& m) const;
-    const Matrix<T> Inverse(void) const;
-    T Determinant(void) const;
-    const Matrix<T> GetCofactorMatrix(int row, int col) const;
-    T GetCofactor(int row, int col) const;
+    inline Matrix<Type> T(void) const { return Transpose(); }
+    inline Matrix<Type> I(void) const { return Inverse(); }
+    Type D(void) const { return Determinant(); }
+    inline static Matrix<Type> E(int size) { return Identify(size); }
 
-    inline Matrix<T> E(int size) { return Identify(size); }
-    static Matrix<T> Identify(int size)
+    Matrix<Type> Transpose(void) const;
+    Matrix<Type> Multiply(const Matrix<Type>& m) const;
+    Matrix<Type> Inverse(void) const;
+    Type Determinant(void) const;
+    Matrix<Type> GetCofactorMatrix(int row, int col) const;
+    Type GetCofactor(int row, int col) const;
+
+    static Matrix<Type> Identify(int size)
     {
-        Matrix<T> I(size, size);
+        Matrix<Type> I(size, size);
         for (int i = 0; i < size; ++i)
         {
             I[i] = 0;
@@ -106,144 +110,144 @@ public:
         return I;
     }
 
-    bool IsNull(void) const { return m_NumOfArray == 0; }
-    int GetNumOfArray(void) const { return m_NumOfArray; }
-    int GetNumOfData(void) const { return m_NumOfData; }
+    bool IsNull(void) const { return m_RowLength == 0; }
+    int GetRowLength(void) const { return m_RowLength; }
+    int GetColumnLength(void) const { return m_ColumnLength; }
     bool Resize(int, int);
 private:
     // Member functions (private).
     void AllocateRow   (void);
     void AllocateColumn(void);
     void Allocate      (void);
-    int Smaller(int length) const { return (length > m_NumOfArray) ? m_NumOfArray : length; };
+    int Smaller(int length) const { return (length > m_RowLength) ? m_RowLength : length; };
 
     // Member variables (private).
-    int m_NumOfArray;
-    int m_NumOfData;
-    Vector<T>** m_Array;
-    Vector<T>   m_Zero;
+    int m_RowLength;
+    int m_ColumnLength;
+    Vector<Type>** m_Array;
+    Vector<Type>   m_Zero;
 };
 
 
-template <class T>
-void Matrix<T>::Allocate(void)
+template <class Type>
+void Matrix<Type>::Allocate(void)
 {
     AllocateRow();
     AllocateColumn();
 }
 
-template <class T>
-void Matrix<T>::AllocateRow(void)
+template <class Type>
+void Matrix<Type>::AllocateRow(void)
 {
-    if (0 < m_NumOfArray)
+    if (0 < m_RowLength)
     {
-        m_Array = new Vector<T>*[m_NumOfArray];
+        m_Array = new Vector<Type>*[m_RowLength];
         ASSERT(NULL != m_Array);
     }
 }
 
-template <class T>
-void Matrix<T>::AllocateColumn(void)
+template <class Type>
+void Matrix<Type>::AllocateColumn(void)
 {
-    for (int i = 0; i < m_NumOfArray; ++i)
+    for (int i = 0; i < m_RowLength; ++i)
     {
-        m_Array[i] = new Vector<T>(m_NumOfData);
+        m_Array[i] = new Vector<Type>(m_ColumnLength);
         ASSERT(m_Array[i] != NULL);
     }
 }
 
-template <class T>
-Matrix<T>::Matrix(int numArray, int numData)
+template <class Type>
+Matrix<Type>::Matrix(int rowLength, int columnLength)
   : m_Array(NULL),
-    m_NumOfData(numData),
-    m_NumOfArray(numArray),
+    m_ColumnLength(columnLength),
+    m_RowLength(rowLength),
     m_Zero(0)
 {
     Allocate();
 }
 
-template <class T>
-Matrix<T>::Matrix(const Matrix<T>& m)
+template <class Type>
+Matrix<Type>::Matrix(const Matrix<Type>& m)
   : m_Array(NULL),
-    m_NumOfArray(m.GetNumOfArray()),
-    m_NumOfData(m.GetNumOfData()),
+    m_RowLength(m.GetRowLength()),
+    m_ColumnLength(m.GetColumnLength()),
     m_Zero(0)
 {
     AllocateRow();
-    for (int i = 0; i < m_NumOfArray; ++i)
+    for (int i = 0; i < m_RowLength; ++i)
     {
-        m_Array[i] = new Vector<T>(m[i]);
+        m_Array[i] = new Vector<Type>(m[i]);
         ASSERT(m_Array[i] != NULL);
     }
 }
 
-template <class T>
+template <class Type>
 template <typename U>
-Matrix<T>::Matrix(const Matrix<U>& m)
+Matrix<Type>::Matrix(const Matrix<U>& m)
   : m_Array(NULL),
-    m_NumOfArray(m.GetNumOfArray()),
-    m_NumOfData(m.GetNumOfData()),
+    m_RowLength(m.GetRowLength()),
+    m_ColumnLength(m.GetColumnLength()),
     m_Zero(0)
 {
     AllocateRow();
-    for (int i = 0; i < m_NumOfArray; ++i)
+    for (int i = 0; i < m_RowLength; ++i)
     {
-        m_Array[i] = new Vector<T>(m[i]);
+        m_Array[i] = new Vector<Type>(m[i]);
         ASSERT(m_Array[i] != NULL);
     }
 }
 
-template <class T>
-Matrix<T>::~Matrix()
+template <class Type>
+Matrix<Type>::~Matrix()
 {
     if (m_Array != NULL)
     {
-        for (int i = 0; i < m_NumOfArray; ++i)
+        for (int i = 0; i < m_RowLength; ++i)
         {
             delete m_Array[i];
         }
         delete[] m_Array;
     }
-    m_Array = PTR_CAST(Vector<T>**, NULL);
-    m_NumOfArray = 0;
-    m_NumOfData = 0;
+    m_Array = PTR_CAST(Vector<Type>**, NULL);
+    m_RowLength = 0;
+    m_ColumnLength = 0;
 }
 
-template <class T>
-bool Matrix<T>::Resize(int numArray, int numData)
+template <class Type>
+bool Matrix<Type>::Resize(int rowLength, int columnLength)
 {
-    if (numArray < 0 || numData < 0)
+    if (rowLength < 0 || columnLength < 0)
     {
         return false;
     }
 
-    if (numArray != m_NumOfArray)
+    if (rowLength != m_RowLength)
     {
-        Vector<T>** ptr = NULL;
-        if (numArray > 0)
+        Vector<Type>** ptr = NULL;
+        if (rowLength > 0)
         {
-            ptr = new Vector<T>*[numArray];
+            ptr = new Vector<Type>*[rowLength];
             ASSERT(NULL != ptr);
-            for (int i = 0; i < numArray; ++i)
+            for (int i = 0; i < rowLength; ++i)
             {
                 ptr[i] = NULL;
             }
         }
 
-        for (int i = 0; i < Smaller(numArray); ++i)
+        for (int i = 0; i < Smaller(rowLength); ++i)
         {
             ptr[i] = m_Array[i];
             m_Array[i] = NULL;
         }
-        for (int i = 0; i < numArray; ++i)
+        for (int i = 0; i < rowLength; ++i)
         {
             if (ptr[i] == NULL)
             {
-                ptr[i] = new Vector<T>(numData);
+                ptr[i] = new Vector<Type>(columnLength);
                 ASSERT(ptr[i] != NULL);
             }
         }
-        for (int i = 0; i < m_NumOfArray; ++i)
+        for (int i = 0; i < m_RowLength; ++i)
         {
             if (m_Array[i] != NULL)
             {
@@ -253,36 +257,36 @@ bool Matrix<T>::Resize(int numArray, int numData)
         }
         delete[] m_Array;
         m_Array = ptr;
-        m_NumOfArray = numArray;
+        m_RowLength = rowLength;
     }
-    m_NumOfData = numData;
+    m_ColumnLength = columnLength;
 
     bool status = true;
-    for (int i = 0; i < m_NumOfArray; ++i)
+    for (int i = 0; i < m_RowLength; ++i)
     {
-        status &= (*m_Array[i]).Resize(m_NumOfData);
+        status &= (*m_Array[i]).Resize(m_ColumnLength);
     }
     return status;
 }
 
-template <class T>
-Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
+template <class Type>
+Matrix<Type>& Matrix<Type>::operator=(const Matrix<Type>& m)
 {
-    Resize(m.GetNumOfArray(), m.GetNumOfData());
-    for (int i = 0; i < m_NumOfArray; ++i)
+    Resize(m.GetRowLength(), m.GetColumnLength());
+    for (int i = 0; i < m_RowLength; ++i)
     {
         *m_Array[i] = m[i];
     }
     return *this;
 }
 
-template <class T>
-const Matrix<T> Matrix<T>::Transpose(void) const
+template <class Type>
+Matrix<Type> Matrix<Type>::Transpose(void) const
 {
-    Matrix<T> transposed(GetNumOfData(), GetNumOfArray());
-    for (int i = 0; i < GetNumOfArray(); ++i)
+    Matrix<Type> transposed(GetColumnLength(), GetRowLength());
+    for (int i = 0; i < GetRowLength(); ++i)
     {
-        for (int j = 0; j < GetNumOfData(); ++j)
+        for (int j = 0; j < GetColumnLength(); ++j)
         {
             transposed[j][i] = (*this)[i][j];
         }
@@ -290,20 +294,20 @@ const Matrix<T> Matrix<T>::Transpose(void) const
     return transposed;
 }
 
-template <class T>
-const Matrix<T> Matrix<T>::Multiply(const Matrix<T>& m) const
+template <class Type>
+Matrix<Type> Matrix<Type>::Multiply(const Matrix<Type>& m) const
 {
-    if ( GetNumOfData() != m.GetNumOfArray() )
+    if ( GetColumnLength() != m.GetRowLength() )
     {
         return *this;
     }
-    Matrix<T> multiplied(GetNumOfArray(), m.GetNumOfData());
-    for (int row = 0; row < multiplied.GetNumOfArray(); ++row)
+    Matrix<Type> multiplied(GetRowLength(), m.GetColumnLength());
+    for (int row = 0; row < multiplied.GetRowLength(); ++row)
     {
-        for (int col = 0; col < multiplied.GetNumOfData(); ++col)
+        for (int col = 0; col < multiplied.GetColumnLength(); ++col)
         {
-            T v = 0;
-            for (int k = 0; k < GetNumOfData(); ++k)
+            Type v = 0;
+            for (int k = 0; k < GetColumnLength(); ++k)
             {
                 v += (*this)[row][k] * m[k][col];
             }
@@ -313,12 +317,12 @@ const Matrix<T> Matrix<T>::Multiply(const Matrix<T>& m) const
     return multiplied;
 }
 
-template <class T>
-const Matrix<T> Matrix<T>::GetCofactorMatrix(int row, int col) const
+template <class Type>
+Matrix<Type> Matrix<Type>::GetCofactorMatrix(int row, int col) const
 {
-    int rowCount = GetNumOfArray();
-    int colCount = GetNumOfData();
-    Matrix<T> cofactorMatrix(rowCount-1, colCount-1);
+    int rowCount = GetRowLength();
+    int colCount = GetColumnLength();
+    Matrix<Type> cofactorMatrix(rowCount-1, colCount-1);
 
     for (int r = 0, ri = 0; ri < rowCount; ++ri)
     {
@@ -339,27 +343,27 @@ const Matrix<T> Matrix<T>::GetCofactorMatrix(int row, int col) const
     return cofactorMatrix;
 }
 
-template <class T>
-T Matrix<T>::GetCofactor(int row, int col) const
+template <class Type>
+Type Matrix<Type>::GetCofactor(int row, int col) const
 {
     int sign = ( (row + col) & 1) ? -1 : 1;
     return GetCofactorMatrix(row, col).Determinant() * sign;
 }
 
-template <class T>
-T Matrix<T>::Determinant(void) const
+template <class Type>
+Type Matrix<Type>::Determinant(void) const
 {
-    if ( GetNumOfData() != GetNumOfArray() )
+    if ( GetColumnLength() != GetRowLength() )
     {
         return 0;
     }
-    int dimension = GetNumOfData();
-    T det = 0;
+    int dimension = GetColumnLength();
+    Type det = 0;
 
     // Sarrus
     if ( 3 == dimension )
     {
-        const Matrix<T>&m = *this;
+        const Matrix<Type>&m = *this;
         det = m[0][0] * m[1][1] * m[2][2]
               + m[0][1] * m[1][2] * m[2][0]
               + m[0][2] * m[1][0] * m[2][1]
@@ -369,20 +373,20 @@ T Matrix<T>::Determinant(void) const
     }
     else if ( 2 == dimension )
     {
-        const Matrix<T>&m = *this;
+        const Matrix<Type>&m = *this;
         det = m[0][0] * m[1][1]
               - m[0][1] * m[1][0];
     }
     else if ( 1 == dimension )
     {
-        const Matrix<T>&m = *this;
+        const Matrix<Type>&m = *this;
         det = m[0][0];
     }
     else
     {
-        for (int row = 0; row < GetNumOfArray(); ++row)
+        for (int row = 0; row < GetRowLength(); ++row)
         {
-            //Matrix<T> m(CoFactor(row, 0));
+            //Matrix<Type> m(CoFactor(row, 0));
             //DumpMatrix(m, "%f");
             //double v = m.Determinant() * sign * (*this)[row][0];
             det += GetCofactor(row, 0) * (*this)[row][0];
@@ -391,15 +395,15 @@ T Matrix<T>::Determinant(void) const
     return det;
 }
 
-template <class T>
-const Matrix<T> Matrix<T>::Inverse(void) const
+template <class Type>
+Matrix<Type> Matrix<Type>::Inverse(void) const
 {
-    if ( GetNumOfData() != GetNumOfArray() )
+    if ( GetColumnLength() != GetRowLength() )
     {
         return *this;
     }
 
-    T det = Determinant();
+    Type det = Determinant();
     if ( 0 == det )
     {
         printf("Det=Zero\n");
@@ -407,9 +411,9 @@ const Matrix<T> Matrix<T>::Inverse(void) const
     }
     // Calculate Inversed-Matrix by Cofactors.
     printf("Determinant=%f\n", det);
-    int rowCount = GetNumOfArray();
-    int colCount = GetNumOfData();
-    Matrix<T> inversed(rowCount, colCount);
+    int rowCount = GetRowLength();
+    int colCount = GetColumnLength();
+    Matrix<Type> inversed(rowCount, colCount);
 
 #if 0
     for (int row = 0; row < rowCount; ++row)
@@ -417,7 +421,7 @@ const Matrix<T> Matrix<T>::Inverse(void) const
         for (int col = 0; col < colCount; ++col)
         {
             int sign = ((row + col) & 1) ? -1 : 1;
-            Matrix<T> m(GetCofactorMatrix(row, col));
+            Matrix<Type> m(GetCofactorMatrix(row, col));
             printf("cof[%d, %d]\n", row, col);
             //DumpMatrix(m, "%f");
             inversed[col][row] = GetCofactor(row, col) / det;
@@ -426,9 +430,9 @@ const Matrix<T> Matrix<T>::Inverse(void) const
     }
 #else
     // Calculate by Wipe-out
-    static const T threshold = 1.0e-10; // TBD
+    static const Type threshold = 1.0e-10; // TBD
 
-    Matrix<T> m(rowCount, colCount*2);
+    Matrix<Type> m(rowCount, colCount*2);
     for (int row = 0; row < rowCount; ++row)
     {
         for (int col = 0; col < colCount; ++col)
@@ -458,7 +462,7 @@ const Matrix<T> Matrix<T>::Inverse(void) const
         {
             if (fabs(m[i][iter]) > threshold)
             {
-                Vector<T> vec(m[i]);
+                Vector<Type> vec(m[i]);
                 m[i] = m[iter];
                 vec /= vec[iter];
                 m[iter] = vec;
@@ -475,7 +479,7 @@ const Matrix<T> Matrix<T>::Inverse(void) const
         {
             if (i != iter)
             {
-                Vector<T> vec(m[iter]);
+                Vector<Type> vec(m[iter]);
                 vec *= m[i][iter];
                 m[i] -= vec;
             }
