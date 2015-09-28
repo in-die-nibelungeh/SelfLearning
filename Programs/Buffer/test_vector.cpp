@@ -240,6 +240,7 @@ static void test_vector_api(void)
         }
     }
     // Fifo
+    printf("[Fifo]\n");
     double v = dvec2.Fifo(5);
     CHECK_VALUE(v, 2);
     for (int i = lower; i < upper; ++i)
@@ -253,12 +254,41 @@ static void test_vector_api(void)
             CHECK_VALUE(dvec2[i], 0);
         }
     }
+    // Unshift
+    printf("[Unshift]\n");
+    v = dvec2.Unshift(2);
+    CHECK_VALUE(v, 5);
+    for (int i = lower; i < upper; ++i)
+    {
+        if (0 <= i && i < dvec2.GetLength())
+        {
+            CHECK_VALUE(dvec2[i], i+2);
+        }
+        else
+        {
+            CHECK_VALUE(dvec2[i], 0);
+        }
+    }
+
     // Cast (default function?)
+    printf("[Cast]\n");
     ivec = static_cast< mcon::Vector<int> >(dvec);
     for (int i = 0; i < ivec.GetLength(); ++i)
     {
         CHECK_VALUE(ivec[i], i+1);
         CHECK_VALUE(dvec[i], i+1);
     }
+    ivec = dvec;
+    for (int i = 0; i < ivec.GetLength(); ++i)
+    {
+        CHECK_VALUE(ivec[i], i+1);
+        CHECK_VALUE(dvec[i], i+1);
+    }
+    // Maximum/Minimum
+    printf("[GetMaximum]\n");
+    CHECK_VALUE(dvec2.GetMaximum(),4);
+    printf("[GetMinimum]\n");
+    CHECK_VALUE(dvec2.GetMinimum(),2);
+
     printf("END\n");
 }
