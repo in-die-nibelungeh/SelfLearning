@@ -19,6 +19,26 @@
 //static const char* fname_body = "sweep_440-8800";
 static const char* fname_body = "sweep_440-3520_1s";
 
+status_t Normalize(mcon::Vector<double>& vec)
+{
+    mcon::Matrix<double> complex(2, vec.GetLength());
+    mcon::Matrix<double> gp(2, vec.GetLength());
+
+    LOG("Ft ... ");
+    Fft::Ft(complex, vec);
+    LOG("Done\n");
+    LOG("Convert to gain and phsae ... ");
+    Fft::ConvertToGainPhase(gp, complex);
+    LOG("Done\n");
+
+    // Normalizing
+    double max = gp[0].GetMaximum();
+    LOG("Divied max (%f) ...", max);
+    vec /= max;
+    LOG("Done\n");
+    return NO_ERROR;
+}
+
 static status_t GetIr(const char* name, mcon::Vector<double>& ir, int& fs)
 {
     FileIo wave;
@@ -41,23 +61,10 @@ static status_t GetIr(const char* name, mcon::Vector<double>& ir, int& fs)
 
     // Only left channel is picked up.
     int ch = metaData.numChannels;
-    double energy = 0.0;
     for (int i = 0; i < pcm.GetLength(); ++i)
     {
         ir[i] = static_cast<double>(pcm[ch*i]);
-        energy += POW2(ir[i]);
     }
-    // ir.GetLength() で割ると一要素あたりのエネルギになる。
-    // 全区間にわたるエネルギで正規化しておきたい (畳み込みの結果が範囲内に収まるように)。
-    //
-    energy = sqrt(energy);// / ir.GetLength();
-    printf("Energy: %f (length=%d)\n", energy, ir.GetLength());
-    // Normalizing
-    for (int i = 0; i < pcm.GetLength(); ++i)
-    {
-        ir[i] /= energy;
-    }
-
     return NO_ERROR;
 }
 
@@ -80,35 +87,30 @@ static status_t GetAudioIn(mcon::Vector<int16_t>& audioIn)
     return status;
 }
 
-static status_t MakeTestIr(void)
+static status_t MakeTestIr(int length)
 {
-    static const int ir_length = 64;
+    const int ir_length = length;
 
     mcon::Vector<double> impluse;
     int fs = 0;
 
-    int status = GetIr("Trig Room.wav", impluse, fs);
+    int status = GetIr("Trig_Room.wav", impluse, fs);
 
     if ( NO_ERROR != status )
     {
         return status;
     }
-    // インパルス長が 64 になるように調整
+    // インパルス長が length になるように調整
     const int x = impluse.GetLength() / ir_length;
 
     mcon::Vector<double> ir_arranged(ir_length);
 
-    double energy = 0.0;
     for (int i = 0; i < impluse.GetLength(); ++i)
     {
         ir_arranged[i] = impluse[i*x];
-        energy += POW2(ir_arranged[i]);
     }
-    energy = sqrt(energy);
-
-    printf("Energy: %g\n", energy);
-    // 区間のエネルギで割る
-    ir_arranged /= energy;
+    // 正規化
+    Normalize(ir_arranged);
 
     // int16_t に合わせるため
     ir_arranged *= 32767;
@@ -116,13 +118,15 @@ static status_t MakeTestIr(void)
     mcon::Vector<int16_t> ir_arranged_int(ir_arranged);
     FileIo ir(fs, 1, 16);
 
-    const char* name = "ir_test.wav";
+    char name[256];
+    sprintf(name, "ir_test_%d.wav", length);
     status = ir.Write(name, ir_arranged_int);
 
     if (status != NO_ERROR)
     {
         printf("Failed in writing %s...\n", name);
     }
+    return NO_ERROR;
     mcon::Vector<double> hoge(ir_length);
     for (int i = 0; i < ir_length; ++i)
     {
@@ -336,26 +340,6 @@ static void test_IR(void)
     printf("Length=%d\n", pcm.GetLength() / metaData.numChannels);
 }
 
-status_t Normalize(mcon::Vector<double>& vec)
-{
-    mcon::Matrix<double> complex(2, vec.GetLength());
-    mcon::Matrix<double> gp(2, vec.GetLength());
-
-    LOG("Ft ... ");
-    Fft::Ft(complex, vec);
-    LOG("Done\n");
-    LOG("Convert to gain and phsae ... ");
-    Fft::ConvertToGainPhase(gp, complex);
-    LOG("Done\n");
-
-    // Normalizing
-    double max = gp[0].GetMaximum();
-    LOG("Divied max (%f) ...", max);
-    vec /= max;
-    LOG("Done\n");
-    return NO_ERROR;
-}
-
 status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>& audioIn, const mcon::Vector<double>& impluse)
 {
     if (audioIn.GetLength() < impluse.GetLength())
@@ -376,7 +360,7 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     return NO_ERROR;
 }
 
-status_t RLS(const char* audioInFile, const char* irFile)
+status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
 {
     mcon::Vector<double> ir;
     mcon::Vector<double> audioIn;
@@ -384,12 +368,16 @@ status_t RLS(const char* audioInFile, const char* irFile)
     int fs;
 
     {
+        MakeTestIr(tapps);
+
         mcon::Vector<int16_t> ir_int;
         FileIo wave;
         status_t status;
 
         LOG("Loading ir file ... ");
-        status = wave.Read(irFile, ir_int);
+        char name[256];
+        sprintf(name, "ir_test_%d.wav", tapps);
+        status = wave.Read(name, ir_int);
         if ( NO_ERROR != status )
         {
             printf("An error occured: error=%d\n", status);
@@ -402,17 +390,6 @@ status_t RLS(const char* audioInFile, const char* irFile)
         Normalize(ir);
         LOG("Done\n");
 
-/*
-        mcon::Matrix<double> complex(2, ir.GetLength());
-        mcon::Matrix<double> gp(2, ir.GetLength());
-
-        Fft::Ft(complex, ir);
-        Fft::ConvertToGainPhase(gp, complex);
-
-        // Normalizing
-        double max = gp[0].GetMaximum();
-        ir /= max;
-*/
         fs = wave.GetSamplingRate();
 
         LOG("Sampling rate: %d\n", fs);
@@ -445,7 +422,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
 
 #if 0
         LOG("Normalizing audio-in ... ");
-        if (0)
+        if (1)
         {
             Normalize(audioIn);
         }
@@ -456,15 +433,6 @@ status_t RLS(const char* audioInFile, const char* irFile)
         }
         LOG("Done\n");
 #endif
-/*
-        // Normalizing
-        mcon::Matrix<double> complex(2, audioIn.GetLength());
-        mcon::Matrix<double> gp(2, audioIn.GetLength());
-        Fft::Ft(complex, audioIn);
-        Fft::ConvertToGainPhase(gp, complex);
-        double max = gp[0].GetMaximum();
-        audioIn /= max;
-*/
     }
 
     // Convolution
@@ -480,13 +448,6 @@ status_t RLS(const char* audioInFile, const char* irFile)
     }
 
     {
-#if 0
-        // From IR
-        audioIn = ir;
-        audioInConv = ir;
-        audioInConv = 0;
-        audioInConv[0] = 1.0;
-#endif
         static const int n = audioIn.GetLength();
         static const int M = ir.GetLength(); /// a design parameter.
         double c = 0.5; // an appropriately small number
@@ -494,7 +455,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
         mcon::Vector<double> _h(M);
         _h = 0;
         mcon::Matrix<double> h(_h.Transpose());
-        mcon::Vector<double>& d = audioInConv;
+        mcon::Vector<double>& d = audioIn;
         mcon::Vector<double> uv(M);
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
@@ -506,7 +467,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
         LOG("Now executing RLS with %d samples.\n", n);
         for (int i = 0; i < n; ++i)
         {
-            uv.Unshift(audioIn[i]);
+            uv.Unshift(audioInConv[i]);
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
             double denom = 1.0;
@@ -540,7 +501,9 @@ status_t RLS(const char* audioInFile, const char* irFile)
 
             Fft::Ft(complex, coefs);
             Fft::ConvertToGainPhase(coefs_gp, complex);
-            std::string fname("ir_vs_coefs_");
+            char _fname[128];
+            sprintf(_fname, "ir_vs_coefs_%d_", tapps);
+            std::string fname(_fname);
             fname += std::string(audioInFile);
             fname.erase( fname.length()-4, 4);
             fname += std::string(".csv");
@@ -560,13 +523,13 @@ status_t RLS(const char* audioInFile, const char* irFile)
                     fprintf(fp, "%g,%g,%g\n", i*df, ir_gp[1][i]*180/M_PI, coefs_gp[1][i]*180/M_PI);
                 }
                 fprintf(fp, "\n");
-                fprintf(fp, "i,IR,Coef)\n");
+                fprintf(fp, "i,IR,Coef\n");
                 for (int i = 0; i < ir.GetLength(); ++i)
                 {
                     fprintf(fp, "%d,%g,%g\n", i, ir[i], coefs[i]);
                 }
                 fprintf(fp, "\n");
-#if 0
+#if 1
                 // Dump some variables to evaluate the error left.
                 fprintf(fp, "i,e,eta,J\n");
                 for (int i = 0; i < n; ++i)
@@ -577,44 +540,143 @@ status_t RLS(const char* audioInFile, const char* irFile)
                 fclose(fp);
             }
         }
-#if 0
-        double max = 0.0;
-        for (int i = 0; i < h.GetColumnLength(); ++i)
+    }
+    return NO_ERROR;
+}
+
+status_t RlsFromIr(const char* irFile, int tapps)
+{
+    mcon::Vector<double> ir;
+    int fs;
+
+    {
+        mcon::Vector<int16_t> ir_int;
+        FileIo wave;
+        status_t status;
+
+        LOG("Loading ir file ... ");
+        status = wave.Read(irFile, ir_int);
+        if ( NO_ERROR != status )
         {
-            if (max < fabs(h[i][0]))
+            printf("An error occured: error=%d\n", status);
+            return status;
+        }
+        LOG("Done\n");
+        ir = ir_int;
+
+        fs = wave.GetSamplingRate();
+        LOG("Sampling rate: %d\n", fs);
+    }
+
+    {
+        static const int n = ir.GetLength();
+        static const int M = tapps;
+        double c = 0.5; // an appropriately small number
+        mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
+        mcon::Vector<double> _h(M);
+        _h = 0;
+        mcon::Matrix<double> h(_h.Transpose());
+        mcon::Vector<double> d(n);
+        mcon::Vector<double> uv(M);
+        mcon::Vector<double> e(n);
+        mcon::Vector<double> eta(n);
+        mcon::Vector<double> J(n);
+
+        P /= c;
+        uv = 0;
+        d = 0;
+
+        {
+            d[0] = 1.0;
+            /*
+            d[n/2] = 1;
+            if (0 == (n & 1))
             {
-                max = fabs(h[i][0]);
+                d[n/2-1] = 1;
+            }
+            */
+        }
+        LOG("Now executing RLS with %d samples.\n", n);
+        for (int i = 0; i < n; ++i)
+        {
+            uv.Unshift(ir[i]);
+            const mcon::Matrix<double>& u = uv.Transpose();
+            mcon::Matrix<double> k(P.Multiply(u)); // numerator
+            double denom = 1.0;
+            const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
+            ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
+            denom = denominator[0][0] + 1;
+            k /= denom;
+
+            const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
+            ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
+            eta[i] = d[i] - m[0][0];
+            //printf("i=%d,eta=%g,d=%g,m=%g\n", i, eta, d[i], m[0][0]);
+            h += k * eta[i];
+
+            e[i] = d[i] - (u.Transpose().Multiply(h))[0][0];
+            J[i] = J[i-1] + e[i] * eta[i];
+            P -= k.Multiply(u.Transpose()).Multiply(P);
+            if ( (i % 10) == 0 )
+            {
+                LOG("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
             }
         }
-        mcon::Vector<int16_t> coefs(h.Transpose()[0] * (32767.0/max));
-        FileIo filter(fs, 1, 16);
-        filter.Write("rls_taps_coefficients.wav", coefs);
-        h.DumpMatrix(h, "%f");
-        mcon::Vector<double> hoge(M);
-        for (int i = 0; i < M; ++i)
+        LOG("\n");
         {
-            hoge[i] = h[i][0];
-        }
-        mcon::Matrix<double> comp(2, M);
-        mcon::Matrix<double> gp(2, M/2);
-        Fft::Ft(comp, hoge);
-        Fft::ConvertToGainPhase(gp, comp);
-        FILE*fp = fopen("coef_ft.csv", "w");
-        double df = 1.0  * fs / M;
-        for (int i = 1; i < gp.GetLength(); ++i)
-        {
-            fprintf(fp, "%f,%f,%f\n",
-                i*df, gp[0][i], gp[1][i]*180/M_PI);
-        }
-        fclose(fp);
+            mcon::Vector<double> coefs(h.Transpose()[0]);
+            mcon::Matrix<double> complex(2, coefs.GetLength());
+            mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
+            //Fft::Ft(complex, ir);
+            //Fft::ConvertToGainPhase(ir_gp, complex);
+
+            Fft::Ft(complex, coefs);
+            Fft::ConvertToGainPhase(coefs_gp, complex);
+            char _fname[128];
+            sprintf(_fname, "ir_vs_coefs_%d_", tapps);
+            std::string fname(_fname);
+            fname += std::string(irFile);
+            fname.erase( fname.length()-4, 4);
+            fname += std::string(".csv");
+            FILE* fp = fopen(fname.c_str(), "w");
+            if (NULL != fp)
+            {
+                double df = 1.0  * fs / M;
+                fprintf(fp, "freq,Gain(Coefs)\n");
+                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                {
+                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[0][i]);
+                }
+                fprintf(fp, "\n");
+                fprintf(fp, "freq,Phase(Coefs)\n");
+                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                {
+                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[1][i]*180/M_PI);
+                }
+                fprintf(fp, "\n");
+                fprintf(fp, "i,Ir,Coef\n");
+                for (int i = 0; i < coefs.GetLength(); ++i)
+                {
+                    fprintf(fp, "%d,%g,%g\n", i, ir[i], coefs[i]);
+                }
+                fprintf(fp, "\n");
+#if 1
+                // Dump some variables to evaluate the error left.
+                fprintf(fp, "i,e,eta,J\n");
+                for (int i = 0; i < n; ++i)
+                {
+                    fprintf(fp, "%d,%g,%g,%g\n", i, e[i], eta[i], J[i]);
+                }
 #endif
+                fclose(fp);
+            }
+        }
     }
     return NO_ERROR;
 }
 
 int main(int argc, char* argv[])
 {
-    //MakeTestIr();
     //MakeTestWave();
     //test_RLS();
     std::string fbody("sweep_440-3520_1s");
@@ -624,7 +686,16 @@ int main(int argc, char* argv[])
     }
     printf("Proccessing for %s.wav\n", fbody.c_str());
     std::string audioIn = fbody + std::string(".wav");
-    RLS(audioIn.c_str(), "ir_test.wav");
+    int tapps[] = {16, 64, 256, 512, 1024, 2048, 0};
+
+    for (int i = 0; tapps[i] != 0; ++i)
+    {
+        printf("tapps=%d\n", tapps[i]);
+        MakeTestIr(tapps[i]);
+        //RlsFromAudio(audioIn.c_str(), "Trig_Room.wav", tapps[i]);
+        //RlsFromIr("Trig_Room.wav", tapps[i]);
+    }
+
     printf("Done\n\n");
     return 0;
 }
