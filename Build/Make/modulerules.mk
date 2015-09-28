@@ -21,7 +21,7 @@ endif
 endif
 
 ifeq ($(MODULE_BUILD),Debug)
-    CPPFLAGS += -DDEBUG
+    CPPFLAGS += -DDEBUG -g
 endif
 
 MODULE_OBJ := \
