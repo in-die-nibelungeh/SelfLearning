@@ -362,17 +362,16 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     {
         return -ERROR_ILLEGAL;
     }
+
     audioOut.Resize(audioIn.GetLength());
 
     for (int i = 0; i < audioIn.GetLength(); ++i)
     {
-        double ans = 0.0;
-        const int len = impluse.GetLength();
-        for (int k = 0; k < len; ++k)
+        audioOut[i] = 0.0;
+        for (int k = 0; k < impluse.GetLength(); ++k)
         {
-            ans += audioIn[i + len - k] * impluse[k];
+            audioOut[i] += audioIn[i - k] * impluse[k];
         }
-        audioOut[i] = ans;
     }
     return NO_ERROR;
 }
@@ -446,7 +445,7 @@ status_t RLS(const char* audioInFile, const char* irFile)
 
 #if 0
         LOG("Normalizing audio-in ... ");
-        if (1)
+        if (0)
         {
             Normalize(audioIn);
         }
@@ -487,12 +486,15 @@ status_t RLS(const char* audioInFile, const char* irFile)
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
         mcon::Vector<double> _h(M);
         _h = 0;
-        mcon::Matrix<double> h(_h.Transpose());//M, 1);
+        mcon::Matrix<double> h(_h.Transpose());
         mcon::Vector<double>& d = audioInConv;
         mcon::Vector<double> uv(M);
+        mcon::Vector<double> e(n);
+        mcon::Vector<double> eta(n);
+        mcon::Vector<double> J(n);
+
 
         P /= c;
-        //h = 0;
         uv = 0;
 
         LOG("Now executing RLS with %d samples.\n", n);
@@ -509,10 +511,12 @@ status_t RLS(const char* audioInFile, const char* irFile)
 
             const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
-            double eta = d[i] - m[0][0];
+            eta[i] = d[i] - m[0][0];
             //printf("i=%d,eta=%g,d=%g,m=%g\n", i, eta, d[i], m[0][0]);
-            h += k * eta;
+            h += k * eta[i];
 
+            e[i] = d[i] - (u.Transpose().Multiply(h))[0][0];
+            J[i] = J[i-1] + e[i] * eta[i];
             P -= k.Multiply(u.Transpose()).Multiply(P);
             if ( (i % 10) == 0 )
             {
@@ -522,6 +526,15 @@ status_t RLS(const char* audioInFile, const char* irFile)
         LOG("\n");
         {
             mcon::Vector<double> coefs(h.Transpose()[0]);
+            // Needed to be reversed?
+            for (int i = 0; i < coefs.GetLength()/2; ++i)
+            {
+                const int len = coefs.GetLength();
+                double tmp = coefs[i];
+                coefs[i] = coefs[len - i - 1];
+                coefs[len - i - 1] = tmp;
+            }
+
             mcon::Matrix<double> complex(2, ir.GetLength());
             mcon::Matrix<double> ir_gp(2, ir.GetLength());
             mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
@@ -549,6 +562,21 @@ status_t RLS(const char* audioInFile, const char* irFile)
                 {
                     fprintf(fp, "%g,%g,%g\n", i*df, ir_gp[1][i]*180/M_PI, coefs_gp[1][i]*180/M_PI);
                 }
+                fprintf(fp, "\n");
+                fprintf(fp, "i,IR,Coef)\n");
+                for (int i = 0; i < ir.GetLength(); ++i)
+                {
+                    fprintf(fp, "%d,%g,%g\n", i, ir[i], coefs[i]);
+                }
+                fprintf(fp, "\n");
+#if 0
+                // Dump some variables to evaluate the error left.
+                fprintf(fp, "i,e,eta,J\n");
+                for (int i = 0; i < n; ++i)
+                {
+                    fprintf(fp, "%d,%g,%g,%g\n", i, e[i], eta[i], J[i]);
+                }
+#endif
                 fclose(fp);
             }
         }
