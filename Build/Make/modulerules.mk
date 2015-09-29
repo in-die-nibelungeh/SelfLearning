@@ -1,6 +1,9 @@
 
 BIN ?= a.exe
 
+CC := $(TOOLCHAIN_PREFIX)gcc.exe
+LD := $(TOOLCHAIN_PREFIX)ld.exe
+
 LIBS += -lstdc++ -lm
 
 PROJECT_INCDIR := $(MY_AUDIO_ROOT)/Programs/Include
@@ -49,7 +52,7 @@ build: $(BIN) lib
 lib: $(LIB)
 
 $(BIN): $(OBJ) $(INC)
-	gcc $(CPPFLAGS) -o $(BIN) $(OBJ) $(LIBS)
+	$(CC) $(CPPFLAGS) -o $(BIN) $(OBJ) $(LIBS)
 
 $(LIB): $(MODULE_OBJ)
 	@if [ -n "$(LIB)" ] ; then \
@@ -69,6 +72,6 @@ clean:
 	@rm -rf $(BIN) $(LIB) *.BAK *.o
 
 .cpp.o: $(INC)
-	gcc -c $(CPPFLAGS) $<
+	$(CC) -c $(CPPFLAGS) $<
 
 .PHONY: all lib install clean build run
