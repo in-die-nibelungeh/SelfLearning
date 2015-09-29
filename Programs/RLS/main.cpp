@@ -146,6 +146,164 @@ static status_t MakeTestIr(int length)
     fclose(fp);
 }
 
+static status_t AnalyzeWaveform(mcon::Vector<double>& data)
+{
+    double max = fabs(data[0]);
+    double min = fabs(data[0]);
+    double ave;
+    double var;
+    double sd;
+    double E = 0.0;
+
+    {
+        double sum = fabs(data[0]);
+
+        for (int i = 1; i < data.GetLength(); ++i)
+        {
+            if (max < fabs(data[i]))
+            {
+                max = fabs(data[i]);
+            }
+            if (min > fabs(data[i]))
+            {
+                min = fabs(data[i]);
+            }
+            sum += fabs(data[i]);
+            E += POW2(data[i]);
+        }
+        ave = sum / data.GetLength();
+    }
+
+    // ˆÓ–¡‚È‚µ
+    if (0 == max || min == max)
+    {
+        return NO_ERROR;
+    }
+
+    ASSERT(0 != min);
+
+    printf("Maximum: %g\n", max);
+    printf("Minimum: %g\n", min);
+    printf("Average: %g\n", ave);
+
+    {
+        double sum = 0.0;
+
+        for (int i = 1; i < data.GetLength(); ++i)
+        {
+            sum += POW2(data[i] - ave);
+        }
+        // •ªŽUA•W€•Î·
+        var = sum / data.GetLength();
+        sd  = sqrt(var);
+    }
+
+    // ‚Æ‚É‚©‚­ 64 ’iŠK•ªŠ„
+    const int seps = 64;
+    mcon::Vector<int> bars(seps);
+    mcon::Vector<double> energy(seps);
+
+    bars = 0;
+    energy = 0;
+
+    double upper = pow(2, static_cast<int>(log10(max) / log10(2)) + 1);
+    double lower = upper / 2.0;
+    int count = 0;
+    for (int k = seps - 1; k >= 0; --k)
+    {
+        if (0 != k)
+        {
+            for (int i = 0; i < data.GetLength(); ++i)
+            {
+                double v = fabs(data[i]);
+                if (lower <= v && v < upper)
+                {
+                    ++bars[k];
+                    energy[k] += POW2(v);
+                    ++count;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < data.GetLength(); ++i)
+            {
+                double v = fabs(data[i]);
+                if (v < upper)
+                {
+                    ++bars[k];
+                    energy[k] += POW2(v);
+                    ++count;
+                }
+            }
+        }
+        upper /= 2;
+        lower = upper / 2;
+    }
+    printf("length=%d\n", data.GetLength());
+    printf("count =%d\n", count);
+
+    return NO_ERROR;
+}
+
+static status_t EnergyRatio(mcon::Vector<double>& data)
+{
+    const int seps = 16;
+    const double threshold = 0.5;
+    mcon::Vector<double> tmp(data);
+    bool exit = false;
+    do
+    {
+        const int width = static_cast<int>(tmp.GetLength() / seps + 0.5) + 1;
+        mcon::Vector<double> energy(seps);
+        double E = 0.0;
+
+        energy = 0;
+
+        for (int i = 0; i < tmp.GetLength(); ++i)
+        {
+            int ai = i / width;
+
+            E += POW2(tmp[i]);
+            energy[ai] += POW2(tmp[i]);
+        }
+
+        if (energy[0]/E < threshold)
+        {
+            double sum = 0;
+
+            printf("Width: %d\n", width);
+
+            for (int i = 0; i < seps; ++i)
+            {
+                sum += energy[i];
+
+                printf("%d\t%g\t%g\n", i,
+                    energy[i]/E*100, sum/E*100);
+            }
+            exit = true;
+        }
+        else
+        {
+            const double threshold_cut = 0.8;
+            int cut;
+            double sum = 0.0;
+            for (int cut = 0; cut < seps; ++cut)
+            {
+                sum += energy[cut];
+                if (sum/E > threshold_cut)
+                {
+                    break;
+                }
+            }
+            tmp = tmp(0, (cut+1) * width);
+        }
+    } while (exit == false);
+
+    return NO_ERROR;
+}
+
+
 static status_t MakeTestWave(void)
 {
     mcon::Vector<double> impluse;
@@ -251,8 +409,8 @@ static void test_RLS(void)
             printf("fs doesn't match: %d != %d\n", fs, metaData.samplingRate);
         }
     }
-    static const int n = audioIn.GetLength();
-    static const int M = 64; // a design parameter.
+    const int n = audioIn.GetLength();
+    const int M = 64; // a design parameter.
     double c = 0.5; // an appropriately small number
     mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
     mcon::Matrix<double> h(M, 1);
@@ -448,8 +606,8 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
     }
 
     {
-        static const int n = audioIn.GetLength();
-        static const int M = ir.GetLength(); /// a design parameter.
+        const int n = audioIn.GetLength();
+        const int M = ir.GetLength(); /// a design parameter.
         double c = 0.5; // an appropriately small number
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
         mcon::Vector<double> _h(M);
@@ -569,8 +727,8 @@ status_t RlsFromIr(const char* irFile, int tapps)
     }
 
     {
-        static const int n = ir.GetLength();
-        static const int M = tapps;
+        const int n = ir.GetLength();
+        const int M = tapps;
         double c = 0.5; // an appropriately small number
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
         mcon::Vector<double> _h(M);
@@ -581,7 +739,10 @@ status_t RlsFromIr(const char* irFile, int tapps)
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
+        mcon::Vector<double> ea(5);
+        const double threshold = 1.0e-9;
 
+        ea = 1.0;
         P /= c;
         uv = 0;
         d = 0;
@@ -620,6 +781,12 @@ status_t RlsFromIr(const char* irFile, int tapps)
             if ( (i % 10) == 0 )
             {
                 LOG("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
+            }
+            ea.Unshift(e[i] * eta[i]);
+            if (ea.GetAverage() < threshold && i > M)
+            {
+                LOG("\nThe error is enough small (%g with %d iter), so exit\n", ea.GetAverage(), i);
+                break;
             }
         }
         LOG("\n");
@@ -679,6 +846,16 @@ int main(int argc, char* argv[])
 {
     //MakeTestWave();
     //test_RLS();
+    if(0)
+    {
+        FileIo wav;
+        mcon::Vector<int16_t> impluse_int;
+        wav.Read("Trig_Room.wav", impluse_int);
+        mcon::Vector<double> impluse(impluse_int);
+        EnergyRatio(impluse);
+        return 0;
+    }
+
     std::string fbody("sweep_440-3520_1s");
     if (argc > 1)
     {
@@ -691,11 +868,9 @@ int main(int argc, char* argv[])
     for (int i = 0; tapps[i] != 0; ++i)
     {
         printf("tapps=%d\n", tapps[i]);
-        MakeTestIr(tapps[i]);
         //RlsFromAudio(audioIn.c_str(), "Trig_Room.wav", tapps[i]);
-        //RlsFromIr("Trig_Room.wav", tapps[i]);
+        RlsFromIr("Trig_Room.wav", tapps[i]);
     }
-
     printf("Done\n\n");
     return 0;
 }
