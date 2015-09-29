@@ -20,8 +20,9 @@ static float sdot(int simd, int n, const float *a, const float *b)
     int    ne = 0;
     float  sum = 0;
 
-    if      (simd == 1) {
-        // SSE
+    // 4‚Â‚¸‚ÂŒvŽZ‚·‚é (SSE)
+    if (simd == 1)
+    {
 #if defined(__GNUC__)
         __attribute__((aligned(16))) float fsum[4];
 #else // _WIN32
@@ -38,8 +39,9 @@ static float sdot(int simd, int n, const float *a, const float *b)
         _mm_store_ps(fsum, vsum);
         sum = fsum[0] + fsum[1] + fsum[2] + fsum[3];
     }
-    else if (simd == 2) {
-        // AVX
+    // 8 ‚Â‚¸‚ÂŒvŽZ‚·‚é (AVX)
+    else if (simd == 2)
+    {
 #if defined(__GNUC__)
         __attribute__((aligned(32))) float fsum[8];
 #else // _WIN32
@@ -58,7 +60,9 @@ static float sdot(int simd, int n, const float *a, const float *b)
             + fsum[4] + fsum[5] + fsum[6] + fsum[7];
     }
 
-    for (i = ne; i < n; i++) {
+    // SIMD ‰‰ŽZ‚ÌŽc‚èA‚ ‚é‚¢‚Í SIMD Žw’è‚ª‚È‚¢ê‡‚ÌŒvŽZ‚ð‚·‚éB
+    for (i = ne; i < n; i++)
+    {
         sum += a[i] * b[i];
     }
 
@@ -118,7 +122,8 @@ int main(int argc, char **argv)
 
     // calculation
     sum = 0;
-    for (i = 0; i < loop; i++) {
+    for (i = 0; i < loop; i++)
+    {
         sum += sdot(simd, n, a, b);
     }
 
