@@ -4,9 +4,9 @@ LIB=libfft.a
 MODULE_HEADER=Fft.h
 MODULE_SRC=Fft.cpp
 
-INC=$(MODULE_HEADER) test.cpp
+INC=$(MODULE_HEADER) test.cpp tune.cpp
 
-LIBS=-lwg
+LIBS=-lwg -lbut -lfio
 
 CPPFLAGS += -O3
 
