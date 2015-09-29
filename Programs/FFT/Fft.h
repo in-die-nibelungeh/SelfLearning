@@ -13,6 +13,11 @@ status_t Ift (double timeSeries[], const double realPart[], const double imagina
 status_t Ft  (mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries);
 status_t Ift (mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex);
 
-status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex);
+status_t ConvertToPolarCoords(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex);
+
+status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
+{
+    ConvertToPolarCoords(gainPhase, complex);
+}
 
 } // namespace Fft

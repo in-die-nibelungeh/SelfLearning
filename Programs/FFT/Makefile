@@ -4,7 +4,7 @@ LIB=libfft.a
 MODULE_HEADER=Fft.h
 MODULE_SRC=Fft.cpp
 
-INC=$(MODULE_HEADER)
+INC=$(MODULE_HEADER) test.cpp
 
 LIBS=-lwg
 

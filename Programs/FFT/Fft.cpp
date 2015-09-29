@@ -155,8 +155,7 @@ status_t Ift(mcon::Vector<double>& outTd, const mcon::Matrix<double>& inFd)
 
 #define POW2(v) ((v)*(v))
 
-//status_t ConvertToRadAng(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
-status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
+status_t ConvertToPolarCoords(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
 {
     if ( complex.GetRowLength() < 2 )
     {
