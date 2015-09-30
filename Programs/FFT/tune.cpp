@@ -26,13 +26,30 @@ static void tune_ft(void)
     LOG("SamplingRate: %d\n", fs);
     LOG("Length: %d\n", sweep.GetLength());
 
-    mcon::Matrix<double> complex(2, sweep.GetLength());
-    mcon::Matrix<double> gp(2, sweep.GetLength());
+    status_t status;
+    const int n = sweep.GetLength();
+    mcon::Matrix<double> complex(2, n);
+    mcon::Matrix<double> gp(2, n);
+    mcon::Vector<double> ift(n);
     mbut::Stopwatch sw;
-    Fft::Ft(complex, sweep);
-    LOG("Time consumed for Ft: %f [sec]\n", sw.Push());
-    Fft::ConvertToPolarCoords(gp, complex);
-    LOG("Time consumed for Gp: %f [sec]\n", sw.Push());
+    status = Fft::Ft(complex, sweep);
+    if (NO_ERROR != status)
+    {
+        LOG("An error occured: error=%d\n", status);
+    }
+    LOG("Time consumed for Ft : %f [sec]\n", sw.Tick());
+    status = Fft::ConvertToPolarCoords(gp, complex);
+    if (NO_ERROR != status)
+    {
+        LOG("An error occured: error=%d\n", status);
+    }
+    LOG("Time consumed for Gp : %f [sec]\n", sw.Tick());
+    status = Fft::Ift(ift, complex);
+    if (NO_ERROR != status)
+    {
+        LOG("An error occured: error=%d\n", status);
+    }
+    LOG("Time consumed for Ift: %f [sec]\n", sw.Tick());
     {
         std::string csv = fbody + std::string(".csv");
 
@@ -49,6 +66,11 @@ static void tune_ft(void)
             for (int i = 0; i < gp.GetColumnLength(); ++i)
             {
                 fprintf(fp, "%g,%g,%g\n", i*df, gp[0][i], gp[1][i]);
+            }
+            fprintf(fp, "\n");
+            for (int i = 0; i < ift.GetLength(); ++i)
+            {
+                fprintf(fp, "%d,%g,%g,%g\n", i, sweep[i], ift[i], sqrt( pow(sweep[i] - ift[i], 2) ) );
             }
             fclose(fp);
         }

@@ -84,29 +84,38 @@ status_t Ft(double real[], double imag[], const double td[], int n)
     return NO_ERROR;
 }
 
-status_t Ft(mcon::Matrix<double>& outFd, const mcon::Vector<double>& inTd)
+status_t Ft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries)
 {
-    if ( outFd.GetRowLength() < 2 )
+    bool status = complex.Resize(2, timeSeries.GetLength());
+    if (false == status)
     {
-        return -ERROR_ILLEGAL;
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
 
-    mcon::Vector<double>& real = outFd[0];
-    mcon::Vector<double>& imag = outFd[1];
+    mcon::Vector<double>& real = complex[0];
+    mcon::Vector<double>& imag = complex[1];
 
-    for (int i = 0; i < outFd.GetColumnLength(); ++i)
+    const int N = timeSeries.GetLength();
+    const double df = 2.0 * g_Pi / N;
+
+    mcon::Vector<double> sinTable(N);
+    mcon::Vector<double> cosTable(N);
+
+    for (int i = 0; i < N; ++i)
     {
-        int N = inTd.GetLength();
-        double df = (double)i * g_Pi * 2 / N;
+        sinTable[i] = sin(df * i);
+        cosTable[i] = cos(df * i);
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
         real[i] = 0.0;
         imag[i] = 0.0;
-        if (i < N)
+        for (int j = 0; j < N; ++j)
         {
-            for (int j = 0; j < N; ++j)
-            {
-                real[i] += (inTd[j] * cos(df * j));
-                imag[i] -= (inTd[j] * sin(df * j));
-            }
+            int k = (i * j) % N;
+            real[i] += (timeSeries[j] * cosTable[k]);
+            imag[i] -= (timeSeries[j] * sinTable[k]);
         }
     }
     return NO_ERROR;
@@ -127,53 +136,64 @@ status_t Ift(double td[], const double real[], const double imag[], int N)
     return NO_ERROR;
 }
 
-status_t Ift(mcon::Vector<double>& outTd, const mcon::Matrix<double>& inFd)
+status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex)
 {
-    if ( inFd.GetRowLength() < 2 )
+    if (complex.GetRowLength() < 2)
     {
         return -ERROR_ILLEGAL;
     }
-    const mcon::Vector<double>& real = inFd[0];
-    const mcon::Vector<double>& imag = inFd[1];
+    const int N = timeSeries.GetLength();
+    const double df = 2.0 * g_Pi / N;
 
-    for (int i = 0; i < outTd.GetLength(); ++i)
+    mcon::Vector<double> sinTable(N);
+    mcon::Vector<double> cosTable(N);
+
+    for (int i = 0; i < N; ++i)
     {
-        const int N = inFd.GetColumnLength();
+        sinTable[i] = sin(df * i);
+        cosTable[i] = cos(df * i);
+    }
+
+    const mcon::Vector<double>& real = complex[0];
+    const mcon::Vector<double>& imag = complex[1];
+
+    for (int i = 0; i < timeSeries.GetLength(); ++i)
+    {
+        const int N = complex.GetColumnLength();
         double df = (double)i * g_Pi * 2 / N;
-        outTd[i] = 0.0;
-        if (i < N)
+        timeSeries[i] = 0.0;
+        for (int j = 0; j < N; ++j)
         {
-            for (int j = 0; j < N; ++j)
-            {
-                outTd[i]  += (real[j] * cos(df * j) - imag[j] * sin(df * j));
-            }
-            outTd[i] /= N;
+            int k = (i * j) % N;
+            timeSeries[i] += (real[j] * cosTable[k] - imag[j] * sinTable[k]);
         }
     }
+    timeSeries /= N;
     return NO_ERROR;
 }
 
 #define POW2(v) ((v)*(v))
 
-status_t ConvertToPolarCoords(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
+status_t ConvertToPolarCoords(mcon::Matrix<double>& polar, const mcon::Matrix<double>& complex)
 {
-    if ( complex.GetRowLength() < 2 )
+    if (complex.GetRowLength() < 2)
     {
         return -ERROR_ILLEGAL;
     }
-    if (gainPhase.GetRowLength() < 2)
+    bool status = polar.Resize(2, complex.GetColumnLength());
+    if (false == status)
     {
-        gainPhase.Resize(2, complex.GetColumnLength());
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    mcon::Vector<double>& gain  = gainPhase[0];
-    mcon::Vector<double>& phase = gainPhase[1];
+    mcon::Vector<double>& r  = polar[0];
+    mcon::Vector<double>& arg = polar[1];
     const mcon::Vector<double>& real  = complex[0];
     const mcon::Vector<double>& imag  = complex[1];
 
     for (int i = 0; i < complex.GetColumnLength(); ++i)
     {
-        gain[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
-        phase[i] = atan(imag[i]/real[i]);
+        r[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
+        arg[i] = atan(imag[i]/real[i]);
     }
     return NO_ERROR;
 }
