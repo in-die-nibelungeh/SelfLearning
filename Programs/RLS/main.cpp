@@ -485,7 +485,7 @@ static void test_IR(void)
     FileIo wave;
     mcon::Vector<int16_t> pcm;
 
-    wave.Read("Trig Room.wav", pcm);
+    wave.Read("Trig_Room.wav", pcm);
     FileIo::MetaData metaData = wave.GetMetaData();
 
     int length = 0;
@@ -618,6 +618,8 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
+        mcon::Vector<double> K(n);
+        mcon::Vector<double> U(n);
 
         P /= c;
         uv = 0;
@@ -626,6 +628,7 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
         for (int i = 0; i < n; ++i)
         {
             uv.Unshift(audioInConv[i]);
+            U[i] = uv.GetNorm();
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
             double denom = 1.0;
@@ -633,7 +636,7 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
             ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
             denom = denominator[0][0] + 1;
             k /= denom;
-
+            K[i] = k.Transpose()[0].GetNorm();
             const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
             eta[i] = d[i] - m[0][0];
@@ -689,10 +692,166 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
                 fprintf(fp, "\n");
 #if 1
                 // Dump some variables to evaluate the error left.
-                fprintf(fp, "i,e,eta,J\n");
+                fprintf(fp, "i,e,eta,J,|k|,|u|\n");
                 for (int i = 0; i < n; ++i)
                 {
-                    fprintf(fp, "%d,%g,%g,%g\n", i, e[i], eta[i], J[i]);
+                    fprintf(fp, "%d,%g,%g,%g,%g\n", i, e[i], eta[i], J[i], K[i], U[i]);
+                }
+#endif
+                fclose(fp);
+            }
+        }
+    }
+    return NO_ERROR;
+}
+
+status_t RlsFrom2Audio(const char* audioInFile, const char* audioRefFile, int tapps)
+{
+    mcon::Vector<double> audioIn;
+    mcon::Vector<double> audioRef;
+    int fs;
+
+    // Audio-in
+    {
+        FileIo wave;
+        mcon::Vector<int16_t> audioIn_int;
+
+        LOG("Loading audio input ... ");
+        status_t status = wave.Read(audioInFile, audioIn_int);
+
+        if (NO_ERROR != status)
+        {
+            printf("An error occured during reading %s: error=%d\n", audioInFile, status);
+            return -ERROR_CANNOT_OPEN_FILE;
+        }
+        LOG("Done\n");
+
+        fs = wave.GetSamplingRate();
+
+        LOG("Copying to global audio-in ... ");
+        audioIn = audioIn_int;
+        LOG("Done\n");
+    }
+
+    LOG("SamplingRate: %d\n", fs);
+    LOG("Length (audioIn) : %d\n", audioIn.GetLength());
+
+    // Audio-ref
+    {
+        FileIo wave;
+        mcon::Vector<int16_t> audioRef_int;
+
+        LOG("Loading audio reference ... ");
+        status_t status = wave.Read(audioRefFile, audioRef_int);
+
+        if (NO_ERROR != status)
+        {
+            printf("An error occured during reading %s: error=%d\n", audioRefFile, status);
+            return -ERROR_CANNOT_OPEN_FILE;
+        }
+        LOG("Done\n");
+        LOG("Length: %d\n", audioRef_int.GetLength());
+        if (fs != wave.GetSamplingRate())
+        {
+            ERROR_LOG("Not matched the sampling rates: %d <=> %d\n", fs, wave.GetSamplingRate());
+            return -ERROR_ILLEGAL;
+        }
+
+        LOG("Copying to global audio-in ... ");
+        audioRef = audioRef_int;
+        LOG("Done\n");
+    }
+
+    LOG("Length (audioRef): %d\n", audioRef.GetLength());
+
+    {
+        const int n = audioIn.GetLength();
+        const int M = tapps;
+        double c = 0.5; // an appropriately small number
+        mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
+        mcon::Vector<double> _h(M);
+        _h = 0;
+        mcon::Matrix<double> h(_h.Transpose());
+        mcon::Vector<double>& d = audioIn;
+        mcon::Vector<double> uv(M);
+        mcon::Vector<double> e(n);
+        mcon::Vector<double> eta(n);
+        mcon::Vector<double> J(n);
+        mcon::Vector<double> K(n);
+        mcon::Vector<double> U(n);
+
+        P /= c;
+        uv = 0;
+
+        LOG("Now executing RLS with %d samples.\n", n);
+        for (int i = 0; i < n; ++i)
+        {
+            uv.Unshift(audioRef[i]);
+            U[i] = uv.GetNorm();
+            const mcon::Matrix<double>& u = uv.Transpose();
+            mcon::Matrix<double> k(P.Multiply(u)); // numerator
+            double denom = 1.0;
+            const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
+            ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
+            denom = denominator[0][0] + 1;
+            k /= denom;
+            K[i] = k.Transpose()[0].GetNorm();
+            const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
+            ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
+            eta[i] = d[i] - m[0][0];
+            //printf("i=%d,eta=%g,d=%g,m=%g\n", i, eta, d[i], m[0][0]);
+            h += k * eta[i];
+
+            e[i] = d[i] - (u.Transpose().Multiply(h))[0][0];
+            J[i] = J[i-1] + e[i] * eta[i];
+            P -= k.Multiply(u.Transpose()).Multiply(P);
+            if ( (i % 10) == 0 )
+            {
+                LOG("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
+            }
+        }
+        LOG("\n");
+        {
+            mcon::Vector<double> coefs(h.Transpose()[0]);
+            mcon::Matrix<double> complex(2, coefs.GetLength());
+            mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
+
+            Fft::Ft(complex, coefs);
+            Fft::ConvertToGainPhase(coefs_gp, complex);
+            char _fname[128];
+            sprintf(_fname, "ir_vs_coefs_%d_", tapps);
+            std::string fname(_fname);
+            fname += std::string(audioInFile);
+            fname.erase( fname.length()-4, 4);
+            fname += std::string(".csv");
+            FILE* fp = fopen(fname.c_str(), "w");
+            if (NULL != fp)
+            {
+                double df = 1.0  * fs / M;
+                fprintf(fp, "freq,Gain(Coefs)\n");
+                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                {
+                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[0][i]);
+                }
+                fprintf(fp, "\n");
+                fprintf(fp, "freq,Phase(Coefs)\n");
+                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                {
+                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[1][i]*180/M_PI);
+                }
+                fprintf(fp, "\n");
+                fprintf(fp, "i,Coef\n");
+                for (int i = 0; i < coefs.GetLength(); ++i)
+                {
+                    fprintf(fp, "%d,%g\n", i, coefs[i]);
+                }
+                fprintf(fp, "\n");
+#if 1
+                // Dump some variables to evaluate the error left.
+                fprintf(fp, "i,e,eta,J,|k|,|u|\n");
+                for (int i = 0; i < n; ++i)
+                {
+                    fprintf(fp, "%d,%g,%g,%g,%g\n", i, e[i], eta[i], J[i], K[i], U[i]);
                 }
 #endif
                 fclose(fp);
@@ -720,8 +879,13 @@ status_t RlsFromIr(const char* irFile, int tapps)
             return status;
         }
         LOG("Done\n");
-        ir = ir_int;
-
+        const int ch = wave.GetNumChannels();
+        const int length = ir_int.GetLength();
+        ir.Resize(length / ch);
+        for (int i = 0; i < length / ch; ++i)
+        {
+            ir[i] = ir_int[ch*i];
+        }
         fs = wave.GetSamplingRate();
         LOG("Sampling rate: %d\n", fs);
     }
@@ -739,28 +903,46 @@ status_t RlsFromIr(const char* irFile, int tapps)
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
+        mcon::Vector<double> K(n);
+        mcon::Vector<double> U(n);
         mcon::Vector<double> ea(5);
         const double threshold = 1.0e-9;
 
         ea = 1.0;
         P /= c;
         uv = 0;
-        d = 0;
 
+        // インパルス応答
         {
-            d[0] = 1.0;
-            /*
-            d[n/2] = 1;
-            if (0 == (n & 1))
-            {
-                d[n/2-1] = 1;
-            }
-            */
+            d = 0;
+            d[0] = 32767.0;
         }
+        // 直接伝達による立ち上がり (と思われる箇所) を調べる。
+        // タップ数が少ない場合、伝達の遅延を破棄しつつ、
+        // ゲインの推定精度を上げられると思われる。
+        int s = 0;
+        double max = fabs(ir[0]);
+        // 1 秒間を調べる
+        // これより遅い立ち上がりはないはず。
+        for (int i = 1; i < fs; ++i)
+        {
+            if (i < 210)
+            printf("ir[%3d] = %g\n", i, ir[i]);
+            const double v = fabs(ir[i]);
+            if (v > max)
+            {
+                max = v;
+                s = i;
+            }
+        }
+        printf("Max = %g at %d\n", max, s);
+        //s = 0;
+
         LOG("Now executing RLS with %d samples.\n", n);
-        for (int i = 0; i < n; ++i)
+        for (int i = s; i < n; ++i)
         {
             uv.Unshift(ir[i]);
+            U[i] = uv.GetNorm();
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
             double denom = 1.0;
@@ -768,7 +950,7 @@ status_t RlsFromIr(const char* irFile, int tapps)
             ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
             denom = denominator[0][0] + 1;
             k /= denom;
-
+            K[i] = k.Transpose()[0].GetNorm();
             const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
             eta[i] = d[i] - m[0][0];
@@ -782,20 +964,20 @@ status_t RlsFromIr(const char* irFile, int tapps)
             {
                 LOG("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
             }
+#if 0
             ea.Unshift(e[i] * eta[i]);
             if (ea.GetAverage() < threshold && i > M)
             {
                 LOG("\nThe error is enough small (%g with %d iter), so exit\n", ea.GetAverage(), i);
                 break;
             }
+#endif
         }
         LOG("\n");
         {
             mcon::Vector<double> coefs(h.Transpose()[0]);
             mcon::Matrix<double> complex(2, coefs.GetLength());
             mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
-            //Fft::Ft(complex, ir);
-            //Fft::ConvertToGainPhase(ir_gp, complex);
 
             Fft::Ft(complex, coefs);
             Fft::ConvertToGainPhase(coefs_gp, complex);
@@ -829,10 +1011,10 @@ status_t RlsFromIr(const char* irFile, int tapps)
                 fprintf(fp, "\n");
 #if 1
                 // Dump some variables to evaluate the error left.
-                fprintf(fp, "i,e,eta,J\n");
+                fprintf(fp, "i,e,eta,J,|k|,|u|\n");
                 for (int i = 0; i < n; ++i)
                 {
-                    fprintf(fp, "%d,%g,%g,%g\n", i, e[i], eta[i], J[i]);
+                    fprintf(fp, "%d,%g,%g,%g,%g\n", i, e[i], eta[i], J[i], K[i], U[i]);
                 }
 #endif
                 fclose(fp);
@@ -842,10 +1024,39 @@ status_t RlsFromIr(const char* irFile, int tapps)
     return NO_ERROR;
 }
 
+// sweep_440-3520_10s.wav を Trig_Room.wav と畳み込んだが、
+// 振幅の調整が出鱈目なので、ws で確認したゲインの違いをもとに
+// レベルを合わせるための処理
+// 一回きりのもの。
+// →出鱈目でも良いのではないか？
+static void MakeReference(void)
+{
+    mcon::Vector<int16_t> data_int;
+    FileIo wave;
+    std::string fbody("sweep_440-3520_10s");
+    std::string fname = fbody + std::string(".wav");
+    wave.Read(fname.c_str(), data_int);
+    mcon::Vector<double> data(data_int);
+    double ratio = 0.101936005111598 / 0.417508606968193;
+    data *= ratio;
+    data_int = data;
+    std::string name = fbody + std::string("_ref.wav");
+    wave.Write(name.c_str(), data_int);
+}
+
 int main(int argc, char* argv[])
 {
     //MakeTestWave();
     //test_RLS();
+    //MakeReference();
+    if (0)
+    {
+        std::string ref("sweep_440-3520_10s_ref.wav");
+        std::string in("sweep_440-3520_conv_Trig_Room.wav");
+        RlsFrom2Audio(in.c_str(), ref.c_str(), 64);
+        return 0;
+    }
+
     if(0)
     {
         FileIo wav;
@@ -863,7 +1074,7 @@ int main(int argc, char* argv[])
     }
     printf("Proccessing for %s.wav\n", fbody.c_str());
     std::string audioIn = fbody + std::string(".wav");
-    int tapps[] = {16, 64, 256, 512, 1024, 2048, 0};
+    int tapps[] = {64, 0};//, 512, 1024, 2048, 0};
 
     for (int i = 0; tapps[i] != 0; ++i)
     {
