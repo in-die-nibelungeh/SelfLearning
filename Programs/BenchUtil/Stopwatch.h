@@ -10,7 +10,7 @@ class Stopwatch
 public:
     Stopwatch();
     ~Stopwatch();
-    double Push(void);
+    double Tick(void);
     double GetRecord(void) const;
 private:
     double m_Last;

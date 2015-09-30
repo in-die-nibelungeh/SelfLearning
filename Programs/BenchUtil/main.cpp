@@ -10,7 +10,7 @@ static void test_stopwatch(void)
     {
         d += i;
     }
-    printf("Time consumed: %g\n", sw.Push());
+    printf("Time consumed: %g\n", sw.Tick());
     printf("ans=%f\n", d);
 }
 

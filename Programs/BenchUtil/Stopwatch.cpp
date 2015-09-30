@@ -10,7 +10,7 @@ Stopwatch::Stopwatch()
 
 Stopwatch::~Stopwatch() {}
 
-double Stopwatch::Push(void)
+double Stopwatch::Tick(void)
 {
     struct timeval ts;
 
