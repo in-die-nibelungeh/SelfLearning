@@ -8,7 +8,7 @@
 
 static void test_test(void)
 {
-    FileIo wave;
+    mfio::Wave wave;
 
     wave.Check();
 }
@@ -17,7 +17,7 @@ static void test_read(void)
 {
     size_t size;
     int16_t* buffer;
-    FileIo wave;
+    mfio::Wave wave;
     wave.Read("ding.wav", &buffer, &size);
 
     //printf("Sizeof(PcmFormat)=%d\n", sizeof(FileIo::PcmFormat));
@@ -31,7 +31,7 @@ static void test_read(void)
     }
 
     {
-        struct FileIo::MetaData metaData = wave.GetMetaData();
+        struct mfio::Wave::MetaData metaData = wave.GetMetaData();
 
         CHECK_VALUE_INT(metaData.samplingRate, 44100);
         CHECK_VALUE_INT(metaData.numChannels ,     2);
@@ -41,7 +41,7 @@ static void test_read(void)
 
     // îÒÉ[ÉçÇ≈Ç†ÇÍÇŒâΩÇ≈Ç‡ó«Ç¢ÅB
     mcon::Vector<int16_t> bufferObj(1);
-    FileIo waveBuf;
+    mfio::Wave waveBuf;
     waveBuf.Read("ding.wav", bufferObj);
     {
         int32_t fs, ch, bit;
@@ -97,7 +97,7 @@ static void test_write(void)
 
     {
         char fname[256];
-        FileIo wave(fs, ch, depth);
+        mfio::Wave wave(fs, ch, depth);
         sprintf(fname, "sweep_%d-%d.wav", freq, freq*multi);
         wave.Write(reinterpret_cast<const char*>(fname), buffer, size);
         sprintf(fname, "sweep_%d-%d_buffer.wav", freq, freq*multi);

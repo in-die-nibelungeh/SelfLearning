@@ -6,40 +6,47 @@
 #include "debug.h"
 #include "status.h"
 #include "types.h"
-#include "FileIo.h"
+#include "Wave.h"
 
-struct WaveChunk
-{
-    union
+namespace mfio {
+
+namespace {
+
+    struct WaveChunk
     {
-        char c[4];
-        int32_t i;
-    } m_Name;
-    uint32_t  m_Size;
-};
+        union
+        {
+            char c[4];
+            int32_t i;
+        } name;
+        uint32_t size;
+    };
+}
 
-FileIo::FileIo()
- : m_Format(PF_LPCM),
-   m_SamplingRate(0),
-   m_NumChannels(0),
-   m_BitDepth(0),
-   m_Duration(0.0)
+Wave::Wave()
+  : m_Duration(0.0)
+{
+    Initialize(0, 0, 0, UNKNOWN);
+}
+
+Wave::Wave(int fs, int ch, int bits)
+  : m_Duration(0.0)
+{
+    Initialize(fs, ch, bits, LPCM);
+}
+
+Wave::~Wave()
 {
 }
 
-FileIo::FileIo(int fs, int ch, int depth)
-  : m_Format(PF_LPCM),
-    m_SamplingRate(fs),
-    m_NumChannels(ch),
-    m_BitDepth(depth),
-    m_Duration(0.0)
-{}
-
-FileIo::~FileIo()
+void Wave::Initialize(int fs, int ch, int bits, WaveFormat format)
 {
+    m_MetaData.format = format;
+    m_MetaData.numChannels  = ch;
+    m_MetaData.bitDepth = bits;
+    m_MetaData.samplingRate = fs;
 }
-
-status_t FileIo::Check(void)
+status_t Wave::Check(void)
 {
     CHECK(8 == sizeof(WaveChunk));
     CHECK(4 == sizeof(int32_t));
@@ -47,7 +54,7 @@ status_t FileIo::Check(void)
     return NO_ERROR;
 }
 
-status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
+status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
 {
     status_t ret = NO_ERROR;
     int32_t length = 0;
@@ -56,13 +63,13 @@ status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     {
         WaveChunk chunk = {0, 0};
         int rb = fread(&chunk, sizeof(chunk), 1, fd);
-        DEBUG_LOG("rb=%d, pos=%d, size=%d, eof=%d\n", rb, ftell(fd), chunk.m_Size, feof(fd));
+        DEBUG_LOG("rb=%d, pos=%d, size=%d, eof=%d\n", rb, ftell(fd), chunk.size, feof(fd));
 
         if (feof(fd) || rb == 0)
         {
             break;
         }
-        switch(chunk.m_Name.i)
+        switch(chunk.name.i)
         {
             case CID_RIFF:
             {
@@ -77,37 +84,41 @@ status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
             }
             case CID_FMT:
             {
-                fread(&m_Format      , sizeof(int16_t), 1, fd);
-                fread(&m_NumChannels , sizeof(int16_t), 1, fd);
-                fread(&m_SamplingRate, sizeof(int32_t), 1, fd);
+                m_MetaData.format = UNKNOWN;
+                m_MetaData.numChannels = 0;
+                m_MetaData.bitDepth = 0;
+
+                fread(&m_MetaData.format      , sizeof(int16_t), 1, fd);
+                fread(&m_MetaData.numChannels , sizeof(int16_t), 1, fd);
+                fread(&m_MetaData.samplingRate, sizeof(int32_t), 1, fd);
                 fseek(fd, sizeof(int32_t)+sizeof(int16_t), SEEK_CUR);
-                fread(&m_BitDepth    , sizeof(int16_t), 1, fd);
-                fseek(fd, chunk.m_Size-16, SEEK_CUR);
+                fread(&m_MetaData.bitDepth    , sizeof(int16_t), 1, fd);
+                fseek(fd, chunk.size-16, SEEK_CUR);
                 break;
             }
             case CID_DATA:
             {
                 pos = ftell(fd);
-                size = chunk.m_Size;
+                size = chunk.size;
                 fseek(fd, size, SEEK_CUR);
                 break;
             }
             case CID_FACT:
             {
                 fread(&length, sizeof(int32_t), 1, fd);
-                fseek(fd, chunk.m_Size-sizeof(int32_t), SEEK_CUR);
-                if (chunk.m_Size > 4)
+                fseek(fd, chunk.size-sizeof(int32_t), SEEK_CUR);
+                if (chunk.size > 4)
                 {
-                    ERROR_LOG("Unexpected size of fact: size=%d\n", chunk.m_Size);
+                    ERROR_LOG("Unexpected size of fact: size=%d\n", chunk.size);
                     ret = -ERROR_UNKNOWN;
                 }
                 break;
             }
             default:
             {
-                char * c = chunk.m_Name.c;
+                char * c = chunk.name.c;
                 LOG("Unexpeced chunk: %c%c%c%c\n", c[0], c[1], c[2], c[3]);
-                fseek(fd, chunk.m_Size, SEEK_CUR);
+                fseek(fd, chunk.size, SEEK_CUR);
                 // ret = ERROR_UNKNOWN;
                 break;
             }
@@ -115,13 +126,13 @@ status_t FileIo::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     }
     if (length != 0)
     {
-        m_Duration = (double)length / m_SamplingRate;
+        m_Duration = (double)length / GetSamplingRate();
     }
 
     return ret;
 }
 
-status_t FileIo::Read(const char* path, mcon::Vector<int16_t>& buffer)
+status_t Wave::Read(const char* path, mcon::Vector<int16_t>& buffer)
 {
     FILE* fd = fopen(path, "r");
 
@@ -153,7 +164,7 @@ status_t FileIo::Read(const char* path, mcon::Vector<int16_t>& buffer)
 }
 
 
-status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
+status_t Wave::Read(const char* path, int16_t** buffer, size_t* size)
 {
     FILE* fd = fopen(path, "r");
 
@@ -186,33 +197,25 @@ status_t FileIo::Read(const char* path, int16_t** buffer, size_t* size)
     return ret;
 }
 
-status_t FileIo::SetMetaData(int32_t fs, int32_t ch, int32_t depth)
+status_t Wave::SetMetaData(int32_t fs, int32_t ch, int32_t depth)
 {
-    m_SamplingRate = fs;
-    m_NumChannels = ch;
-    m_BitDepth = depth;
+    m_MetaData.samplingRate = fs;
+    m_MetaData.numChannels = ch;
+    m_MetaData.bitDepth = depth;
     return NO_ERROR;
 }
 
-status_t FileIo::GetMetaData(int32_t* fs, int32_t* ch, int32_t* depth) const
+status_t Wave::GetMetaData(int32_t* fs, int32_t* ch, int32_t* depth) const
 {
-    *fs = m_SamplingRate;
-    *ch = m_NumChannels;
-    *depth = m_BitDepth;
+    *fs = GetSamplingRate();
+    *ch = GetNumChannels();
+    *depth = GetBitDepth();
     return NO_ERROR;
 }
 
-struct FileIo::MetaData FileIo::GetMetaData(void) const
+const struct Wave::MetaData& Wave::GetMetaData(void) const
 {
-    struct FileIo::MetaData metaData =
-    {
-        m_Format,
-        m_NumChannels,
-        m_BitDepth,
-        m_SamplingRate
-    };
-
-    return metaData;
+    return m_MetaData;
 }
 
 #define FileWrite(fd, type, v)             \
@@ -221,7 +224,7 @@ struct FileIo::MetaData FileIo::GetMetaData(void) const
         fwrite(&tmp, sizeof(type), 1, fd); \
     }
 
-status_t FileIo::WriteMetaData(FILE*& fd, size_t size) const
+status_t Wave::WriteMetaData(FILE*& fd, size_t size) const
 {
     // 'RIFF'
     size_t riffSize = 4 + sizeof(WaveChunk) * 2 + 0x10 + size;
@@ -230,15 +233,19 @@ status_t FileIo::WriteMetaData(FILE*& fd, size_t size) const
     FileWrite(fd, int32_t, C4TOI('W', 'A', 'V', 'E'));
 
     // 'FMT '
-    int32_t BytesPerDt = m_BitDepth / 8;
+    const int fs = GetSamplingRate();
+    const int bits = GetBitDepth();
+    const int ch = GetNumChannels();
+    //const int format = GetFormat();
+    int BytesPerDt = bits / 8;
     FileWrite(fd, int32_t, CID_FMT);
     FileWrite(fd, int32_t, 0x10);
-    FileWrite(fd, int16_t, PF_LPCM); // PCM
-    FileWrite(fd, int16_t, m_NumChannels);
-    FileWrite(fd, int32_t, m_SamplingRate);
-    FileWrite(fd, int32_t, m_SamplingRate * m_NumChannels * BytesPerDt);
-    FileWrite(fd, int16_t, m_NumChannels * BytesPerDt); // BlockSize in Byte
-    FileWrite(fd, int16_t, m_BitDepth);
+    FileWrite(fd, int16_t, LPCM); // PCM
+    FileWrite(fd, int16_t, ch);
+    FileWrite(fd, int32_t, fs);
+    FileWrite(fd, int32_t, fs * ch * BytesPerDt);
+    FileWrite(fd, int16_t, ch * BytesPerDt); // BlockSize in Byte
+    FileWrite(fd, int16_t, bits);
 
     // 'DATA'
     FileWrite(fd, int32_t, CID_DATA);
@@ -247,7 +254,7 @@ status_t FileIo::WriteMetaData(FILE*& fd, size_t size) const
     return NO_ERROR;
 }
 
-status_t FileIo::Write(const char* path, int16_t* buffer, size_t size) const
+status_t Wave::Write(const char* path, int16_t* buffer, size_t size) const
 {
     if (NULL == buffer)
     {
@@ -268,7 +275,7 @@ status_t FileIo::Write(const char* path, int16_t* buffer, size_t size) const
     return NO_ERROR;
 }
 
-status_t FileIo::Write(const char* path, const mcon::Vector<int16_t>& buffer) const
+status_t Wave::Write(const char* path, const mcon::Vector<int16_t>& buffer) const
 {
     if (NULL == buffer)
     {
@@ -291,3 +298,4 @@ status_t FileIo::Write(const char* path, const mcon::Vector<int16_t>& buffer) co
     return NO_ERROR;
 }
 
+} // namespace mfio {
