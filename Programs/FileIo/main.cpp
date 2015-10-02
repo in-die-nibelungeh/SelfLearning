@@ -6,7 +6,7 @@
 #include "types.h"
 #include "debug.h"
 
-static void test_test(void)
+static void test_check(void)
 {
     mfio::Wave wave;
 
@@ -15,57 +15,65 @@ static void test_test(void)
 
 static void test_read(void)
 {
-    size_t size;
-    int16_t* buffer;
+    int length;
+    double* buffer;
     mfio::Wave wave;
-    wave.Read("ding.wav", &buffer, &size);
+    wave.Read("ding.wav", &buffer, &length);
 
     //printf("Sizeof(PcmFormat)=%d\n", sizeof(FileIo::PcmFormat));
     //printf("Sizeof(MetaData)=%d\n", sizeof(FileIo::MetaData));
     {
-        int32_t fs, ch, bit;
-        wave.GetMetaData(&fs, &ch, &bit);
-        CHECK_VALUE_INT( fs, 44100);
-        CHECK_VALUE_INT( ch,     2);
-        CHECK_VALUE_INT(bit,    16);
+        int fs, ch, bit, fmt;
+        wave.GetMetaData(&fs, &ch, &bit, &fmt);
+        CHECK_VALUE( fs, 44100);
+        CHECK_VALUE( ch,     2);
+        CHECK_VALUE(bit,    16);
+        CHECK_VALUE(fmt,   mfio::Wave::LPCM);
     }
 
     {
         struct mfio::Wave::MetaData metaData = wave.GetMetaData();
 
-        CHECK_VALUE_INT(metaData.samplingRate, 44100);
-        CHECK_VALUE_INT(metaData.numChannels ,     2);
-        CHECK_VALUE_INT(metaData.bitDepth    ,    16);
-        CHECK_VALUE_INT(size, 70016);
+        CHECK_VALUE(metaData.samplingRate, 44100);
+        CHECK_VALUE(metaData.numChannels ,     2);
+        CHECK_VALUE(metaData.bitDepth    ,    16);
+        CHECK_VALUE(length, 70016/(metaData.bitDepth/8));
     }
 
     // îÒÉ[ÉçÇ≈Ç†ÇÍÇŒâΩÇ≈Ç‡ó«Ç¢ÅB
-    mcon::Vector<int16_t> bufferObj(1);
+    mcon::Matrix<double> bufferObj(1, 1);
     mfio::Wave waveBuf;
     waveBuf.Read("ding.wav", bufferObj);
     {
-        int32_t fs, ch, bit;
-        waveBuf.GetMetaData(&fs, &ch, &bit);
-        CHECK_VALUE_INT( fs, 44100);
-        CHECK_VALUE_INT( ch,     2);
-        CHECK_VALUE_INT(bit,    16);
-        CHECK_VALUE_INT(bufferObj.GetLength(), 70016/2);
+        int32_t fs, ch, bit, fmt;
+        waveBuf.GetMetaData(&fs, &ch, &bit, &fmt);
+        CHECK_VALUE( fs, 44100);
+        CHECK_VALUE( ch,     2);
+        CHECK_VALUE(bit,    16);
+        CHECK_VALUE(bufferObj.GetColumnLength(), 70016/ch/(bit/8));
+        CHECK_VALUE(fmt, mfio::Wave::LPCM);
     }
 
-    DEBUG_LOG("Comparing data buffer:\n");
+    LOG("Comparing data buffer:\n");
     int numUnequal = 0;
-    for ( int i = 0; i < bufferObj.GetLength(); ++i )
+    const int ch = waveBuf.GetNumChannels();
+    for ( int i = 0; i < bufferObj.GetColumnLength(); ++i )
     {
-        if ( buffer[i] != bufferObj[i] )
+        for (int c = 0; c < ch; ++c)
         {
-            ++numUnequal;
-            printf("Not equal at %5d: buffer=%d, bufferObj=%d\n",
-                i, buffer[i], bufferObj[i]);
+            const int idx = ch*i + c;
+            if ( buffer[idx] != bufferObj[c][i] )
+            {
+                ++numUnequal;
+                LOG("Not equal at %5d: buffer=%g, bufferObj=%g\n",
+                    i, buffer[i], bufferObj[c][i]);
+            }
         }
     }
+    CHECK_VALUE(numUnequal, 0);
     if ( 0 == numUnequal )
     {
-        DEBUG_LOG("Matched completely\n");
+        LOG("Matched completely\n");
     }
 }
 
@@ -76,12 +84,12 @@ static void test_write(void)
     int32_t fs = 48000;
     int32_t duration = 10;
     int32_t ch = 1;
-    int32_t depth = sizeof(int16_t) * 8;
     int32_t amp = 32767;
     int32_t multi = 20;
-    size_t size = duration * fs * ch * depth / 8;
-    int16_t* buffer = (int16_t*)malloc(size);
-    mcon::Vector<int16_t> bufferObj(size/sizeof(int16_t));
+    const int length = duration * fs * ch;
+    const size_t size = length * sizeof(double);
+    double* buffer = (double*)malloc(size);
+    mcon::Matrix<double> bufferObj(1, length);
 
     wg.SetWaveType(WaveGen::WT_SINE);
     wg.SetSamplingRate(fs);
@@ -91,12 +99,12 @@ static void test_write(void)
 
     for (int i = 0; i < duration * fs; ++i, ++wg)
     {
-        buffer[i] = static_cast<int16_t>(amp * wg.GetValue());
-        bufferObj[i] = buffer[i];
+        buffer[i] = amp * wg.GetValue();
+        bufferObj[0][i] = buffer[i];
     }
-
     {
         char fname[256];
+        int depth = sizeof(int16_t) * 8;
         mfio::Wave wave(fs, ch, depth);
         sprintf(fname, "sweep_%d-%d.wav", freq, freq*multi);
         wave.Write(reinterpret_cast<const char*>(fname), buffer, size);
@@ -108,7 +116,7 @@ static void test_write(void)
 
 int main(void)
 {
-    test_test();
+    test_check();
     test_read();
     test_write();
 

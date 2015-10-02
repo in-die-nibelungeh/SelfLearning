@@ -4,7 +4,7 @@
 
 #include "types.h"
 #include "status.h"
-#include "Vector.h"
+#include "Matrix.h"
 
 #define C4TOI(c0, c1, c2, c3) \
     ( ((c3 << 24) & 0xff000000) | \
@@ -36,16 +36,16 @@ public:
     };
 
     Wave();
-    Wave(int samplingRate, int numChannels, int bitDepth);
+    Wave(int samplingRate, int numChannels, int bitDepth, WaveFormat format = LPCM);
     ~Wave();
 
     // Read
-    status_t Read(const char* path, int16_t ** pBuffer, size_t* size);
-    status_t Read(const char* path, mcon::Vector<int16_t>& buffer);
+    status_t Read(const char* path, double ** pBuffer, int* length);
+    status_t Read(const char* path, mcon::Matrix<double>& buffer);
 
     // Write
-    status_t Write(const char* path, int16_t* buffer, size_t size) const;
-    status_t Write(const char* path, const mcon::Vector<int16_t>& buffer) const;
+    status_t Write(const char* path, double* buffer, size_t size) const;
+    status_t Write(const char* path, const mcon::Matrix<double>& buffer) const;
 
     // Meta Data
     const struct MetaData& GetMetaData(void) const;
@@ -61,9 +61,13 @@ public:
     {
         return m_MetaData.numChannels;
     }
-    status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth) const;
-    status_t SetMetaData(struct MetaData& meta);
-    status_t SetMetaData(int samplingRate, int numChannels, int bitDepth);
+    inline WaveFormat GetWaveFormat(void) const
+    {
+        return m_MetaData.format;
+    }
+    status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth, int* format) const;
+    status_t SetMetaData(const struct MetaData& metaData);
+    status_t SetMetaData(int samplingRate, int numChannels, int bitDepth, WaveFormat format = LPCM);
     double   GetDuration(void) const { m_Duration; }
 
     // TBD
@@ -79,6 +83,7 @@ private:
 
     void Initialize(int smaplingRate, int numChannels, int bitDepth, WaveFormat format);
 
+    status_t IsValidMetaData(void) const;
     status_t ReadMetaData(FILE*& fd, int& dataPosition, size_t& dataSize);
     status_t WriteMetaData(FILE*& fd, size_t dataSize) const;
 

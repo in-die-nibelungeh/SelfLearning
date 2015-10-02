@@ -23,16 +23,23 @@ namespace {
     };
 }
 
+/*
+#if 8 != sizeof(WaveChunk)
+#error Unexpected value: sizeof(WaveChunk)
+#endif
+*/
+
+
 Wave::Wave()
   : m_Duration(0.0)
 {
     Initialize(0, 0, 0, UNKNOWN);
 }
 
-Wave::Wave(int fs, int ch, int bits)
+Wave::Wave(int fs, int ch, int bits, WaveFormat format)
   : m_Duration(0.0)
 {
-    Initialize(fs, ch, bits, LPCM);
+    Initialize(fs, ch, bits, format);
 }
 
 Wave::~Wave()
@@ -46,6 +53,7 @@ void Wave::Initialize(int fs, int ch, int bits, WaveFormat format)
     m_MetaData.bitDepth = bits;
     m_MetaData.samplingRate = fs;
 }
+
 status_t Wave::Check(void)
 {
     CHECK(8 == sizeof(WaveChunk));
@@ -132,10 +140,9 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     return ret;
 }
 
-status_t Wave::Read(const char* path, mcon::Vector<int16_t>& buffer)
+status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
 {
     FILE* fd = fopen(path, "r");
-
     if (NULL == fd)
     {
         return -ERROR_NOT_FOUND; // NOT_FOUND
@@ -143,73 +150,110 @@ status_t Wave::Read(const char* path, mcon::Vector<int16_t>& buffer)
 
     size_t dataSize;
     int dataPosition;
+    status_t status;
 
-    status_t ret = ReadMetaData(fd, dataPosition, dataSize);
-
-    if (NO_ERROR == ret)
+    status = ReadMetaData(fd, dataPosition, dataSize);
+    if (NO_ERROR != status)
     {
-        if (false == buffer.Resize(dataSize/sizeof(int16_t)))
-        {
-            ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
-        }
-        else
-        {
-            fseek(fd, dataPosition, SEEK_SET);
-            int ret = fread(buffer, sizeof(uint8_t), dataSize, fd);
-        }
+        goto END1;
     }
-    fclose(fd);
 
-    return ret;
+    const int ch = GetNumChannels();
+    const int bits = GetBitDepth() / 8;
+    const int length = dataSize / bits / ch;
+    if (false == buffer.Resize(ch, length))
+    {
+        status = -ERROR_CANNOT_ALLOCATE_MEMORY;
+        goto END1;
+    }
+
+    fseek(fd, dataPosition, SEEK_SET);
+    switch(GetWaveFormat())
+    {
+    case LPCM:
+        {
+            mcon::Vector<int16_t> tmp(length * ch);
+            int sizeRead = fread(tmp, sizeof(uint8_t), dataSize, fd);
+            if (sizeRead != dataSize)
+            {
+                status = -ERROR_ILLEGAL;
+                break;
+            }
+            for (int i = 0; i < length; ++i)
+            {
+                for (int _ch = 0; _ch < ch; ++_ch)
+                {
+                    buffer[_ch][i] = static_cast<double>(tmp[i*ch+_ch]);
+                }
+            }
+        }
+        break;
+    case IEEE_FLOAT:
+        {
+            mcon::Vector<float> tmp(length * ch);
+            int sizeRead = fread(tmp, sizeof(uint8_t), dataSize, fd);
+            {
+                status = -ERROR_ILLEGAL;
+                break;
+            }
+            for (int i = 0; i < length; ++i)
+            {
+                for (int _ch = 0; _ch < ch; ++_ch)
+                {
+                    buffer[_ch][i] = static_cast<double>(tmp[i*ch+_ch]);
+                }
+            }
+        }
+        break;
+    default:
+        ERROR_LOG("Unknown format: %d\n", GetWaveFormat());
+       break;
+    }
+END1:
+    fclose(fd);
+    return status;
 }
 
 
-status_t Wave::Read(const char* path, int16_t** buffer, size_t* size)
+status_t Wave::Read(const char* path, double** buffer, int* length)
 {
-    FILE* fd = fopen(path, "r");
+    mcon::Matrix<double> _buffer;
+    Read(path, _buffer);
 
-    if (NULL == fd)
+    const int ch = GetNumChannels();
+    const int _length = _buffer.GetColumnLength();
+    const size_t _size =  ch * _length * sizeof(double);
+    *length = ch * _length;
+    *buffer = reinterpret_cast<double*>(malloc(_size));
+    if (*buffer == NULL)
     {
-        return -ERROR_NOT_FOUND; // NOT_FOUND
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-
-    size_t dataSize;
-    int dataPosition;
-
-    status_t ret = ReadMetaData(fd, dataPosition, dataSize);
-
-    if (NO_ERROR == ret)
+    for (int i = 0; i < _length; ++i)
     {
-        *buffer = reinterpret_cast<int16_t*>(malloc(dataSize));
-        *size = dataSize;
-        if (*buffer == NULL)
+        for (int c = 0; c < ch; ++c)
         {
-            ret = -ERROR_CANNOT_ALLOCATE_MEMORY;
-        }
-        else
-        {
-            fseek(fd, dataPosition, SEEK_SET);
-            fread(*buffer, sizeof(uint8_t), dataSize, fd);
+            (*buffer)[i*ch+c] = _buffer[c][i];
         }
     }
-    fclose(fd);
-
-    return ret;
+    return NO_ERROR;
 }
 
-status_t Wave::SetMetaData(int32_t fs, int32_t ch, int32_t depth)
+status_t Wave::SetMetaData(int fs, int ch, int depth, WaveFormat format)
 {
     m_MetaData.samplingRate = fs;
     m_MetaData.numChannels = ch;
     m_MetaData.bitDepth = depth;
+    m_MetaData.format = format;
     return NO_ERROR;
 }
 
-status_t Wave::GetMetaData(int32_t* fs, int32_t* ch, int32_t* depth) const
+status_t Wave::GetMetaData(int* fs, int* ch, int* depth, int* format) const
 {
     *fs = GetSamplingRate();
     *ch = GetNumChannels();
     *depth = GetBitDepth();
+    *format = GetWaveFormat();
     return NO_ERROR;
 }
 
@@ -236,11 +280,11 @@ status_t Wave::WriteMetaData(FILE*& fd, size_t size) const
     const int fs = GetSamplingRate();
     const int bits = GetBitDepth();
     const int ch = GetNumChannels();
-    //const int format = GetFormat();
-    int BytesPerDt = bits / 8;
+    const int format = GetWaveFormat();
+    const int BytesPerDt = bits / 8;
     FileWrite(fd, int32_t, CID_FMT);
     FileWrite(fd, int32_t, 0x10);
-    FileWrite(fd, int16_t, LPCM); // PCM
+    FileWrite(fd, int16_t, format);
     FileWrite(fd, int16_t, ch);
     FileWrite(fd, int32_t, fs);
     FileWrite(fd, int32_t, fs * ch * BytesPerDt);
@@ -254,30 +298,53 @@ status_t Wave::WriteMetaData(FILE*& fd, size_t size) const
     return NO_ERROR;
 }
 
-status_t Wave::Write(const char* path, int16_t* buffer, size_t size) const
+status_t Wave::IsValidMetaData(void) const
 {
-    if (NULL == buffer)
+    if (GetNumChannels()  == 0 ||
+        GetSamplingRate() == 0 ||
+        GetBitDepth()     == 0 ||
+        GetWaveFormat() == UNKNOWN)
     {
-        return -ERROR_NULL;
+        return false;
     }
-
-    FILE *fd = fopen(path, "w");
-    if (NULL == fd)
-    {
-        return -ERROR_ILLEGAL_PERMISSION;
-    }
-    WriteMetaData(fd, size);
-
-    fwrite(buffer, 1, size, fd);
-
-    fclose(fd);
-
-    return NO_ERROR;
+    return true;
 }
 
-status_t Wave::Write(const char* path, const mcon::Vector<int16_t>& buffer) const
+status_t Wave::Write(const char* path, double* buffer, size_t size) const
 {
-    if (NULL == buffer)
+    if (false == IsValidMetaData())
+    {
+        return -ERROR_ILLEGAL;
+    }
+    mcon::Matrix<double> _buffer(1, size/sizeof(double));
+    mcon::Vector<double>& _vector = _buffer[0];
+    for (int i = 0; i < _buffer.GetColumnLength(); ++i)
+    {
+        _vector[i] = buffer[i];
+    }
+    // Copy
+    return Write(path, _buffer);
+}
+
+#define FileWriteData(fd, buf, len, ch, t)             \
+    {                                                  \
+        for (int i = 0; i < len; ++i)                  \
+        {                                              \
+            for (int c = 0; c < ch; ++c)               \
+            {                                          \
+                const t v = static_cast<t>(buf[c][i]); \
+                fwrite(&v, sizeof(t), 1, fd);          \
+            }                                          \
+        }                                              \
+    }
+
+status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
+{
+    if (false == IsValidMetaData())
+    {
+        return -ERROR_ILLEGAL;
+    }
+    if (0 == buffer.GetColumnLength())
     {
         return -ERROR_NULL;
     }
@@ -287,11 +354,40 @@ status_t Wave::Write(const char* path, const mcon::Vector<int16_t>& buffer) cons
     {
         return -ERROR_ILLEGAL_PERMISSION;
     }
-    size_t size = buffer.GetLength() * sizeof(int16_t);
+
+    const int ch = GetNumChannels();
+    const int length = buffer.GetColumnLength();
+    const size_t size = ch * length * sizeof(double);
 
     WriteMetaData(fd, size);
 
-    fwrite(buffer, 1, size, fd);
+    const int bits = GetBitDepth();
+    const int format = GetWaveFormat();
+
+    DEBUG_LOG("format=%d\n", format);
+    DEBUG_LOG("bitDepth=%d\n", bits);
+    switch(format)
+    {
+    case LPCM:
+        {
+            switch(bits)
+            {
+            case 16: FileWriteData(fd, buffer, length, ch, int16_t); break;
+            case 32: FileWriteData(fd, buffer, length, ch, int32_t); break;
+            }
+        }
+        break;
+    case IEEE_FLOAT:
+        {
+            switch(bits)
+            {
+            case 32: FileWriteData(fd, buffer, length, ch, float); break;
+            }
+        }
+        break;
+    default:
+        break;
+    }
 
     fclose(fd);
 
