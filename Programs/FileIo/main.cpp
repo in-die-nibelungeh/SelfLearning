@@ -114,11 +114,55 @@ static void test_write(void)
     free(buffer);
 }
 
+static void test_read_float(void)
+{
+    const char* name = "101-st.wav";
+    mfio::Wave wave;
+    mcon::Matrix<double> buffer;
+    status_t status = wave.Read(name, buffer);
+    CHECK_VALUE(status, NO_ERROR);
+
+    struct mfio::Wave::MetaData metaData = wave.GetMetaData();
+    const int ch = metaData.numChannels;
+    const int length = buffer.GetColumnLength();
+    CHECK_VALUE(metaData.samplingRate, 44100);
+    CHECK_VALUE(metaData.numChannels ,     2);
+    CHECK_VALUE(metaData.bitDepth    ,    32);
+    CHECK_VALUE(metaData.format      ,    mfio::Wave::IEEE_FLOAT);
+    CHECK_VALUE(length, 143328/(metaData.bitDepth/8)/ch);
+
+    for (int i = 0; i < length/1000; ++i)
+    {
+        LOG("buffer[%d][%d]=%g\n", 0, i, buffer[0][i]);
+    }
+}
+
+static void test_write_float(void)
+{
+    const int ch = 2;
+    const int length = 10;
+    const char* name = "float.wav";
+    mfio::Wave wave(48000, ch, 32, mfio::Wave::IEEE_FLOAT);
+    mcon::Matrix<double> buffer(2, length);
+    for (int i = 0; i < length; ++i)
+    {
+        for (int c = 0; c < ch; ++c)
+        {
+            buffer[c][i] = (c+1)*10+i;
+        }
+    }
+    status_t status = wave.Write(name, buffer);
+    CHECK_VALUE(status, NO_ERROR);
+}
+
+
 int main(void)
 {
     test_check();
     test_read();
     test_write();
+    test_read_float();
+    test_write_float();
 
     return 0;
 }

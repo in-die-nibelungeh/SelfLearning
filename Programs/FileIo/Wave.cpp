@@ -159,8 +159,8 @@ status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
     }
 
     const int ch = GetNumChannels();
-    const int bits = GetBitDepth() / 8;
-    const int length = dataSize / bits / ch;
+    const int bytes = GetBitDepth() / 8;
+    const int length = dataSize / bytes / ch;
     if (false == buffer.Resize(ch, length))
     {
         status = -ERROR_CANNOT_ALLOCATE_MEMORY;
@@ -192,6 +192,7 @@ status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
         {
             mcon::Vector<float> tmp(length * ch);
             int sizeRead = fread(tmp, sizeof(uint8_t), dataSize, fd);
+            if (sizeRead != dataSize)
             {
                 status = -ERROR_ILLEGAL;
                 break;
@@ -364,8 +365,6 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
     const int bits = GetBitDepth();
     const int format = GetWaveFormat();
 
-    DEBUG_LOG("format=%d\n", format);
-    DEBUG_LOG("bitDepth=%d\n", bits);
     switch(format)
     {
     case LPCM:

@@ -49,22 +49,14 @@ public:
 
     // Meta Data
     const struct MetaData& GetMetaData(void) const;
-    inline int GetSamplingRate(void) const
-    {
-        return m_MetaData.samplingRate;
-    }
-    inline int GetBitDepth(void) const
-    {
-        return m_MetaData.bitDepth;
-    }
-    inline int GetNumChannels(void) const
-    {
-        return m_MetaData.numChannels;
-    }
-    inline WaveFormat GetWaveFormat(void) const
-    {
-        return m_MetaData.format;
-    }
+    inline int GetSamplingRate(void) const { return m_MetaData.samplingRate; }
+    inline int GetBitDepth(void) const { return m_MetaData.bitDepth; }
+    inline int GetNumChannels(void) const { return m_MetaData.numChannels; }
+    inline WaveFormat GetWaveFormat(void) const { return m_MetaData.format; }
+    inline void SetSamplingRate(int samplingRate) { m_MetaData.samplingRate = samplingRate; }
+    inline void SetBitDepth(int bitDepth) { m_MetaData.bitDepth = bitDepth; }
+    inline void SetNumChannels(int numChannels) { m_MetaData.numChannels = numChannels; }
+    inline void SetWaveFormat(WaveFormat format) { m_MetaData.format = format; }
     status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth, int* format) const;
     status_t SetMetaData(const struct MetaData& metaData);
     status_t SetMetaData(int samplingRate, int numChannels, int bitDepth, WaveFormat format = LPCM);
