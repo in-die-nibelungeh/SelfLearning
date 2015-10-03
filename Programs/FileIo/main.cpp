@@ -133,14 +133,14 @@ static void test_write(void)
     wg.Reset();
     wg.SetSweepParam(freq*multi, (double)duration, true);
 
-    for (int i = 0; i < duration * fs; i += ch, ++wg)
+    for (int i = 0; i < duration * fs; ++i, ++wg)
     {
         const double v = amp * wg.GetValue();
         for (int c = 0; c < ch; ++c)
         {
-            buffer[i+c] = v;
-            bufferVector[i+c] = v;
-            bufferMatrix[c][i/ch] = v;
+            buffer[ch*i+c] = v;
+            bufferVector[ch*i+c] = v;
+            bufferMatrix[c][i] = v;
         }
     }
     {
