@@ -118,13 +118,14 @@ static void test_write(void)
     int32_t freq = 440;
     int32_t fs = 48000;
     int32_t duration = 10;
-    int32_t ch = 1;
+    int32_t ch = 2;
     int32_t amp = 32767;
     int32_t multi = 20;
     const int length = duration * fs * ch;
     const size_t size = length * sizeof(double);
     double* buffer = (double*)malloc(size);
-    mcon::Matrix<double> bufferObj(1, length);
+    mcon::Vector<double> bufferVector(length);
+    mcon::Matrix<double> bufferMatrix(ch, length/ch);
 
     wg.SetWaveType(WaveGen::WT_SINE);
     wg.SetSamplingRate(fs);
@@ -132,10 +133,15 @@ static void test_write(void)
     wg.Reset();
     wg.SetSweepParam(freq*multi, (double)duration, true);
 
-    for (int i = 0; i < duration * fs; ++i, ++wg)
+    for (int i = 0; i < duration * fs; i += ch, ++wg)
     {
-        buffer[i] = amp * wg.GetValue();
-        bufferObj[0][i] = buffer[i];
+        const double v = amp * wg.GetValue();
+        for (int c = 0; c < ch; ++c)
+        {
+            buffer[i+c] = v;
+            bufferVector[i+c] = v;
+            bufferMatrix[c][i/ch] = v;
+        }
     }
     {
         char fname[256];
@@ -143,8 +149,10 @@ static void test_write(void)
         mfio::Wave wave(fs, ch, depth);
         sprintf(fname, "sweep_%d-%d.wav", freq, freq*multi);
         wave.Write(reinterpret_cast<const char*>(fname), buffer, size);
-        sprintf(fname, "sweep_%d-%d_buffer.wav", freq, freq*multi);
-        wave.Write(reinterpret_cast<const char*>(fname), bufferObj);
+        sprintf(fname, "sweep_%d-%d_vector.wav", freq, freq*multi);
+        wave.Write(reinterpret_cast<const char*>(fname), bufferVector);
+        sprintf(fname, "sweep_%d-%d_matrix.wav", freq, freq*multi);
+        wave.Write(reinterpret_cast<const char*>(fname), bufferMatrix);
     }
     free(buffer);
 }

@@ -316,41 +316,13 @@ status_t Wave::IsValidMetaData(void) const
     return true;
 }
 
-status_t Wave::Write(const char* path, double* buffer, size_t size) const
+status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
 {
     if (false == IsValidMetaData())
     {
         return -ERROR_ILLEGAL;
     }
-    mcon::Matrix<double> _buffer(1, size/sizeof(double));
-    mcon::Vector<double>& _vector = _buffer[0];
-    for (int i = 0; i < _buffer.GetColumnLength(); ++i)
-    {
-        _vector[i] = buffer[i];
-    }
-    // Copy
-    return Write(path, _buffer);
-}
-
-#define FileWriteData(fd, buf, len, ch, t)             \
-    {                                                  \
-        for (int i = 0; i < len; ++i)                  \
-        {                                              \
-            for (int c = 0; c < ch; ++c)               \
-            {                                          \
-                const t v = static_cast<t>(buf[c][i]); \
-                fwrite(&v, sizeof(t), 1, fd);          \
-            }                                          \
-        }                                              \
-    }
-
-status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
-{
-    if (false == IsValidMetaData())
-    {
-        return -ERROR_ILLEGAL;
-    }
-    if (0 == buffer.GetColumnLength())
+    if (0 == buffer.GetLength())
     {
         return -ERROR_NULL;
     }
@@ -361,41 +333,102 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
         return -ERROR_ILLEGAL_PERMISSION;
     }
 
-    const int ch = GetNumChannels();
-    const int length = buffer.GetColumnLength();
-    const size_t size = ch * length * sizeof(double);
+    const int length = buffer.GetLength();
+    const int bytes = GetBitDepth() / 8;
+    const size_t size = bytes * length;
 
     WriteMetaData(fd, size);
 
-    const int bits = GetBitDepth();
-    const int format = GetWaveFormat();
+    status_t status = NO_ERROR;
 
-    switch(format)
+    switch(GetWaveFormat())
     {
     case LPCM:
         {
-            switch(bits)
+            switch(bytes)
             {
-            case 16: FileWriteData(fd, buffer, length, ch, int16_t); break;
-            case 32: FileWriteData(fd, buffer, length, ch, int32_t); break;
+            case sizeof(int16_t):
+                {
+                    mcon::Vector<int16_t> tmp(buffer);
+                    fwrite(tmp, bytes, length, fd);
+                }
+                break;
+            case sizeof(int32_t):
+                {
+                    mcon::Vector<int32_t> tmp(buffer);
+                    fwrite(tmp, bytes, length, fd);
+                }
+                break;
+            default:
+                {
+                    status = -ERROR_ILLEGAL;
+                }
+                break;
             }
         }
         break;
     case IEEE_FLOAT:
         {
-            switch(bits)
+            switch(bytes)
             {
-            case 32: FileWriteData(fd, buffer, length, ch, float); break;
+            case sizeof(float):
+                {
+                    mcon::Vector<float> tmp(buffer);
+                    fwrite(tmp, bytes, length, fd);
+                }
+                break;
+            default:
+                {
+                    status = -ERROR_ILLEGAL;
+                }
+                break;
             }
         }
         break;
     default:
+        {
+            status = -ERROR_UNSUPPORTED;
+        }
         break;
     }
-
     fclose(fd);
 
-    return NO_ERROR;
+    return status;
+}
+
+status_t Wave::Write(const char* path, double* buffer, size_t size) const
+{
+    mcon::Vector<double> tmp(size/sizeof(double));
+    for (int i = 0; i < tmp.GetLength(); ++i)
+    {
+        tmp[i] = buffer[i];
+    }
+    return Write(path, tmp);
+}
+
+status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
+{
+    if (0 == buffer.GetColumnLength()
+        || 0 == buffer.GetRowLength())
+    {
+        return -ERROR_NULL;
+    }
+    const int bits = GetBitDepth();
+    const int ch = GetNumChannels();
+    const int length = buffer.GetColumnLength();
+
+    mcon::Vector<double> tmp(ch * length);
+
+    for (int i = 0; i < length; ++i)
+    {
+        if (i < 20)
+            LOG("%d,%f\n", i, buffer[0][i]);
+        for (int c = 0; c < ch; ++c)
+        {
+            tmp[ch*i+c] = buffer[c][i];
+        }
+    }
+    return Write(path, tmp);
 }
 
 } // namespace mfio {
