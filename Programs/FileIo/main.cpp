@@ -37,16 +37,50 @@ static void test_read(void)
         CHECK_VALUE(metaData.samplingRate, 44100);
         CHECK_VALUE(metaData.numChannels ,     2);
         CHECK_VALUE(metaData.bitDepth    ,    16);
+        CHECK_VALUE(metaData.format      , mfio::Wave::LPCM);
         CHECK_VALUE(length, 70016/(metaData.bitDepth/8));
     }
-
-    // îÒÉ[ÉçÇ≈Ç†ÇÍÇŒâΩÇ≈Ç‡ó«Ç¢ÅB
-    mcon::Matrix<double> bufferObj(1, 1);
-    mfio::Wave waveBuf;
-    waveBuf.Read("ding.wav", bufferObj);
+    /*----------------------------------------------------------------
+     * Vector Interface
+     *----------------------------------------------------------------*/
+    mcon::Vector<double> bufferVector;
+    mfio::Wave waveVector;
+    waveVector.Read("ding.wav", bufferVector);
     {
         int32_t fs, ch, bit, fmt;
-        waveBuf.GetMetaData(&fs, &ch, &bit, &fmt);
+        waveVector.GetMetaData(&fs, &ch, &bit, &fmt);
+        CHECK_VALUE( fs, 44100);
+        CHECK_VALUE( ch,     2);
+        CHECK_VALUE(bit,    16);
+        CHECK_VALUE(bufferVector.GetLength(), 70016/(bit/8));
+        CHECK_VALUE(fmt, mfio::Wave::LPCM);
+    }
+    LOG("Comparing data buffer (Vector):\n");
+    int numUnequal = 0;
+    for ( int i = 0; i < bufferVector.GetLength(); ++i )
+    {
+        if ( buffer[i] != bufferVector[i] )
+        {
+            ++numUnequal;
+            LOG("Not equal at %5d: buffer=%g, bufferVector=%g\n",
+                i, buffer[i], bufferVector[i]);
+        }
+    }
+    CHECK_VALUE(numUnequal, 0);
+    if ( 0 == numUnequal )
+    {
+        LOG("Matched completely (Vector)\n");
+    }
+
+    /*----------------------------------------------------------------
+     * Matrix Interface
+     *----------------------------------------------------------------*/
+    mcon::Matrix<double> bufferObj;
+    mfio::Wave waveMatrix;
+    waveMatrix.Read("ding.wav", bufferObj);
+    {
+        int32_t fs, ch, bit, fmt;
+        waveMatrix.GetMetaData(&fs, &ch, &bit, &fmt);
         CHECK_VALUE( fs, 44100);
         CHECK_VALUE( ch,     2);
         CHECK_VALUE(bit,    16);
@@ -54,9 +88,9 @@ static void test_read(void)
         CHECK_VALUE(fmt, mfio::Wave::LPCM);
     }
 
-    LOG("Comparing data buffer:\n");
-    int numUnequal = 0;
-    const int ch = waveBuf.GetNumChannels();
+    LOG("Comparing data buffer (Matrix):\n");
+    numUnequal = 0;
+    const int ch = waveMatrix.GetNumChannels();
     for ( int i = 0; i < bufferObj.GetColumnLength(); ++i )
     {
         for (int c = 0; c < ch; ++c)
@@ -73,8 +107,9 @@ static void test_read(void)
     CHECK_VALUE(numUnequal, 0);
     if ( 0 == numUnequal )
     {
-        LOG("Matched completely\n");
+        LOG("Matched completely (Matrix)\n");
     }
+    free(buffer);
 }
 
 static void test_write(void)

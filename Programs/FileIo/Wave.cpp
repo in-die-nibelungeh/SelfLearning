@@ -140,7 +140,7 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     return ret;
 }
 
-status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
+status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
 {
     FILE* fd = fopen(path, "r");
     if (NULL == fd)
@@ -155,76 +155,62 @@ status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
     status = ReadMetaData(fd, dataPosition, dataSize);
     if (NO_ERROR != status)
     {
-        goto END1;
+        goto END;
     }
 
-    const int ch = GetNumChannels();
     const int bytes = GetBitDepth() / 8;
-    const int length = dataSize / bytes / ch;
-    if (false == buffer.Resize(ch, length))
+    const int length = dataSize / bytes;
+    if (false == buffer.Resize(length))
     {
         status = -ERROR_CANNOT_ALLOCATE_MEMORY;
-        goto END1;
+        goto END;
     }
 
     fseek(fd, dataPosition, SEEK_SET);
+
+    status = -ERROR_ILLEGAL;
     switch(GetWaveFormat())
     {
     case LPCM:
         {
-            mcon::Vector<int16_t> tmp(length * ch);
-            int sizeRead = fread(tmp, sizeof(uint8_t), dataSize, fd);
-            if (sizeRead != dataSize)
+            mcon::Vector<int16_t> tmp(length);
+            if (dataSize == fread(tmp, sizeof(uint8_t), dataSize, fd))
             {
-                status = -ERROR_ILLEGAL;
-                break;
-            }
-            for (int i = 0; i < length; ++i)
-            {
-                for (int _ch = 0; _ch < ch; ++_ch)
-                {
-                    buffer[_ch][i] = static_cast<double>(tmp[i*ch+_ch]);
-                }
+                buffer = tmp;
+                status = NO_ERROR;
             }
         }
         break;
     case IEEE_FLOAT:
         {
-            mcon::Vector<float> tmp(length * ch);
-            int sizeRead = fread(tmp, sizeof(uint8_t), dataSize, fd);
-            if (sizeRead != dataSize)
+            mcon::Vector<float> tmp(length);
+            if (dataSize == fread(tmp, sizeof(uint8_t), dataSize, fd))
             {
-                status = -ERROR_ILLEGAL;
-                break;
-            }
-            for (int i = 0; i < length; ++i)
-            {
-                for (int _ch = 0; _ch < ch; ++_ch)
-                {
-                    buffer[_ch][i] = static_cast<double>(tmp[i*ch+_ch]);
-                }
+                buffer = tmp;
+                status = NO_ERROR;
             }
         }
         break;
     default:
-        ERROR_LOG("Unknown format: %d\n", GetWaveFormat());
-       break;
+        break;
     }
-END1:
+END:
     fclose(fd);
-    return status;
+    return NO_ERROR;
 }
-
 
 status_t Wave::Read(const char* path, double** buffer, int* length)
 {
-    mcon::Matrix<double> _buffer;
-    Read(path, _buffer);
+    mcon::Vector<double> tmp;
+    status_t status = Read(path, tmp);
+    if (NO_ERROR != status)
+    {
+        return status;
+    }
 
-    const int ch = GetNumChannels();
-    const int _length = _buffer.GetColumnLength();
-    const size_t _size =  ch * _length * sizeof(double);
-    *length = ch * _length;
+    const int _length = tmp.GetLength();
+    const size_t _size =  _length * sizeof(double);
+    *length = _length;
     *buffer = reinterpret_cast<double*>(malloc(_size));
     if (*buffer == NULL)
     {
@@ -232,9 +218,28 @@ status_t Wave::Read(const char* path, double** buffer, int* length)
     }
     for (int i = 0; i < _length; ++i)
     {
+        (*buffer)[i] = tmp[i];
+    }
+    return NO_ERROR;
+}
+
+status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
+{
+    mcon::Vector<double> tmp;
+    status_t status = Read(path, tmp);
+
+    if (NO_ERROR != status)
+    {
+        return status;
+    }
+    const int ch = GetNumChannels();
+    const int length = tmp.GetLength() / ch;
+    buffer.Resize(ch, length);
+    for (int i = 0; i < length; ++i)
+    {
         for (int c = 0; c < ch; ++c)
         {
-            (*buffer)[i*ch+c] = _buffer[c][i];
+            buffer[c][i] = tmp[i*ch+c];
         }
     }
     return NO_ERROR;

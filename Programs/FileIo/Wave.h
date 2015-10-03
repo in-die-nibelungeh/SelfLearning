@@ -41,10 +41,12 @@ public:
 
     // Read
     status_t Read(const char* path, double ** pBuffer, int* length);
+    status_t Read(const char* path, mcon::Vector<double>& buffer);
     status_t Read(const char* path, mcon::Matrix<double>& buffer);
 
     // Write
     status_t Write(const char* path, double* buffer, size_t size) const;
+    status_t Write(const char* path, const mcon::Vector<double>& buffer) const;
     status_t Write(const char* path, const mcon::Matrix<double>& buffer) const;
 
     // Meta Data
