@@ -1,8 +1,8 @@
 BIN=fileio.exe
 LIB=libfio.a
 
-MODULE_HEADER=FileIo.h Wave.h
-MODULE_SRC=Wave.cpp
+MODULE_HEADER=FileIo.h Wave.h Csv.h
+MODULE_SRC=Wave.cpp Csv.cpp
 
 INC=$(MODULE_HEADER)
 
