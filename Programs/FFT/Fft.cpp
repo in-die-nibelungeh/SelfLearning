@@ -142,7 +142,11 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     {
         return -ERROR_ILLEGAL;
     }
-    const int N = timeSeries.GetLength();
+    if ( false == timeSeries.Resize(complex.GetColumnLength()) )
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
+    const int N = complex.GetColumnLength();
     const double df = 2.0 * g_Pi / N;
 
     mcon::Vector<double> sinTable(N);
