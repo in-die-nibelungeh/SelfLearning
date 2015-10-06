@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "Fft.h"
 #include "WaveGen.h"
+#include "FileIo.h"
 
 #define POW2(v) ((v)*(v))
 
@@ -113,8 +114,47 @@ static void test_ft_buffer(void)
     }
 }
 
+static int sign(double v)
+{
+    return (v < 0) ? -1 : 1;
+}
+
+static void test_gp_complex(void)
+{
+    const char* fname = "sweep_440-3520_1s.wav";
+    mfio::Wave wave;
+    mcon::Vector<double> buffer;
+    wave.Read(fname, buffer);
+    mcon::Matrix<double> complex;
+    mcon::Matrix<double> gp;
+    mcon::Matrix<double> icomplex;
+
+    LOG("Ft\n");
+    Fft::Ft(complex, buffer);
+    LOG("Polar\n");
+    Fft::ConvertToPolarCoords(gp, complex);
+    LOG("Complex\n");
+    Fft::ConvertToComplex(icomplex, gp);
+    for ( int i = 0; i < icomplex.GetColumnLength(); ++i)
+    {
+        icomplex[0][i] = fabs(icomplex[0][i]) * sign(complex[0][i]);
+        icomplex[1][i] = fabs(icomplex[1][i]) * sign(complex[1][i]);
+    }
+    LOG("Saving\n");
+    {
+        const int n = buffer.GetLength();
+        mcon::Matrix<double> matrix(4, n);
+        matrix[0] = complex[0];
+        matrix[1] = complex[1];
+        matrix[2] = icomplex[0];
+        matrix[3] = icomplex[1];
+        mfio::Csv::Write("sweep_440-3520_1s.csv", matrix);
+    }
+}
+
 static void tests(void)
 {
     test_ft();
     test_ft_buffer();
+    test_gp_complex();
 }

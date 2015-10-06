@@ -16,11 +16,9 @@ static void tune_ft(void)
 
     mcon::Vector<double> sweep;
     {
-        mcon::Vector<int16_t> sweep_int;
         std::string wfile = fbody + std::string(".wav");
-        FileIo wave;
-        wave.Read(wfile.c_str(), sweep_int);
-        sweep = sweep_int;
+        mfio::Wave wave;
+        wave.Read(wfile.c_str(), sweep);
         fs = wave.GetSamplingRate();
     }
     LOG("SamplingRate: %d\n", fs);

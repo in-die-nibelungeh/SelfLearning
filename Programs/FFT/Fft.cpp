@@ -198,4 +198,29 @@ status_t ConvertToPolarCoords(mcon::Matrix<double>& polar, const mcon::Matrix<do
     return NO_ERROR;
 }
 
+status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<double>& polar)
+{
+    if (polar.GetRowLength() < 2)
+    {
+        return -ERROR_ILLEGAL;
+    }
+    bool status = complex.Resize(2, polar.GetColumnLength());
+    if (false == status)
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
+    const mcon::Vector<double>& r = polar[0];
+    const mcon::Vector<double>& arg = polar[1];
+    mcon::Vector<double>& real  = complex[0];
+    mcon::Vector<double>& imag  = complex[1];
+
+    for (int i = 0; i < polar.GetColumnLength(); ++i)
+    {
+        const double v = r[i];
+        real[i] = v * cos(arg[i]);
+        imag[i] = v * sin(arg[i]);
+    }
+    return NO_ERROR;
+}
+
 }; // namespace Fft

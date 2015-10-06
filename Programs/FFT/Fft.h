@@ -20,4 +20,6 @@ status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<
     ConvertToPolarCoords(gainPhase, complex);
 }
 
+status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<double>& polar);
+
 } // namespace Fft
