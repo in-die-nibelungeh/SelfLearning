@@ -33,6 +33,12 @@ Csv::Csv(const char* fname)
     Open(fname);
 }
 
+Csv::Csv(std::string fname)
+    : m_Handle(NULL)
+{
+    Open(fname.c_str());
+}
+
 Csv::~Csv()
 {
     Close();
