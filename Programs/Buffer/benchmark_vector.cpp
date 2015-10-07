@@ -6,12 +6,12 @@ static void benchmark_vector_api(void)
 
     mcon::Vector<double> vec(length);
 
-    BenchUtil bu;
+    mbut::Stopwatch sw;
     for (int i = 0; i < 1024; ++i)
     {
         mcon::Vector<double> vec2(vec);
     }
-    printf("Vector<T>(Vector<T>)=%f\n", bu.Finish());
+    printf("Vector<T>(Vector<T>)=%f\n", sw.Tick());
 
     printf("Benchmark END\n");
 }

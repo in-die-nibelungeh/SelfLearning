@@ -407,7 +407,7 @@ int main(void)
     */
     //test_matrix_multiply();
     //test_matrix_determinant();
-    //test_vector_api();
+    test_vector_api();
     benchmark_vector_api();
     //test_matrix_api();
     //test_matrix_inverse();

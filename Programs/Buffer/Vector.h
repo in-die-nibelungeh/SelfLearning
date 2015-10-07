@@ -160,6 +160,20 @@ public:
         return max;
     }
 
+    inline Type GetMaximumAbsolute(void) const
+    {
+        Type max = Absolute((*this)[0]);
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            const Type v = Absolute((*this)[i]);
+            if (max < v)
+            {
+                max = v;
+            }
+        }
+        return max;
+    }
+
     inline Type GetMinimum(void) const
     {
         Type min = (*this)[0];
@@ -173,6 +187,40 @@ public:
         return min;
     }
 
+    inline Type GetMinimumAbsolute(void) const
+    {
+        Type min = Absolute((*this)[0]);
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            const Type v = Absolute((*this)[i]);
+            if (min > v)
+            {
+                min = v;
+            }
+        }
+        return min;
+    }
+
+
+    inline Type GetSum(void) const
+    {
+        Type sum = 0;
+        MCON_ITERATION( i, GetLength(), sum += (*this)[i] );
+        return sum;
+    }
+
+    inline double GetAverage(void) const
+    {
+        return GetSum()/GetLength();
+    }
+
+    inline double GetNorm(void) const
+    {
+        double squareSum = 0;
+        MCON_ITERATION( i, GetLength(), squareSum += (*this)[i] * (*this)[i]);
+        return sqrt(squareSum);
+    }
+
     int GetLength(void) const { return m_Length; }
     bool IsNull(void) const { return m_Length == 0; }
     bool Resize(int length);
@@ -184,11 +232,11 @@ private:
     int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
     int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
     void   Allocate(void);
-
+    Type   Absolute(Type v) const { return (v < 0) ? -v : v; }
     // Private member variables.
-    Type*     m_Address;
+    Type*  m_Address;
     int    m_Length;
-    Type      m_Zero;
+    Type   m_Zero;
 };
 
 template <typename Type>

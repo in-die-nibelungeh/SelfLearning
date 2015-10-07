@@ -289,6 +289,36 @@ static void test_vector_api(void)
     CHECK_VALUE(dvec2.GetMaximum(),4);
     printf("[GetMinimum]\n");
     CHECK_VALUE(dvec2.GetMinimum(),2);
-
+    printf("[GetMaximumAbsolute/GetMinimumAbsolute]\n");
+    // MaximumAbsolute/MinimumAbsolute
+    {
+        const int length = 6;
+        mcon::Vector<double> vec(length);
+        // 1, -2, 3, -4, 5, -6
+        for (int i = 0; i < length; ++i)
+        {
+            vec[i] = (i+1) * ((i&1) ? -1 : 1);
+        }
+        double max_abs = vec.GetMaximumAbsolute();
+        double min_abs = vec.GetMinimumAbsolute();
+        CHECK_VALUE(max_abs, 6);
+        CHECK_VALUE(min_abs, 1);
+    }
+    printf("[GetSum/Average/GetNorm]\n");
+    {
+        const int length = 10;
+        mcon::Vector<double> v(length);
+        for (int i = 0; i < length; ++i)
+        {
+            v[i] = i + 1;
+        }
+        const double sum = v.GetSum();
+        const double ave = v.GetAverage();
+        CHECK_VALUE(sum, 55);
+        CHECK_VALUE(ave, 5.5);
+        v[length - 1] = 2;
+        const double norm = v.GetNorm();
+        CHECK_VALUE(norm, 17);
+    }
     printf("END\n");
 }
