@@ -14,6 +14,9 @@
 
 #define POW2(x) ((x)*(x))
 
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps);
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile);
+
 status_t Normalize(mcon::Vector<double>& vec)
 {
     mcon::Matrix<double> complex(2, vec.GetLength());
@@ -498,7 +501,7 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
     return NO_ERROR;
 }
 
-status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tapps)
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps)
 {
     mcon::Vector<double> input;
     mcon::Vector<double> reference;
@@ -529,21 +532,21 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
         fs = wave.GetSamplingRate();
     }
 
-    LOG("\n");
     LOG("[Input]\n");
     LOG("    SamplingRate: %d\n", fs);
     LOG("    Length      : %d\n", input.GetLength());
+    LOG("\n");
 
-    // Audio-ref
+    // Reference
     {
         mfio::Wave wave;
         mcon::Matrix<double> referenceMatrix;
         LOG("Loading audio reference ... ");
-        status_t status = wave.Read(refFile, referenceMatrix);
+        status_t status = wave.Read(referenceFile, referenceMatrix);
 
         if (NO_ERROR != status)
         {
-            printf("An error occured during reading %s: error=%d\n", refFile, status);
+            printf("An error occured during reading %s: error=%d\n", referenceFile, status);
             return -ERROR_CANNOT_OPEN_FILE;
         }
         LOG("Done\n");
@@ -559,9 +562,9 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
         }
         reference = referenceMatrix[0];
     }
-    LOG("\n");
     LOG("[Reference]\n");
     LOG("    Length      : %d\n", reference.GetLength());
+    LOG("\n");
 
     if ( input.GetLength() > reference.GetLength() )
     {
@@ -570,7 +573,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
     }
     {
         LOG("\n");
-        LOG("Initializing ... ");
+        LOG("Initializing variables ... ");
         const int n = input.GetLength();
         const int M = tapps;
         double c = 0.5; // an appropriately small number
@@ -624,7 +627,8 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
             fbody = std::string(_fbody);
             fbody += std::string(inputFile);
             fbody.erase( fbody.length()-4, 4);
-            fbody += std::string(refFile);
+            fbody += std::string("_");
+            fbody += std::string(referenceFile);
             fbody.erase( fbody.length()-4, 4);
         }
         LOG("\n");
@@ -641,14 +645,14 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
                 mcon::Matrix<double> gain(2, length);
                 const double df = 1.0  * fs / M;
                 const double max = gp[0].GetMaximum();
-                for (int i = 1; i < length; ++i)
+                for (int i = 0; i < length; ++i)
                 {
                     gain[0][i] = i*df;
                     gain[1][i] = -20 * log10(gp[0][i]/max);
                 }
                 std::string fname = fbody + std::string("_gain") + ecsv;
                 mfio::Csv csv(fname);
-                csv.Write("freq,Gain[dB]\n");
+                csv.Write(",freq,Gain[dB]\n");
                 csv.Write(gain);
                 csv.Close();
                 LOG("Output: %s\n", fname.c_str());
@@ -657,14 +661,14 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
             {
                 mcon::Matrix<double> phase(2, length);
                 const double df = 1.0  * fs / M;
-                for (int i = 1; i < length; ++i)
+                for (int i = 0; i < length; ++i)
                 {
                     phase[0][i] = i*df;
                     phase[1][i] = gp[1][i]*180/M_PI;
                 }
                 std::string fname = fbody + std::string("_phase") + ecsv;
                 mfio::Csv csv(fname);
-                csv.Write("freq,Phase[deg]\n");
+                csv.Write(",freq,Phase[deg]\n");
                 csv.Write(phase);
                 csv.Close();
                 LOG("Output: %s\n", fname.c_str());
@@ -694,11 +698,12 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tap
         }
         LOG("\n");
         {
-            LOG("Verifying ... \n");
+            LOG("Verifying ... ");
             const int n = input.GetLength();
             mcon::Vector<double> origin(n);
             Convolution(origin, input, resp);
             LOG("Done\n");
+            origin *= 32767.0/origin.GetMaximumAbsolute();
             const std::string ewav(".wav");
             std::string fname = fbody + ewav;
             LOG("Saving as %s\n", fname.c_str());
@@ -1067,10 +1072,10 @@ static void EstimateIr(void)
 
 static void usage(void)
 {
-    printf("Usage: %s INPUT REFERENCE [TAPPS]\n", "rls");
+    printf("Usage: %s [OPTIONS] INPUT REFERENCE [TAPPS]\n", "rls");
     printf("\n");
-    printf("INPUT and REFERENCE must be .wav file.\n");
-    printf("TAPPS must be an interger value which is larger than 0.\n");
+    printf("INPUT and REFERENCE must be .wav files.\n");
+    printf("TAPPS must be an interger value larger than 0.\n");
 }
 
 int main(int argc, char* argv[])
@@ -1098,12 +1103,131 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    printf("Input: %s\n", input.c_str());
-    printf("Reference: %s\n", reference.c_str());
-    printf("Tapps: %d\n", tapps);
-
+    LOG("Input: %s\n", input.c_str());
+    LOG("Reference: %s\n", reference.c_str());
+    LOG("Tapps: %d\n", tapps);
+    LOG("\n");
+    //ConvoluteTwoWaveforms(input.c_str(), reference.c_str());
     RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps);
 
-    printf("Done\n\n");
     return 0;
+}
+
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
+{
+    mcon::Vector<double> input;
+    mcon::Vector<double> system;
+    std::string fbody;
+    int fs;
+
+    // Input
+    {
+        mfio::Wave wave;
+        mcon::Matrix<double> inputMatrix;
+        LOG("Loading input ... ");
+        status_t status = wave.Read(inputFile, inputMatrix);
+
+        if (NO_ERROR != status)
+        {
+            printf("An error occured during reading %s: error=%d\n", inputFile, status);
+            return -ERROR_CANNOT_OPEN_FILE;
+        }
+        if ( wave.GetNumChannels() > 1 )
+        {
+            LOG("%d-channel waveform was input.\n", wave.GetNumChannels());
+            LOG("Only left channel is used for estimation.\n");
+        }
+        LOG("Done\n");
+
+        input = inputMatrix[0];
+        fs = wave.GetSamplingRate();
+    }
+
+    LOG("[Input]\n");
+    LOG("    SamplingRate: %d\n", fs);
+    LOG("    Length      : %d\n", input.GetLength());
+    LOG("\n");
+
+    // System
+    {
+        mfio::Wave wave;
+        mcon::Matrix<double> systemMatrix;
+        LOG("Loading audio system ... ");
+        status_t status = wave.Read(systemFile, systemMatrix);
+
+        if (NO_ERROR != status)
+        {
+            printf("An error occured during reading %s: error=%d\n", systemFile, status);
+            return -ERROR_CANNOT_OPEN_FILE;
+        }
+        LOG("Done\n");
+        if ( wave.GetNumChannels() > 1 )
+        {
+            LOG("%d-channel waveform was input.\n", wave.GetNumChannels());
+            LOG("Only left channel is used for estimation.\n");
+        }
+        if ( wave.GetWaveFormat() != mfio::Wave::LPCM )
+        {
+            mcon::Matrix<double> lpcm(systemMatrix);
+            double max = lpcm[0].GetMaximumAbsolute();
+            for ( int i = 1; i < lpcm.GetRowLength(); ++i )
+            {
+                double _max = lpcm[i].GetMaximumAbsolute();
+                if ( _max > max )
+                {
+                    max = _max;
+                }
+            }
+            lpcm *= 32767.0/max;
+            std::string fname = std::string(systemFile);
+            fname.erase( fname.length()-4, 4);
+            fname += std::string("_LPCM.wav");
+            wave.SetWaveFormat(mfio::Wave::LPCM);
+            wave.SetBitDepth(16);
+            wave.Write(fname, lpcm);
+        }
+        if (fs != wave.GetSamplingRate())
+        {
+            ERROR_LOG("Not matched the sampling rates: %d (input) <=> %d (system)\n", fs, wave.GetSamplingRate());
+            return -ERROR_ILLEGAL;
+        }
+        system = systemMatrix[0];
+    }
+    LOG("[System]\n");
+    LOG("    Length      : %d\n", system.GetLength());
+    LOG("\n");
+
+    if ( input.GetLength() < system.GetLength() )
+    {
+        LOG("\Error: input (%d) is shorter than system (%d).\n", input.GetLength(), system.GetLength());
+        LOG("Exiting ... \n");
+        return 0;
+    }
+    {
+        LOG("\n");
+        LOG("Convluting ... ");
+        mcon::Vector<double> output;
+        Convolution(output, input, system);
+        LOG("Done\n");
+        const double max = output.GetMaximumAbsolute();
+        output *= (32767.0/max);
+        LOG("max=%f\n", max);
+        {
+            fbody  = std::string(inputFile);
+            fbody.erase( fbody.length()-4, 4);
+            fbody += std::string("_");
+            fbody += std::string(systemFile);
+            fbody.erase( fbody.length()-4, 4);
+        }
+        LOG("\n");
+        {
+            std::string fname = fbody + std::string(".wav");
+            LOG("Saving as %s ... ", fname.c_str());
+            mfio::Wave wave(fs, 1, 16);
+            wave.Write(fname, output);
+            LOG("Done\n");
+        }
+    }
+    LOG("Finished.\n");
+    return NO_ERROR;
 }
