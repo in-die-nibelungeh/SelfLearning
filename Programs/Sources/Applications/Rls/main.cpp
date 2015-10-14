@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "status.h"
@@ -11,13 +10,9 @@
 #include "Matrix.h"
 #include "FileIo.h"
 
-#include "Buffer.h"
 #include "Fft.h"
 
 #define POW2(x) ((x)*(x))
-
-//static const char* fname_body = "sweep_440-8800";
-static const char* fname_body = "sweep_440-3520_1s";
 
 status_t Normalize(mcon::Vector<double>& vec)
 {
@@ -66,25 +61,6 @@ static status_t GetIr(const char* name, mcon::Vector<double>& ir, int& fs)
     }
     fs = wave.GetSamplingRate();
     return NO_ERROR;
-}
-
-static status_t GetAudioIn(mcon::Vector<double>& audioIn)
-{
-    mfio::Wave wave;
-    int status = wave.Read( (std::string(fname_body) + std::string(".wav")).c_str(), audioIn);
-
-    if ( NO_ERROR != status )
-    {
-        return status;
-    }
-
-    mfio::Wave::MetaData metaData = wave.GetMetaData();
-
-    printf("fs =%d\n", metaData.samplingRate);
-    printf("ch =%d\n", metaData.numChannels);
-    printf("bit=%d\n", metaData.bitDepth);
-
-    return status;
 }
 
 static status_t MakeTestIr(const char* fname, int length)
@@ -306,183 +282,6 @@ static status_t EnergyRatio(mcon::Vector<double>& data)
     return NO_ERROR;
 }
 
-
-static status_t MakeTestWave(void)
-{
-    mcon::Vector<double> impluse;
-    mcon::Vector<double> audioIn;
-    int fs = 0;
-
-    int status = GetIr("ir_test.wav", impluse, fs);
-    // return NO_ERROR;
-    // TBD
-    // îÕàÕÇí¥Ç¶Ç»Ç¢ÇÊÇ§Ç…í≤êÆ
-    // Å®Ç«Ç§Ç∑ÇÈÇ◊Ç´ÅH
-    impluse *= 0.3;
-    if ( NO_ERROR != status )
-    {
-        return status;
-    }
-    status = GetAudioIn(audioIn);
-    if ( NO_ERROR != status )
-    {
-        return status;
-    }
-
-    int tapps_log2 = static_cast<int>( log2(impluse.GetLength()) + 0.5 );
-
-    mcon::Vector<int16_t> audioOut(audioIn.GetLength());
-
-    int len = impluse.GetLength();
-    printf("Convolution\n");
-    for (int dgain = 10, exit = 0; dgain >= 0 ; --dgain)
-    {
-        exit = 1;
-        for (int i = 0; i < audioIn.GetLength(); ++i)
-        {
-            double sum = 0;
-            for (int k = 0; k < len; ++k)
-            {
-                sum += (audioIn[i + k - len] * impluse[len - k]);
-            }
-            //sum /= (1L << (15+tapps_log2-dgain));
-            if (sum < -32768 || 32767 < sum)
-            {
-                printf("Failed at gain=%d (sum=%f)\n", dgain, sum);
-                exit = 0;
-                break;
-            }
-            if ( (i % 4000) == 0 )
-            {
-                printf("%4.1f [%%] out[%d]=%f\r", i*100.0/audioIn.GetLength(),i, sum);
-            }
-            audioOut[i] = static_cast<int16_t>(sum);
-        }
-        if (exit == 1)
-        {
-            break;
-        }
-    }
-
-    mfio::Wave wave(fs, 1, 16);
-
-    status = wave.Write( (std::string(fname_body) + std::string("_conv.wav")).c_str(), audioOut);
-
-    if ( NO_ERROR != status )
-    {
-        printf("Failed in writing...\n");
-    }
-    return status;
-}
-
-
-static void test_RLS(void)
-{
-    int fs;
-    mcon::Vector<double> reference;
-    mcon::Vector<double> audioIn;
-    {
-        const char* file = (std::string(fname_body) + std::string("_conv.wav")).c_str();
-        mfio::Wave waveAudioIn;
-        status_t status = waveAudioIn.Read(file, audioIn);
-        if (NO_ERROR != status)
-        {
-            printf("Failed in reading %s: error=%d\n", file, status);
-            return ;
-        }
-        mfio::Wave::MetaData metaData = waveAudioIn.GetMetaData();
-        printf("fs=%d\n", metaData.samplingRate);
-        fs = metaData.samplingRate;
-    }
-
-    {
-        const char* file = (std::string(fname_body) + std::string(".wav")).c_str();
-        mfio::Wave waveReference;
-        status_t status = waveReference.Read(file, reference);
-        if (NO_ERROR != status)
-        {
-            printf("Failed in reading %s: error=%d\n", file, status);
-            return ;
-        }
-        mfio::Wave::MetaData metaData = waveReference.GetMetaData();
-        printf("fs=%d\n", metaData.samplingRate);
-
-        if ( fs != metaData.samplingRate )
-        {
-            printf("fs doesn't match: %d != %d\n", fs, metaData.samplingRate);
-        }
-    }
-    const int n = audioIn.GetLength();
-    const int M = 64; // a design parameter.
-    double c = 0.5; // an appropriately small number
-    mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
-    mcon::Matrix<double> h(M, 1);
-    //mcon::Matrix<double> u(audioIn.Transpose());
-    mcon::Vector<double> d(reference);
-    mcon::Vector<double> uv(M);
-
-    P /= c;
-    h[0] = 0;
-    uv = 0;
-
-    printf("Start (n=%d)\n", n);
-    for (int i = 0; i < n; ++i)
-    {
-        uv.Fifo(audioIn[i]);
-        const mcon::Matrix<double>& u = uv.Transpose();
-        // Calling template <typename U> operator Vector<U>() const
-        //mcon::Vector<double> d = reference(i, M);
-        mcon::Matrix<double> k(P.Multiply(u)); // numerator
-        double denom = 1.0;
-        const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
-        ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
-        denom = denominator[0][0] + 1;
-        k /= denom;
-
-        const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
-        ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
-        double eta = d[i] - m[0][0];
-
-        h += k * eta;
-
-        P -= k.Multiply(u.Transpose()).Multiply(P);
-        if ( (i % 10) == 0 )
-        {
-            printf("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
-        }
-    }
-    printf("\n");
-    double max = 0.0;
-    for (int i = 0; i < h.GetColumnLength(); ++i)
-    {
-        if (max < fabs(h[i][0]))
-        {
-            max = fabs(h[i][0]);
-        }
-    }
-    mcon::Vector<int16_t> coefs(h.Transpose()[0] * (32767.0/max));
-    mfio::Wave filter(fs, 1, 16);
-    filter.Write("rls_taps_coefficients.wav", coefs);
-    h.DumpMatrix(h, "%f");
-    mcon::Vector<double> hoge(M);
-    for (int i = 0; i < M; ++i)
-    {
-        hoge[i] = h[i][0];
-    }
-    mcon::Matrix<double> comp(2, M);
-    mcon::Matrix<double> gp(2, M/2);
-    Fft::Ft(comp, hoge);
-    Fft::ConvertToGainPhase(gp, comp);
-    FILE*fp = fopen("coef_ft.csv", "w");
-    double df = 1.0  * fs / M;
-    for (int i = 1; i < gp.GetColumnLength(); ++i)
-    {
-        fprintf(fp, "%f,%f,%f\n",
-            i*df, gp[0][i], gp[1][i]*180/M_PI);
-    }
-    fclose(fp);
-}
-
 static void test_IR(void)
 {
     mfio::Wave wave;
@@ -699,66 +498,87 @@ status_t RlsFromAudio(const char* audioInFile, const char* irFile, int tapps)
     return NO_ERROR;
 }
 
-status_t RlsFrom2Audio(const char* audioInFile, const char* audioRefFile, int tapps)
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* refFile, int tapps)
 {
-    mcon::Vector<double> audioIn;
-    mcon::Vector<double> audioRef;
+    mcon::Vector<double> input;
+    mcon::Vector<double> reference;
+    mcon::Vector<double> resp;
+    std::string fbody;
     int fs;
 
-    // Audio-in
+    // Input
     {
         mfio::Wave wave;
-        LOG("Loading audio input ... ");
-        status_t status = wave.Read(audioInFile, audioIn);
+        mcon::Matrix<double> inputMatrix;
+        LOG("Loading input ... ");
+        status_t status = wave.Read(inputFile, inputMatrix);
 
         if (NO_ERROR != status)
         {
-            printf("An error occured during reading %s: error=%d\n", audioInFile, status);
+            printf("An error occured during reading %s: error=%d\n", inputFile, status);
             return -ERROR_CANNOT_OPEN_FILE;
+        }
+        if ( wave.GetNumChannels() > 1 )
+        {
+            LOG("%d-channel waveform was input.\n", wave.GetNumChannels());
+            LOG("Only left channel is used for estimation.\n");
         }
         LOG("Done\n");
 
+        input = inputMatrix[0];
         fs = wave.GetSamplingRate();
-
     }
 
-    LOG("SamplingRate: %d\n", fs);
-    LOG("Length (audioIn) : %d\n", audioIn.GetLength());
+    LOG("\n");
+    LOG("[Input]\n");
+    LOG("    SamplingRate: %d\n", fs);
+    LOG("    Length      : %d\n", input.GetLength());
 
     // Audio-ref
     {
         mfio::Wave wave;
-
+        mcon::Matrix<double> referenceMatrix;
         LOG("Loading audio reference ... ");
-        status_t status = wave.Read(audioRefFile, audioRef);
+        status_t status = wave.Read(refFile, referenceMatrix);
 
         if (NO_ERROR != status)
         {
-            printf("An error occured during reading %s: error=%d\n", audioRefFile, status);
+            printf("An error occured during reading %s: error=%d\n", refFile, status);
             return -ERROR_CANNOT_OPEN_FILE;
         }
         LOG("Done\n");
-        LOG("Length: %d\n", audioRef.GetLength());
+        if ( wave.GetNumChannels() > 1 )
+        {
+            LOG("%d-channel waveform was input.\n", wave.GetNumChannels());
+            LOG("Only left channel is used for estimation.\n");
+        }
         if (fs != wave.GetSamplingRate())
         {
-            ERROR_LOG("Not matched the sampling rates: %d <=> %d\n", fs, wave.GetSamplingRate());
+            ERROR_LOG("Not matched the sampling rates: %d (input) <=> %d (reference)\n", fs, wave.GetSamplingRate());
             return -ERROR_ILLEGAL;
         }
-
-        LOG("Done\n");
+        reference = referenceMatrix[0];
     }
+    LOG("\n");
+    LOG("[Reference]\n");
+    LOG("    Length      : %d\n", reference.GetLength());
 
-    LOG("Length (audioRef): %d\n", audioRef.GetLength());
-
+    if ( input.GetLength() > reference.GetLength() )
     {
-        const int n = audioIn.GetLength();
+        LOG("\nWarning: input is longer than reference.\n");
+        LOG("This may cause a wrong estimation.\n");
+    }
+    {
+        LOG("\n");
+        LOG("Initializing ... ");
+        const int n = input.GetLength();
         const int M = tapps;
         double c = 0.5; // an appropriately small number
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
         mcon::Vector<double> _h(M);
         _h = 0;
         mcon::Matrix<double> h(_h.Transpose());
-        mcon::Vector<double>& d = audioIn;
+        mcon::Vector<double>& d = input;
         mcon::Vector<double> uv(M);
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
@@ -769,10 +589,11 @@ status_t RlsFrom2Audio(const char* audioInFile, const char* audioRefFile, int ta
         P /= c;
         uv = 0;
 
-        LOG("Now executing RLS with %d samples.\n", n);
+        LOG("Done\n");
+        LOG("Now starting RLS with %d samples.\n", n);
         for (int i = 0; i < n; ++i)
         {
-            uv.Unshift(audioRef[i]);
+            uv.Unshift(reference[i]);
             U[i] = uv.GetNorm();
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
@@ -796,54 +617,105 @@ status_t RlsFrom2Audio(const char* audioInFile, const char* audioRefFile, int ta
                 LOG("%4.1f [%%]: %d/%d\r", i*100.0/n, i, n);
             }
         }
+        resp = h.Transpose()[0];
+        {
+            char _fbody[128];
+            sprintf(_fbody, "Af_%dtapps_", tapps);
+            fbody = std::string(_fbody);
+            fbody += std::string(inputFile);
+            fbody.erase( fbody.length()-4, 4);
+            fbody += std::string(refFile);
+            fbody.erase( fbody.length()-4, 4);
+        }
         LOG("\n");
         {
-            mcon::Vector<double> coefs(h.Transpose()[0]);
-            mcon::Matrix<double> complex(2, coefs.GetLength());
-            mcon::Matrix<double> coefs_gp(2, coefs.GetLength());
+            const int length = resp.GetLength();
+            mcon::Matrix<double> complex(2, length);
+            mcon::Matrix<double> gp(2, length);
 
-            Fft::Ft(complex, coefs);
-            Fft::ConvertToGainPhase(coefs_gp, complex);
-            char _fname[128];
-            sprintf(_fname, "ir_vs_coefs_%d_", tapps);
-            std::string fname(_fname);
-            fname += std::string(audioInFile);
-            fname.erase( fname.length()-4, 4);
-            fname += std::string(".csv");
-            FILE* fp = fopen(fname.c_str(), "w");
-            if (NULL != fp)
+            Fft::Ft(complex, resp);
+            Fft::ConvertToPolarCoords(gp, complex);
+            const std::string ecsv(".csv");
+            // Gain
             {
-                double df = 1.0  * fs / M;
-                fprintf(fp, "freq,Gain(Coefs)\n");
-                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                mcon::Matrix<double> gain(2, length);
+                const double df = 1.0  * fs / M;
+                const double max = gp[0].GetMaximum();
+                for (int i = 1; i < length; ++i)
                 {
-                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[0][i]);
+                    gain[0][i] = i*df;
+                    gain[1][i] = -20 * log10(gp[0][i]/max);
                 }
-                fprintf(fp, "\n");
-                fprintf(fp, "freq,Phase(Coefs)\n");
-                for (int i = 1; i < coefs_gp.GetColumnLength(); ++i)
+                std::string fname = fbody + std::string("_gain") + ecsv;
+                mfio::Csv csv(fname);
+                csv.Write("freq,Gain[dB]\n");
+                csv.Write(gain);
+                csv.Close();
+                LOG("Output: %s\n", fname.c_str());
+            }
+            // Phase
+            {
+                mcon::Matrix<double> phase(2, length);
+                const double df = 1.0  * fs / M;
+                for (int i = 1; i < length; ++i)
                 {
-                    fprintf(fp, "%g,%g\n", i*df, coefs_gp[1][i]*180/M_PI);
+                    phase[0][i] = i*df;
+                    phase[1][i] = gp[1][i]*180/M_PI;
                 }
-                fprintf(fp, "\n");
-                fprintf(fp, "i,Coef\n");
-                for (int i = 0; i < coefs.GetLength(); ++i)
-                {
-                    fprintf(fp, "%d,%g\n", i, coefs[i]);
-                }
-                fprintf(fp, "\n");
-#if 1
-                // Dump some variables to evaluate the error left.
-                fprintf(fp, "i,e,eta,J,|k|,|u|\n");
-                for (int i = 0; i < n; ++i)
-                {
-                    fprintf(fp, "%d,%g,%g,%g,%g,%g\n", i, e[i], eta[i], J[i], K[i], U[i]);
-                }
-#endif
-                fclose(fp);
+                std::string fname = fbody + std::string("_phase") + ecsv;
+                mfio::Csv csv(fname);
+                csv.Write("freq,Phase[deg]\n");
+                csv.Write(phase);
+                csv.Close();
+                LOG("Output: %s\n", fname.c_str());
+            }
+            // TimeSeries Data of the estimated response.
+            {
+                std::string fname = fbody + std::string("_ts") + ecsv;
+                mfio::Csv::Write(fname, resp);
+                LOG("Output: %s\n", fname.c_str());
+            }
+
+            // Rls logs
+            {
+                mcon::Matrix<double> logs(5, n);
+                logs[0] = e;
+                logs[1] = eta;
+                logs[2] = J;
+                logs[3] = K;
+                logs[4] = U;
+                std::string fname = fbody + std::string("_logs") + ecsv;
+                mfio::Csv csv(fname);
+                csv.Write("i,e,eta,J,|k|,|u|\n");
+                csv.Write(logs);
+                csv.Close();
+                LOG("Output: %s\n", fname.c_str());
             }
         }
+        LOG("\n");
+        {
+            LOG("Verifying ... \n");
+            const int n = input.GetLength();
+            mcon::Vector<double> origin(n);
+            Convolution(origin, input, resp);
+            LOG("Done\n");
+            const std::string ewav(".wav");
+            std::string fname = fbody + ewav;
+            LOG("Saving as %s\n", fname.c_str());
+            mfio::Wave wave;
+            wave.SetNumChannels(1);
+            wave.SetBitDepth(16);
+            wave.SetSamplingRate(fs);
+            wave.SetWaveFormat(mfio::Wave::LPCM);
+            status_t status = wave.Write(fname, origin);
+            if ( NO_ERROR != status )
+            {
+                ERROR_LOG("Failed in writing %s: error=%d\n", fname.c_str(), status);
+            }
+            LOG("Done.\n");
+        }
     }
+    LOG("Finished.\n");
     return NO_ERROR;
 }
 
@@ -1193,81 +1065,45 @@ static void EstimateIr(void)
     }
 }
 
+static void usage(void)
+{
+    printf("Usage: %s INPUT REFERENCE [TAPPS]\n", "rls");
+    printf("\n");
+    printf("INPUT and REFERENCE must be .wav file.\n");
+    printf("TAPPS must be an interger value which is larger than 0.\n");
+}
+
 int main(int argc, char* argv[])
 {
-    //MakeTestWave();
-    //test_RLS();
-    //MakeReference();
-    if (1)
+    std::string reference;
+    std::string input;
+    int tapps = 256;
+
+    if ( argc < 3 )
     {
-        EstimateIr();
+        usage();
         return 0;
     }
-    if (0)
+    input = std::string(argv[1]);
+    reference = std::string(argv[2]);
+
+    if ( argc > 3 )
     {
-        int fs;
-        std::string fbody("Trig_Room");
-        std::string fwave = fbody + std::string(".wav");
-        mcon::Vector<double> ir;
-        GetIr(fwave.c_str(), ir, fs);
-        const int n = ir.GetLength();
-        LOG("IR length: %d\n", n);
-        mcon::Matrix<double> complex(2, n);
-        mcon::Matrix<double> gp(2, n);
-        Fft::Ft(complex, ir);
-        Fft::ConvertToPolarCoords(gp, complex);
-        std::string fcsv = fbody + std::string("_spectrum.csv");
-        FILE* fp = fopen(fcsv.c_str(), "w");
-        if (NULL != fp)
-        {
-            const double df = 1.0  * fs / n;
-            fprintf(fp, "freq,gain,phase\n");
-            for (int i = 1; i < n; ++i)
-            {
-                fprintf(fp, "%g,%g,%g\n", i*df, gp[0][i], gp[1][i]*180/M_PI);
-            }
-            fclose(fp);
-        }
-        else
-        {
-            LOG("An error occured when opening file with write-attribute\n");
-        }
-        return 0;
+        tapps = atoi(argv[3]);
     }
-    if (0)
+
+    if ( tapps < 1 )
     {
-        std::string ref("sweep_440-3520_10s_ref.wav");
-        std::string in("sweep_440-3520_conv_Trig_Room.wav");
-        RlsFrom2Audio(in.c_str(), ref.c_str(), 64);
+        usage();
         return 0;
     }
 
-    if(1)
-    {
-        mfio::Wave wave;
-        mcon::Matrix<double> impluse;
-        //wave.Read("Trig_Room.wav", impluse);
-        wave.Read("101-st.wav", impluse);
-        EnergyRatio(impluse[0]);
+    printf("Input: %s\n", input.c_str());
+    printf("Reference: %s\n", reference.c_str());
+    printf("Tapps: %d\n", tapps);
 
-        return 0;
-    }
+    RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps);
 
-    std::string fbody("sweep_440-3520_1s");
-    if (argc > 1)
-    {
-        fbody = std::string(argv[1]);
-    }
-    printf("Proccessing for %s.wav\n", fbody.c_str());
-    std::string audioIn = fbody + std::string(".wav");
-    int tapps[] = {16, 64, 256, 0};//, 512, 1024, 2048, 0};
-
-    for (int i = 0; tapps[i] != 0; ++i)
-    {
-        printf("tapps=%d\n", tapps[i]);
-        //RlsFromAudio(audioIn.c_str(), "Trig_Room.wav", tapps[i]);
-        RlsFromIr("Trig_Room.wav", tapps[i]);
-    }
     printf("Done\n\n");
     return 0;
 }
