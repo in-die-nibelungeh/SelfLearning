@@ -16,7 +16,7 @@ static void test_window(void)
 
     mcon::Vector<double> s(N), han(N), ham(N), b(N), bh(N), n(N), k(N), f(N);
     masp::window::Hanning(coef, N);
-    masp::window::Square(s);
+    masp::window::Rectangular(s);
     masp::window::Hanning(han);
     masp::window::Hamming(ham);
     masp::window::Blackman(b);
@@ -24,7 +24,7 @@ static void test_window(void)
     masp::window::Nuttall(n);
     masp::window::Kaiser(k, 3.0);
     masp::window::Flattop(f);
-    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Square\n");
+    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Rectangular\n");
     for (int i = 0; i < N; ++i)
     {
         printf("%d,%f,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i], s[i]);
@@ -39,7 +39,7 @@ static void test_window(void)
     k.Resize(N);
     f.Resize(N);
     masp::window::Hanning(coef, N);
-    masp::window::Square(s);
+    masp::window::Rectangular(s);
     masp::window::Hanning(han);
     masp::window::Hamming(ham);
     masp::window::Blackman(b);
@@ -48,7 +48,7 @@ static void test_window(void)
     masp::window::Kaiser(k, 3.0);
     masp::window::Flattop(f);
     printf("\n");
-    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Square\n");
+    printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Rectangular\n");
     for (int i = 0; i < N; ++i)
     {
         printf("%d,%f,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i], s[i]);
@@ -58,7 +58,7 @@ static void test_window(void)
 
 static void test_tapps(void)
 {
-    const int Ms[] = {48000};//16, 32, 64, 128, 256, 512, 1024};
+    const int Ms[] = {4800*2};//16, 32, 64, 128, 256, 512, 1024};
     //mfio::Csv csv("hanning.csv");
     mfio::Csv csv("square.csv");
 
@@ -68,11 +68,29 @@ static void test_tapps(void)
         mcon::Matrix<double> complex;
         mcon::Matrix<double> gp;
         //masp::window::Hanning(window);
-        masp::window::Square(window);
+        masp::window::Rectangular(window);
+        for ( int k = 0; k < window.GetLength(); ++k )
+        {
+            if ( k > window.GetLength()/1024 )
+            {
+                window[k] = 0;
+            }
+        }
         Fft::Ft(complex, window);
         Fft::ConvertToPolarCoords(gp, complex);
-        csv.Write(gp[0]);
-        csv.Write("\n");
+        gp[0] /= gp[0].GetMaximumAbsolute();
+        {
+            const int n = window.GetLength();
+            mcon::Matrix<double> matrix(2, n);
+            matrix[1] = gp[0];
+            for ( int k = 0; k < n; ++k )
+            {
+                matrix[0][k] = k * 2.0 / n;
+                matrix[1][k] = 20 * log10(matrix[1][k]);
+            }
+            csv.Write(matrix);
+        }
+        //mfio::Csv::Write("fft.csv", gp[0]);
     }
 }
 

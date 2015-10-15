@@ -5,8 +5,8 @@
 namespace masp {
 namespace window {
 
-void Square(double w[], size_t N);
-void Square(mcon::Vector<double>& w);
+void Rectangular(double w[], size_t N);
+void Rectangular(mcon::Vector<double>& w);
 void Hanning(double w[], size_t N);
 void Hanning(mcon::Vector<double>& w);
 void Hamming(double w[], size_t N);
