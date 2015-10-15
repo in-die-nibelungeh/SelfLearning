@@ -8,7 +8,8 @@ namespace masp { namespace window {
 
 enum WindowFunctionId
 {
-    WFI_HANNING = 1,
+    WFI_SQUARE = 1,
+    WFI_HANNING,
     WFI_HAMMING,
     WFI_GENERALIZED_HAMMING,
     WFI_BLACKMAN,
@@ -26,6 +27,12 @@ double GeneralizedHammingFunction(int i, double dt, double arg)
 {
     double& a = arg;
     return a - (1.0 - a) * cos( (2*i+1) * dt / 2.0);
+}
+
+double SquareFunction(int i, double dt, double arg)
+{
+    //return 0.54 - 0.46 * cos( (2*i+1) * dt / 2.0);
+    return 1.0;
 }
 
 double HammingFunction(int i, double dt, double arg)
@@ -97,6 +104,7 @@ WindowFunctionType GetWindowFunction(int type)
     WindowFunctionType function = reinterpret_cast<WindowFunctionType>(NULL);
     switch(type)
     {
+    case WFI_SQUARE:              function = SquareFunction; break;
     case WFI_HANNING:             function = HanningFunction; break;
     case WFI_HAMMING:             function = HammingFunction; break;
     case WFI_GENERALIZED_HAMMING: function = GeneralizedHammingFunction; break;
@@ -133,6 +141,8 @@ void GenerateWindow(mcon::Vector<double>& w, int type, double arg)
     }
 }
 
+void Square(double w[], size_t N)             { GenerateWindow(w, N, WFI_SQUARE  , 0.0); }
+void Square(mcon::Vector<double>& w)          { GenerateWindow(w,    WFI_SQUARE  , 0.0); }
 void Hanning(double w[], size_t N)            { GenerateWindow(w, N, WFI_HANNING , 0.0); }
 void Hanning(mcon::Vector<double>& w)         { GenerateWindow(w,    WFI_HANNING , 0.0); }
 void Hamming(double w[], size_t N)            { GenerateWindow(w, N, WFI_HAMMING , 0.0); }

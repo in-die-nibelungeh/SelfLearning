@@ -1,7 +1,7 @@
 
 BIN=win.exe
 LIB=libwin.a
-LIBS=-lwg -lfio
+LIBS=-lwg -lfio -lfft
 
 MODULE_HEADER=Window.h
 MODULE_SRC=Window.cpp
