@@ -2,6 +2,7 @@
 
 static void benchmark_vector_api(void)
 {
+    printf("[Vector] START Benchmark\n");
     static const int length = 4*1024*1024;
 
     mcon::Vector<double> vec(length);
@@ -13,5 +14,5 @@ static void benchmark_vector_api(void)
     }
     printf("Vector<T>(Vector<T>)=%f\n", sw.Tick());
 
-    printf("Benchmark END\n");
+    printf("[Vecotr] FINISH Benchmark\n");
 }
