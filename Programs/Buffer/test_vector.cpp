@@ -1,4 +1,6 @@
 
+#include "debug.h"
+
 static void test_vector_api(void)
 {
     // Empty vector.
@@ -186,6 +188,8 @@ static void test_vector_api(void)
         }
         double max_abs = vec.GetMaximumAbsolute();
         double min_abs = vec.GetMinimumAbsolute();
+        UNUSED(max_abs);
+        UNUSED(min_abs);
         CHECK_VALUE(max_abs, 6);
         CHECK_VALUE(min_abs, 1);
     }
@@ -199,10 +203,13 @@ static void test_vector_api(void)
         }
         const double sum = v.GetSum();
         const double ave = v.GetAverage();
+        UNUSED(sum);
+        UNUSED(ave);
         CHECK_VALUE(sum, 55);
         CHECK_VALUE(ave, 5.5);
         v[length - 1] = 2;
         const double norm = v.GetNorm();
+        UNUSED(norm);
         CHECK_VALUE(norm, 17);
     }
     printf("END\n");
