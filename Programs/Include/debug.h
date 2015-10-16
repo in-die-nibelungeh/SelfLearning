@@ -27,15 +27,12 @@
 
 #include <stdio.h>
 
-#if defined(DEBUG)
-
-#define LOG(...) printf(__VA_ARGS__)
-
 #define TOSTR(n) TOSTR_(n)
 #define TOSTR_(n) #n
-#define DEBUG_LOG(...) printf("[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
 
-#define ERROR_LOG(...) fprintf(stderr, __VA_ARGS__)
+#if defined(DEBUG)
+
+#define DEBUG_LOG(...) printf("[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
 
 #define CHECK(cond)                \
     do {                           \
@@ -49,10 +46,6 @@
     } while (0)
 
 
-#define CHECK_VALUE(var, ans)  \
-    DEBUG_LOG("[%s] " #var"=%g (ans=%g)\n", \
-        (var)==(ans) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
-
 #ifndef ASSERT
 #define ASSERT(c) \
     do { if (!(c)) \
@@ -65,15 +58,19 @@
 
 #else  // #if defined(DEBUG)
 
-#define LOG(...) printf(__VA_ARGS__)
 #define DEBUG_LOG(...)
-#define ERROR_LOG(...)
 #define CHECK(cond)
 #define ASSERT(c)
-#define CHECK_VALUE(var, ans)
 
 #endif // #if defined(DEBUG)
 
-#define UNUSED(v) (void)(v);
+#define LOG(...) printf(__VA_ARGS__)
+#define ERROR_LOG(...) fprintf(stderr, "[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
+
+#define CHECK_VALUE(var, ans)  \
+    LOG("[%s] " #var"=%g (ans=%g)\n", \
+        (var)==(ans) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
+
+#define UNUSED(v) (void)(v)
 
 #endif // #ifndef _DEBUG_H_
