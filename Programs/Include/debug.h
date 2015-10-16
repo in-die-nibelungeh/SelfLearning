@@ -30,7 +30,6 @@
 #if defined(DEBUG)
 
 #define LOG(...) printf(__VA_ARGS__)
-//#define DEBUG_LOG(fmt, ...) printf("%s [%s at %d]: " fmt "\n", __func__, __FILE__, __LINE__, __VA_ARGS__)
 
 #define TOSTR(n) TOSTR_(n)
 #define TOSTR_(n) #n
@@ -54,14 +53,6 @@
     DEBUG_LOG("[%s] " #var"=%g (ans=%g)\n", \
         (var)==(ans) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
 
-#define CHECK_VALUE_INT(var, ans)  \
-    DEBUG_LOG("[%s] " #var"=%d (ans=%d)\n", \
-        (var)==(ans) ? "OK" : "NG", var, static_cast<int>(ans))
-
-#define CHECK_VALUE_FLT(var, ans)  \
-    DEBUG_LOG("[%s] " #var"=%f (ans=%f)\n", \
-        (var)==(ans) ? "OK" : "NG", var, static_cast<double>(ans))
-
 #ifndef ASSERT
 #define ASSERT(c) \
     do { if (!(c)) \
@@ -79,9 +70,10 @@
 #define ERROR_LOG(...)
 #define CHECK(cond)
 #define ASSERT(c)
-#define CHECK_VALUE_INT(var, ans)
-#define CHECK_VALUE_DBL(var, ans)
+#define CHECK_VALUE(var, ans)
 
 #endif // #if defined(DEBUG)
+
+#define UNUSED(v) (void)(v);
 
 #endif // #ifndef _DEBUG_H_
