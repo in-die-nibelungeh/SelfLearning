@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <sys/types.h>
 
 #include "types.h"
@@ -40,11 +41,36 @@ public:
     ~Wave();
 
     // Read
+    inline status_t Read(std::string path, double ** pBuffer, int* length)
+    {
+        return Read(path.c_str(), pBuffer, length);
+    }
+    inline status_t Read(std::string path, mcon::Vector<double>& buffer)
+    {
+        return Read(path.c_str(), buffer);
+    }
+    inline status_t Read(std::string path, mcon::Matrix<double>& buffer)
+    {
+        return Read(path.c_str(), buffer);
+    }
     status_t Read(const char* path, double ** pBuffer, int* length);
     status_t Read(const char* path, mcon::Vector<double>& buffer);
     status_t Read(const char* path, mcon::Matrix<double>& buffer);
 
     // Write
+    inline status_t Write(std::string path, double* buffer, size_t size) const
+    {
+        return Write(path.c_str(), buffer, size);
+    }
+    inline status_t Write(std::string path, const mcon::Vector<double>& buffer) const
+    {
+        return Write(path.c_str(), buffer);
+    }
+    inline status_t Write(std::string path, const mcon::Matrix<double>& buffer) const
+    {
+        return Write(path.c_str(), buffer);
+    }
+
     status_t Write(const char* path, double* buffer, size_t size) const;
     status_t Write(const char* path, const mcon::Vector<double>& buffer) const;
     status_t Write(const char* path, const mcon::Matrix<double>& buffer) const;
@@ -62,7 +88,7 @@ public:
     status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth, int* format) const;
     status_t SetMetaData(const struct MetaData& metaData);
     status_t SetMetaData(int samplingRate, int numChannels, int bitDepth, WaveFormat format = LPCM);
-    double   GetDuration(void) const { m_Duration; }
+    double   GetDuration(void) const { return m_Duration; }
 
     // TBD
     status_t Check(void);
