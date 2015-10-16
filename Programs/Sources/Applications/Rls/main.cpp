@@ -39,7 +39,8 @@ status_t Normalize(mcon::Vector<double>& vec)
 
 status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>& audioIn, const mcon::Vector<double>& impluse)
 {
-    if (audioIn.GetLength() < impluse.GetLength())
+    const int M = impluse.GetLength();
+    if (audioIn.GetLength() < M )
     {
         return -ERROR_ILLEGAL;
     }
@@ -49,7 +50,7 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     for (int i = 0; i < audioIn.GetLength(); ++i)
     {
         audioOut[i] = 0.0;
-        for (int k = 0; k < impluse.GetLength(); ++k)
+        for (int k = 0; k < ( (M - 1 > i) ? i+1 : M); ++k)
         {
             audioOut[i] += audioIn[i - k] * impluse[k];
         }
@@ -134,9 +135,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         const int M = tapps;
         double c = 0.0000001; // an appropriately small number
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
-        mcon::Vector<double> _h(M);
-        _h = 0;
-        mcon::Matrix<double> h(_h.Transpose());
+        mcon::Matrix<double> h(M, 1);
         mcon::Vector<double>& d = input;
         mcon::Vector<double> uv(M);
         mcon::Vector<double> e(n);
@@ -145,32 +144,34 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         mcon::Vector<double> K(n);
         mcon::Vector<double> U(n);
 
-        //h = 0;
+        h = 0;
         P /= c;
         uv = 0;
+        J[0] = 0;
 
         LOG("Done\n");
         LOG("Now starting RLS with %d samples.\n", n);
         for (int i = 0; i < n; ++i)
         {
             uv.Unshift(reference[i]);
-            U[i] = uv.GetNorm();
+            U[i] = uv.GetNorm(); // logs
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
-            double denom = 1.0;
             const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
             ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
-            denom = denominator[0][0] + 1;
+            const double denom = denominator[0][0] + 1;
             k /= denom;
-            K[i] = k.Transpose()[0].GetNorm();
+            K[i] = k.Transpose()[0].GetNorm(); // logs
             const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
-            eta[i] = d[i] - m[0][0];
-            //printf("i=%d,eta=%g,d=%g,m=%g\n", i, eta, d[i], m[0][0]);
+            eta[i] = d[i] - m[0][0]; // logs
             h += k * eta[i];
 
-            e[i] = d[i] - (u.Transpose().Multiply(h))[0][0];
-            J[i] = J[i-1] + e[i] * eta[i];
+            e[i] = d[i] - (u.Transpose().Multiply(h))[0][0]; // logs
+            if ( i > 0 )
+            {
+                J[i] = J[i-1] + e[i] * eta[i]; // logs
+            }
             P -= k.Multiply(u.Transpose()).Multiply(P);
             if ( (i % 10) == 0 )
             {
