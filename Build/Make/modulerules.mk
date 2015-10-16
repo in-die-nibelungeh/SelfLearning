@@ -36,9 +36,13 @@ MODULE_OBJ := \
 INC += $(addprefix $(PROJECT_INCDIR)/, types.h status.h debug.h) $(MODULE_HEADER)
 OBJ := $(MODULE_OBJ) $(ENTRY_SRC:*.cpp=.o)
 
+WARNINGS += -Wall \
+
+
 CPPFLAGS += \
 	$(addprefix -I,$(INCDIRS)) \
 	$(addprefix -L,$(LIBDIRS)) \
+	$(WARNINGS) \
 
 all: $(BIN)
 	@echo Succeeded in building $(BIN).
