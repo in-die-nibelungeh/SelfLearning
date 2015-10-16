@@ -1,5 +1,7 @@
 #pragma once
 
+#include <math.h>
+
 #include "types.h"
 #include "debug.h"
 
@@ -28,21 +30,14 @@ public:
     // For const object
     const Type& operator[](const int i) const
     {
-        if (0 <= i && i < m_Length)
-        {
-            return m_Address[i];
-        }
-        return m_Zero;
+        ASSERT (0 <= i && i < m_Length);
+        return m_Address[i];
     }
     // For non-const object
     Type& operator[](const int i)
     {
-        if (0 <= i && i < m_Length)
-        {
-            return m_Address[i];
-        }
-        m_Zero = 0;
-        return m_Zero;
+        ASSERT (0 <= i && i < m_Length);
+        return m_Address[i];
     }
 
     // Copy is to copy available data from src to dest without resizing the dest.
@@ -236,7 +231,6 @@ private:
     // Private member variables.
     Type*  m_Address;
     int    m_Length;
-    Type   m_Zero;
 };
 
 template <typename Type>
@@ -253,17 +247,15 @@ void Vector<Type>::Allocate(void)
 template <typename Type>
 Vector<Type>::Vector(int length)
     : m_Address(NULL),
-    m_Length(length),
-    m_Zero(0)
+    m_Length(length)
 {
     Allocate();
 }
 
 template <typename Type>
 Vector<Type>::Vector(const Vector<Type>& v)
-  : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(Type*, NULL)),
-    m_Zero(0)
+    : m_Address(PTR_CAST(Type*, NULL)),
+    m_Length(v.GetLength())
 {
     Allocate();
     MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
@@ -272,9 +264,8 @@ Vector<Type>::Vector(const Vector<Type>& v)
 template <typename Type>
 template <typename U>
 Vector<Type>::Vector(const Vector<U>& v)
-  : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(Type*, NULL)),
-    m_Zero(0)
+    : m_Address(PTR_CAST(Type*, NULL)),
+    m_Length(v.GetLength())
 {
     Allocate();
     MCON_ITERATION(i, m_Length, (*this)[i] = static_cast<Type>(v[i]));

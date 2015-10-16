@@ -46,20 +46,14 @@ public:
 
     const Vector<Type>& operator[](int i) const
     {
-        if (0 <= i && i < m_RowLength)
-        {
-            return *m_Array[i];
-        }
-        return m_Zero;
+        ASSERT(0 <= i && i < m_RowLength);
+        return *m_Array[i];
     }
 
     Vector<Type>& operator[](int i)
     {
-        if (0 <= i && i < m_RowLength)
-        {
-            return *m_Array[i];
-        }
-        return m_Zero;
+        ASSERT(0 <= i && i < m_RowLength);
+        return *m_Array[i];
     }
 
     Matrix<Type>& operator=(const Matrix<Type>& m);
@@ -125,7 +119,6 @@ private:
     int m_RowLength;
     int m_ColumnLength;
     Vector<Type>** m_Array;
-    Vector<Type>   m_Zero;
 };
 
 
@@ -158,20 +151,18 @@ void Matrix<Type>::AllocateColumn(void)
 
 template <class Type>
 Matrix<Type>::Matrix(int rowLength, int columnLength)
-  : m_Array(NULL),
+    : m_RowLength(rowLength),
     m_ColumnLength(columnLength),
-    m_RowLength(rowLength),
-    m_Zero(0)
+    m_Array(NULL)
 {
     Allocate();
 }
 
 template <class Type>
 Matrix<Type>::Matrix(const Matrix<Type>& m)
-  : m_Array(NULL),
-    m_RowLength(m.GetRowLength()),
+    : m_RowLength(m.GetRowLength()),
     m_ColumnLength(m.GetColumnLength()),
-    m_Zero(0)
+    m_Array(NULL)
 {
     AllocateRow();
     for (int i = 0; i < m_RowLength; ++i)
@@ -184,10 +175,9 @@ Matrix<Type>::Matrix(const Matrix<Type>& m)
 template <class Type>
 template <typename U>
 Matrix<Type>::Matrix(const Matrix<U>& m)
-  : m_Array(NULL),
-    m_RowLength(m.GetRowLength()),
+    : m_RowLength(m.GetRowLength()),
     m_ColumnLength(m.GetColumnLength()),
-    m_Zero(0)
+    m_Array(NULL)
 {
     AllocateRow();
     for (int i = 0; i < m_RowLength; ++i)
