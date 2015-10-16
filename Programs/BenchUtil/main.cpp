@@ -2,6 +2,16 @@
 
 #include "BenchUtil.h"
 
+#if 0
+#include <chrono>
+
+static void tst(void)
+{
+    auto start = std::chrono::system_clock::now();
+    auto end = std::chrono::system_clock::now();
+}
+#endif
+
 static void test_stopwatch(void)
 {
     mbut::Stopwatch sw;
