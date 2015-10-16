@@ -88,7 +88,7 @@ public:
     status_t GetMetaData(int* samplingRate, int* numChannels, int* bitDepth, int* format) const;
     status_t SetMetaData(const struct MetaData& metaData);
     status_t SetMetaData(int samplingRate, int numChannels, int bitDepth, WaveFormat format = LPCM);
-    double   GetDuration(void) const { m_Duration; }
+    double   GetDuration(void) const { return m_Duration; }
 
     // TBD
     status_t Check(void);

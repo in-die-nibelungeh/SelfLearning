@@ -71,7 +71,7 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
     {
         WaveChunk chunk = {0, 0};
         int rb = fread(&chunk, sizeof(chunk), 1, fd);
-        DEBUG_LOG("rb=%d, pos=%d, size=%d, eof=%d\n", rb, ftell(fd), chunk.size, feof(fd));
+        DEBUG_LOG("rb=%d, pos=%ld, size=%d, eof=%d\n", rb, ftell(fd), chunk.size, feof(fd));
 
         if (feof(fd) || rb == 0)
         {
@@ -413,9 +413,10 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
     {
         return -ERROR_NULL;
     }
-    const int bits = GetBitDepth();
     const int ch = GetNumChannels();
     const int length = buffer.GetColumnLength();
+    const int bits = GetBitDepth();
+    UNUSED(bits);
 
     mcon::Vector<double> tmp(ch * length);
 

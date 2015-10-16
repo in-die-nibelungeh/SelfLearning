@@ -115,12 +115,12 @@ static void test_read(void)
 static void test_write(void)
 {
     WaveGen wg;
-    int32_t freq = 440;
-    int32_t fs = 48000;
-    int32_t duration = 10;
-    int32_t ch = 2;
-    int32_t amp = 32767;
-    int32_t multi = 20;
+    const int freq = 440;
+    const int fs = 48000;
+    const int duration = 10;
+    const int ch = 2;
+    const int amp = 32767;
+    const int multi = 20;
     const int length = duration * fs * ch;
     const size_t size = length * sizeof(double);
     double* buffer = (double*)malloc(size);
