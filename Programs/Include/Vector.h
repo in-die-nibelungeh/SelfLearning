@@ -30,21 +30,14 @@ public:
     // For const object
     const Type& operator[](const int i) const
     {
-        if (0 <= i && i < m_Length)
-        {
-            return m_Address[i];
-        }
-        return m_Zero;
+        ASSERT (0 <= i && i < m_Length);
+        return m_Address[i];
     }
     // For non-const object
     Type& operator[](const int i)
     {
-        if (0 <= i && i < m_Length)
-        {
-            return m_Address[i];
-        }
-        m_Zero = 0;
-        return m_Zero;
+        ASSERT (0 <= i && i < m_Length);
+        return m_Address[i];
     }
 
     // Copy is to copy available data from src to dest without resizing the dest.
@@ -162,6 +155,20 @@ public:
         return max;
     }
 
+    inline Type GetMaximumAbsolute(void) const
+    {
+        Type max = Absolute((*this)[0]);
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            const Type v = Absolute((*this)[i]);
+            if (max < v)
+            {
+                max = v;
+            }
+        }
+        return max;
+    }
+
     inline Type GetMinimum(void) const
     {
         Type min = (*this)[0];
@@ -174,6 +181,21 @@ public:
         }
         return min;
     }
+
+    inline Type GetMinimumAbsolute(void) const
+    {
+        Type min = Absolute((*this)[0]);
+        for (int i = 1; i < GetLength(); ++i)
+        {
+            const Type v = Absolute((*this)[i]);
+            if (min > v)
+            {
+                min = v;
+            }
+        }
+        return min;
+    }
+
 
     inline Type GetSum(void) const
     {
@@ -205,11 +227,10 @@ private:
     int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
     int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
     void   Allocate(void);
-
+    Type   Absolute(Type v) const { return (v < 0) ? -v : v; }
     // Private member variables.
-    Type*     m_Address;
+    Type*  m_Address;
     int    m_Length;
-    Type      m_Zero;
 };
 
 template <typename Type>
@@ -226,17 +247,15 @@ void Vector<Type>::Allocate(void)
 template <typename Type>
 Vector<Type>::Vector(int length)
     : m_Address(NULL),
-    m_Length(length),
-    m_Zero(0)
+    m_Length(length)
 {
     Allocate();
 }
 
 template <typename Type>
 Vector<Type>::Vector(const Vector<Type>& v)
-  : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(Type*, NULL)),
-    m_Zero(0)
+    : m_Address(PTR_CAST(Type*, NULL)),
+    m_Length(v.GetLength())
 {
     Allocate();
     MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
@@ -245,9 +264,8 @@ Vector<Type>::Vector(const Vector<Type>& v)
 template <typename Type>
 template <typename U>
 Vector<Type>::Vector(const Vector<U>& v)
-  : m_Length(v.GetLength()),
-    m_Address(PTR_CAST(Type*, NULL)),
-    m_Zero(0)
+    : m_Address(PTR_CAST(Type*, NULL)),
+    m_Length(v.GetLength())
 {
     Allocate();
     MCON_ITERATION(i, m_Length, (*this)[i] = static_cast<Type>(v[i]));

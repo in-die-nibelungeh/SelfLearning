@@ -46,23 +46,19 @@ public:
 
     const Vector<Type>& operator[](int i) const
     {
-        if (0 <= i && i < m_RowLength)
-        {
-            return *m_Array[i];
-        }
-        return m_Zero;
+        ASSERT(0 <= i && i < m_RowLength);
+        return *m_Array[i];
     }
 
     Vector<Type>& operator[](int i)
     {
-        if (0 <= i && i < m_RowLength)
-        {
-            return *m_Array[i];
-        }
-        return m_Zero;
+        ASSERT(0 <= i && i < m_RowLength);
+        return *m_Array[i];
     }
 
     Matrix<Type>& operator=(const Matrix<Type>& m);
+    Matrix<Type>& operator=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }
+    Matrix<Type>& operator*(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] *= v); return *this; }
 
     const Matrix<Type> operator+(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
     const Matrix<Type> operator-(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] -= v); return mat; }
@@ -125,7 +121,6 @@ private:
     int m_RowLength;
     int m_ColumnLength;
     Vector<Type>** m_Array;
-    Vector<Type>   m_Zero;
 };
 
 
@@ -151,6 +146,7 @@ void Matrix<Type>::AllocateColumn(void)
 {
     for (int i = 0; i < m_RowLength; ++i)
     {
+        ASSERT(NULL != m_Array);
         m_Array[i] = new Vector<Type>(m_ColumnLength);
         ASSERT(m_Array[i] != NULL);
     }
@@ -158,20 +154,18 @@ void Matrix<Type>::AllocateColumn(void)
 
 template <class Type>
 Matrix<Type>::Matrix(int rowLength, int columnLength)
-  : m_Array(NULL),
+    : m_RowLength(rowLength),
     m_ColumnLength(columnLength),
-    m_RowLength(rowLength),
-    m_Zero(0)
+    m_Array(NULL)
 {
     Allocate();
 }
 
 template <class Type>
 Matrix<Type>::Matrix(const Matrix<Type>& m)
-  : m_Array(NULL),
-    m_RowLength(m.GetRowLength()),
+    : m_RowLength(m.GetRowLength()),
     m_ColumnLength(m.GetColumnLength()),
-    m_Zero(0)
+    m_Array(NULL)
 {
     AllocateRow();
     for (int i = 0; i < m_RowLength; ++i)
@@ -184,10 +178,9 @@ Matrix<Type>::Matrix(const Matrix<Type>& m)
 template <class Type>
 template <typename U>
 Matrix<Type>::Matrix(const Matrix<U>& m)
-  : m_Array(NULL),
-    m_RowLength(m.GetRowLength()),
+    : m_RowLength(m.GetRowLength()),
     m_ColumnLength(m.GetColumnLength()),
-    m_Zero(0)
+    m_Array(NULL)
 {
     AllocateRow();
     for (int i = 0; i < m_RowLength; ++i)
@@ -406,11 +399,9 @@ Matrix<Type> Matrix<Type>::Inverse(void) const
     Type det = Determinant();
     if ( 0 == det )
     {
-        printf("Det=Zero\n");
         return *this;
     }
     // Calculate Inversed-Matrix by Cofactors.
-    printf("Determinant=%f\n", det);
     int rowCount = GetRowLength();
     int colCount = GetColumnLength();
     Matrix<Type> inversed(rowCount, colCount);
