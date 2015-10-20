@@ -4,6 +4,8 @@
 #include "debug.h"
 #include "Vector.h"
 
+namespace masp {
+
 class Resampler
 {
 public:
@@ -38,7 +40,7 @@ public:
     status_t SetSamplingRates(int targetFs, int baseFs);
     status_t SetFilterParams(double nFpass, double nFstop);
 
-    status_t GetCoefficients(mcon::Vector<double>& coefficients);
+    status_t GetCoefficients(mcon::Vector<double>& coefficients) const;
 
     status_t MakeFilterByWindowType(int windowType, double alpha = 2.0);
     status_t MakeFilterBySpec(double pbRipple, double sbDecay);
@@ -58,3 +60,4 @@ private:
     mcon::Vector<double> m_Coefficients;
 };
 
+} // namespace masp {

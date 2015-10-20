@@ -1,8 +1,8 @@
 
 #include "status.h"
-#include "Resampler.h"
 #include "Window.h"
 #include "Fir.h"
+#include "Resampler.h"
 
 namespace masp {
 
@@ -41,8 +41,8 @@ namespace {
 status_t Resampler::UpdateCoefficients(int windowType, double alpha)
 {
     const double bandWidth = (m_StopBandFrequency - m_PassBandFrequency);
+    DEBUG_LOG("nFp=%g, nFs=%g\n", m_PassBandFrequency, m_StopBandFrequency);
     int N = 0;
-
     switch(windowType)
     {
     case HANNING:
@@ -50,6 +50,7 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
             N = static_cast<int>(6.2 / 2 / bandWidth + 0.5);
             N += (N & 1 ? 0 : 1);
             N *= m_L;
+            DEBUG_LOG("N=%d (Hanning)\n", N);
             m_Coefficients.Resize(N);
             masp::window::Hanning(m_Coefficients);
         }
@@ -59,6 +60,7 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
             N = static_cast<int>(6.6 / 2 / bandWidth + 0.5);
             N += (N & 1 ? 0 : 1);
             N *= m_L;
+            DEBUG_LOG("N=%d (Hamming)\n", N);
             m_Coefficients.Resize(N);
             masp::window::Hamming(m_Coefficients);
         }
@@ -68,6 +70,7 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
             N = static_cast<int>(11.0 / 2 / bandWidth + 0.5);
             N += (N & 1 ? 0 : 1);
             N *= m_L;
+            DEBUG_LOG("N=%d (Blackman)\n", N);
             m_Coefficients.Resize(N);
             masp::window::Blackman(m_Coefficients);
         }
@@ -79,6 +82,7 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
             N = static_cast<int>( masp::g_KaiserTransitionBand[index] / bandWidth + 0.5);
             N += (N & 1 ? 0 : 1);
             N *= m_L;
+            DEBUG_LOG("N=%d (Kaiser), alpha=%g\n", N, alpha);
             m_Coefficients.Resize(N);
             masp::window::Kaiser(m_Coefficients, alpha);
         }
@@ -91,6 +95,8 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
     ASSERT( N != 0 );
     {
         const double cutoff = (m_StopBandFrequency + m_PassBandFrequency) / 2.0 / (m_L > m_M ? m_L : m_M);
+        DEBUG_LOG("nFp=%g, nFs=%g\n", m_PassBandFrequency, m_StopBandFrequency);
+        DEBUG_LOG("nFc=%g\n", cutoff);
         mcon::Vector<double> sinc(N);
         masp::fir::GetCoefficientsLpfSinc(sinc, cutoff);
         m_Coefficients *= sinc;
@@ -109,25 +115,35 @@ status_t Resampler::SetSamplingRates(int targetFs, int baseFs)
     m_BaseFs = baseFs;
 
     {
-        //int LCM, GCD;
+#if defined(DEBUG)
+        int LCM, GCD;
+#endif // #if defined(DEBUG)
         int x = baseFs;
         int y = targetFs;
         int smaller = x > y ? y : x;
 
-        //LCM = 1;
+#if defined(DEBUG)
+        LCM = 1;
+#endif // #if defined(DEBUG)
         for (int i = 2; i < smaller/2; ++i)
         {
             if ( (x % i) == 0 && (y % i) == 0 )
             {
                 x /= i;
                 y /= i;
-                //LCM *= i;
+#if defined(DEBUG)
+                LCM *= i;
+#endif // #if defined(DEBUG)
                 i = 1; // reset
             }
         }
         m_L = y;
         m_M = x;
-        //GCD = x * y * LCM;
+#if defined(DEBUG)
+        GCD = x * y * LCM;
+#endif // #if defined(DEBUG)
+        DEBUG_LOG("L=%d, M=%d\n", m_L, m_M);
+        DEBUG_LOG("LCM=%d, GCD=%d\n", LCM, GCD);
     }
 
     return NO_ERROR;
@@ -195,33 +211,7 @@ status_t Resampler::MakeFilterBySpec(double pbRipple, double sbDecay)
     {
         return -ERROR_NOT_FOUND;
     }
-#if 1
     return UpdateCoefficients(KAISER, static_cast<double>(index + masp::g_KaiserAlphaOffset));
-#else
-    double ratio = static_cast<double>(m_TargetFs) / m_BaseFs;
-    if ( ratio < 1.0 )
-    {
-        ratio = 1 / ratio;
-    }
-
-    // Window (Kaiser)
-    {
-        const double bandWidth = (m_StopBandFrequency - m_PassBandFrequency);
-        const int N = static_cast<int>(masp::g_KaiserTransitionBand[index] / bandWidth + 0.5) * m_L;
-        const double alpha = static_cast<double>(index + masp::g_KaiserAlphaOffset);
-        m_Coefficients.Resize(N);
-        masp::window::Kaiser(m_Coefficients, alpha);
-    }
-
-    // Lpf (Sinc)
-    {
-        const int N = m_Coefficients.GetLength();
-        const double cutoff = (m_StopBandFrequency + m_PassBandFrequency) / 2.0 / m_L;
-        mcon::Vector<double> sinc(N);
-        masp::fir::GetCoefficientsLpfSinc(sinc, cutoff);
-        m_Coefficients *= sinc;
-    }
-#endif
 }
 
 double Convolution(const double* pData, const double* pCoefs, int N, int step)
@@ -229,9 +219,9 @@ double Convolution(const double* pData, const double* pCoefs, int N, int step)
     double ans = 0.0;
     for ( int i = 0; i < N; ++i )
     {
-        ans += pData[i] * pCoefs[i * step];
+        ans += pData[N - 1 - i] * pCoefs[i * step];
     }
-    return 0.0;
+    return ans;
 }
 
 status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<double>& input) const
@@ -253,13 +243,26 @@ status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<dou
     const int width = m_Coefficients.GetLength() / m_L;
 
     int acc = 0;
-    for ( int i = 0; i < N; ++i )
+    for ( int i = 0; i < output.GetLength(); ++i )
     {
         acc += m_M;
         int index = acc / m_L;
         int amari = acc % m_L;
-        output[i] = masp::Convolution(pInput + index, pCoefficients + amari, width, m_L);
+        const int M = (width - 1 - i > 0) ? i + 1 : width;
+        DEBUG_LOG("i=%3d, M=%3d\n", i, M);
+        output[i] = masp::Convolution(pInput + index, pCoefficients + amari, M, m_L);
     }
+    return NO_ERROR;
+}
+
+status_t Resampler::GetCoefficients(mcon::Vector<double>& coefficients) const
+{
+    if ( m_Coefficients.IsNull() )
+    {
+        return -ERROR_NULL;
+    }
+    coefficients = m_Coefficients;
+
     return NO_ERROR;
 }
 
