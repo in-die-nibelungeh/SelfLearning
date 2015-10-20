@@ -1,7 +1,8 @@
 #pragma once
 
 #include "types.h"
-#include "Window.h"
+#include "debug.h"
+#include "Vector.h"
 
 class Resampler
 {
@@ -15,27 +16,45 @@ public:
         NUM_WINDOW_TYPE
     };
 
-    Resampler() {};
+    Resampler(int targetFs, int baseFs, double nFpass, double nFstop)
+        : m_TargetFs(targetFs),
+        m_BaseFs(baseFs),
+        m_PassBandFrequency(nFpass),
+        m_StopBandFrequency(nFstop)
+        //m_PassBandRipple(0.01),
+        //m_StopBandDecay(40)
+    {
+        ASSERT(targetFs > 0);
+        ASSERT(baseFs > 0);
+        ASSERT(0.0 < nFpass && nFpass < 1.0);
+        ASSERT(0.0 < nFstop && nFstop < 1.0);
+        ASSERT(nFpass < nFstop);
+
+        Initialize(targetFs, baseFs, nFpass, nFstop);
+    }
+
     ~Resampler() {};
-    status_t Initialize(int targetFs, int baseFs, int windowType);
+    status_t Initialize(int targetFs, int baseFs, double nFpass, double nFstop);
     status_t SetSamplingRates(int targetFs, int baseFs);
-    status_t SetWindowType(int windowType, double alpha = 2.0);
-    status_t Convert(mcon::Vector<double>& output) const;
-    double Get(int i) const;
+    status_t SetFilterParams(double nFpass, double nFstop);
+
+    status_t GetCoefficients(mcon::Vector<double>& coefficients);
+
+    status_t MakeFilterByWindowType(int windowType, double alpha = 2.0);
+    status_t MakeFilterBySpec(double pbRipple, double sbDecay);
+
+    status_t Convert(mcon::Vector<double>& output, const mcon::Vector<double>& input) const;
 
 private:
-    status_t UpdateCoefficients(void);
+    status_t UpdateCoefficients(int windowType, double alpha);
     int m_TargetFs;
     int m_BaseFs;
-    double m_Ratio;
     int m_L;
     int m_M;
-    int m_Length;
-    mcon::Vector<double> m_Data;
+    double m_PassBandFrequency;
+    double m_StopBandFrequency;
+    //double m_PassBandRipple;
+    //double m_StopBandDecay; // [dB]
     mcon::Vector<double> m_Coefficients;
-    int m_WindowType;
-    double m_WindowArgument;
 };
-
-//Resampler::
 
