@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "FileIo.h"
 #include "Fft.h"
+#include "Fir.h"
 
 static void test_window(void)
 {
@@ -58,37 +59,47 @@ static void test_window(void)
 
 static void test_tapps(void)
 {
-    const int Ms[] = {4800*2};//16, 32, 64, 128, 256, 512, 1024};
+    const int Ms[] = {2, 4, 8, 16, 32, 64, 128};
+    const int baseM = 1024;
     //mfio::Csv csv("hanning.csv");
-    mfio::Csv csv("square.csv");
+    //mfio::Csv csv("rectangular.csv");
+    mfio::Csv csv("sinc.csv");
 
     for ( int i = 0; i < sizeof(Ms)/sizeof(int); ++i )
     {
-        mcon::Vector<double> window(Ms[i]);
+        const double fe = 0.25;
+        const int N = Ms[i] + 1;
+        mcon::Vector<double> sinc(N);
+        mcon::Vector<double> window(N);
+        mcon::Vector<double> response(baseM);
+        masp::fir::GetCoefficientsLpfSinc(sinc, fe);
         mcon::Matrix<double> complex;
         mcon::Matrix<double> gp;
         //masp::window::Hanning(window);
         masp::window::Rectangular(window);
-        for ( int k = 0; k < window.GetLength(); ++k )
+        response = 0;
+        window *= sinc;
+        response.Copy(window);
+        for ( int i = 0; i < (baseM - N)/2; ++i )
         {
-            if ( k > window.GetLength()/1024 )
-            {
-                window[k] = 0;
-            }
+            response.Unshift(0);
         }
-        Fft::Ft(complex, window);
+
+        Fft::Ft(complex, response);
         Fft::ConvertToPolarCoords(gp, complex);
         gp[0] /= gp[0].GetMaximumAbsolute();
         {
-            const int n = window.GetLength();
-            mcon::Matrix<double> matrix(2, n);
+            const int n = response.GetLength();
+            mcon::Matrix<double> matrix(3, n);
             matrix[1] = gp[0];
             for ( int k = 0; k < n; ++k )
             {
-                matrix[0][k] = k * 2.0 / n;
-                matrix[1][k] = 20 * log10(matrix[1][k]);
+                matrix[0][k] = k * 1.0 / n;
+                //matrix[1][k] = 20 * log10(matrix[1][k]);
             }
+            matrix[2] = response;
             csv.Write(matrix);
+            csv.Crlf();
         }
         //mfio::Csv::Write("fft.csv", gp[0]);
     }
@@ -96,7 +107,7 @@ static void test_tapps(void)
 
 int main(void)
 {
-    //test_tapps();
+    test_tapps();
     test_window();
     return 0;
 }
