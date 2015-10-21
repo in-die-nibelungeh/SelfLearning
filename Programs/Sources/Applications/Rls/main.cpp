@@ -46,7 +46,7 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     }
 
     audioOut.Resize(audioIn.GetLength());
-
+#if 1
     for (int i = 0; i < audioIn.GetLength(); ++i)
     {
         audioOut[i] = 0.0;
@@ -55,6 +55,21 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
             audioOut[i] += audioIn[i - k] * impluse[k];
         }
     }
+#else
+    mcon::Vector<double> window(M);
+
+    window = 0;
+
+    for (int i = 0; i < audioIn.GetLength(); ++i)
+    {
+        audioOut[i] = 0.0;
+        window.Fifo(audioIn[i]);
+        for (int k = 0; k < M; ++k)
+        {
+            audioOut[i] += window[M - k - 1] * impluse[k];
+        }
+    }
+#endif
     return NO_ERROR;
 }
 
@@ -133,34 +148,36 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         LOG("Initializing variables ... ");
         const int n = input.GetLength();
         const int M = tapps;
-        double c = 0.0000001; // an appropriately small number
+        double c = 0.001; // an appropriately small number
         mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
         mcon::Matrix<double> h(M, 1);
-        mcon::Vector<double>& d = input;
+        const mcon::Vector<double>& d = reference;
         mcon::Vector<double> uv(M);
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
         mcon::Vector<double> K(n);
         mcon::Vector<double> U(n);
+        mcon::Vector<double> E(n);
+        const double w = 1.0;
 
         h = 0;
         P /= c;
         uv = 0;
-        J[0] = 0;
 
         LOG("Done\n");
         LOG("Now starting RLS with %d samples.\n", n);
         for (int i = 0; i < n; ++i)
         {
-            uv.Unshift(reference[i]);
+            uv.Unshift(input[i]);
             U[i] = uv.GetNorm(); // logs
             const mcon::Matrix<double>& u = uv.Transpose();
             mcon::Matrix<double> k(P.Multiply(u)); // numerator
             const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
             ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
-            const double denom = denominator[0][0] + 1;
+            const double denom = w * denominator[0][0] + 1;
             k /= denom;
+            k *= w;
             K[i] = k.Transpose()[0].GetNorm(); // logs
             const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
@@ -171,6 +188,12 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             if ( i > 0 )
             {
                 J[i] = J[i-1] + e[i] * eta[i]; // logs
+                E[i] = E[i-1] + d[i] * d[i]; // logs
+            }
+            else
+            {
+                J[i] = e[i] * eta[i]; // logs
+                E[i] = d[i] * d[i]; // logs
             }
             P -= k.Multiply(u.Transpose()).Multiply(P);
             if ( (i % 10) == 0 )
@@ -240,15 +263,16 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
 
             // Rls logs
             {
-                mcon::Matrix<double> logs(5, n);
+                mcon::Matrix<double> logs(6, n);
                 logs[0] = e;
                 logs[1] = eta;
                 logs[2] = J;
                 logs[3] = K;
                 logs[4] = U;
+                logs[5] = E;
                 std::string fname = fbody + std::string("_logs") + ecsv;
                 mfio::Csv csv(fname);
-                csv.Write("i,e,eta,J,|k|,|u|\n");
+                csv.Write("i,e,eta,J,|k|,|u|,Esum\n");
                 csv.Write(logs);
                 csv.Close();
                 LOG("Output: %s\n", fname.c_str());
@@ -295,7 +319,34 @@ int main(int argc, char* argv[])
     std::string reference;
     std::string input;
     int tapps = 256;
-
+#if 0
+    {
+        mfio::Wave wave;
+        mcon::Matrix<double> m;
+        wave.Read("101-st.wav", m);
+        wave.SetNumChannels(1);
+        wave.Write("101-st-left.wav", m[0]);
+    }
+    return 0;
+#endif
+#if 0
+    const int N = 4;
+    mcon::Vector<double> imp(N);
+    imp = 0.1;
+    imp[0] = 1.0;
+    mcon::Vector<double> in(10*N);
+    for ( int i = 0; i < in.GetLength(); ++i )
+    {
+        in[i] = i + 1;
+    }
+    mcon::Vector<double> output;
+    Convolution(output, in, imp);
+    for ( int i = 0 ; i < output.GetLength(); ++i )
+    {
+        printf("%d\t%g\n", i+1, output[i]);
+    }
+    return 0;
+#endif
     if ( argc < 3 )
     {
         usage();

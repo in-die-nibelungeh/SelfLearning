@@ -1072,7 +1072,7 @@ static void EstimateIr(void)
     const std::string ewav(".wav");
     const std::string ecsv(".csv");
 
-    std::string wbody("sweep_440-3520_3s");
+    std::string wbody("sweep_440-3520_1s");
     std::string ibody("101-st");
     mcon::Matrix<double> ir;
     mcon::Vector<double> audio;
@@ -1126,7 +1126,7 @@ static void EstimateIr(void)
         mcon::Vector<double>& vector = ir[0];
         const int n = vector.GetLength();
         mcon::Matrix<double> complex;
-        mcon::Matrix<double> icomplex;
+        mcon::Matrix<double> icomplex(2, n);
         mcon::Matrix<double> gp;
         mcon::Matrix<double> igp(2, n);
         mcon::Vector<double> inv(n);
@@ -1135,17 +1135,14 @@ static void EstimateIr(void)
         Fft::Ft(complex, vector);
         LOG("ToPolar\n");
         Fft::ConvertToPolarCoords(gp, complex);
+        LOG("ToInversedComplex\n");
         for (int i = 0; i < n; ++i)
         {
-            igp[0][i] = 1.0/gp[0][i];
-        }
-        igp[1] = gp[1];
-        LOG("ToComplex\n");
-        Fft::ConvertToComplex(icomplex, igp);
-        for (int i = 0; i < n; ++i)
-        {
-            icomplex[0][i] = fabs(icomplex[0][i]) * sign(complex[0][i]);
-            icomplex[1][i] = fabs(icomplex[1][i]) * sign(complex[1][i]) * -1;
+            const double gain = gp[0][i];
+            const double phase = gp[1][i];
+
+            icomplex[0][i] = cos(2*M_PI-phase) / gain;
+            icomplex[1][i] = sin(2*M_PI-phase) / gain;
         }
         LOG("ToPolar, again\n");
         Fft::ConvertToPolarCoords(igp, icomplex);

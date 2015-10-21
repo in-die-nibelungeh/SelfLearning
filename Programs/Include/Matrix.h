@@ -58,7 +58,7 @@ public:
 
     Matrix<Type>& operator=(const Matrix<Type>& m);
     Matrix<Type>& operator=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }
-    Matrix<Type>& operator*(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] *= v); return *this; }
+    //Matrix<Type>& operator*(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] *= v); return *this; }
 
     const Matrix<Type> operator+(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
     const Matrix<Type> operator-(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] -= v); return mat; }

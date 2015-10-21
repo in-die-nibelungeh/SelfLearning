@@ -21,7 +21,7 @@ public:
 
     inline status_t Open(std::string filename, const char* permission = "w")
     {
-        Open(filename.c_str(), permission);
+        return Open(filename.c_str(), permission);
     }
     status_t Open(const char* filename, const char* permission = "w");
     status_t Close(void);
