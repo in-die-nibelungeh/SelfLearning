@@ -56,7 +56,7 @@ public:
     WaveGen  operator[](int);
 
     // Aliases
-    bool SetBaseFrequency(double frequency) { SetWaveFrequency(frequency); }
+    void SetBaseFrequency(double frequency) { SetWaveFrequency(frequency); }
 
     void GenerateWaveform(double buffer[], size_t n, double amplitude = 1.0f);
     void GenerateWaveform(mcon::Vector<double>& buffer, double amplitude = 1.0f);
