@@ -1,7 +1,7 @@
 
 BIN=fir.exe
 LIB=libfir.a
-LIBS=-lwin
+LIBS=-lwin -lfio -lfft
 
 MODULE_HEADER=Fir.h
 MODULE_SRC=Fir.cpp

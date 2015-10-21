@@ -2,11 +2,27 @@
 #include <math.h>
 #include <sys/types.h>
 
+#include "status.h"
 #include "debug.h"
 #include "Fir.h"
 
 namespace masp {
 namespace fir {
+
+enum FilterTypeId
+{
+    FTI_LPF = 1,
+    FTI_HPF,
+    FTI_BPF,
+    FTI_BEF
+};
+
+enum FilterBaseId
+{
+    FBI_SINC = 1,
+    FBI_LANCZOS
+};
+
 
 static const double g_Pi(M_PI);
 
@@ -91,9 +107,9 @@ void GenerateLpfFilter(double coef[], size_t _N, double fe, int type, double arg
     }
 }
 
-void GetCoefficients(double coef[], size_t _N, double fe1, double fe2, double arg, int typeId, int functionId)
+static void GetCoefficients(mcon::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
 {
-    const int N = _N;
+    const int N = coef.GetLength();
     BaseFunction baseFunction = GetBaseFunction(functionId);
     ASSERT(NULL != baseFunction);
     FilterFunction filterFunction = GetFilterFunction(typeId);
@@ -107,19 +123,13 @@ void GetCoefficients(double coef[], size_t _N, double fe1, double fe2, double ar
     }
 }
 
-void GetCoefficients(mcon::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
+static void GetCoefficients(double coef[], size_t N, double fe1, double fe2, double arg, int typeId, int functionId)
 {
-    const int N = coef.GetLength();
-    BaseFunction baseFunction = GetBaseFunction(functionId);
-    ASSERT(NULL != baseFunction);
-    FilterFunction filterFunction = GetFilterFunction(typeId);
-    ASSERT(NULL != filterFunction);
-    for (int i = 0; i < (N+1)/2; ++i)
+    mcon::Vector<double> _coef(N);
+    GetCoefficients(_coef, fe1, fe2, arg, typeId, functionId);
+    for (int i = 0; i < _coef.GetLength(); ++i)
     {
-        const double m = (2 * i + 1 - N) / 2.0;
-        double v = filterFunction(m, fe1, fe2, arg, baseFunction);
-        coef[i] = v;
-        coef[N-i-1] = v;
+        coef[i] = _coef[i];
     }
 }
 
@@ -205,14 +215,34 @@ void FilterLanczos(double coef[], size_t _N, double fe, double n)
 #endif
 }
 
-size_t GetNumOfTapps(double fc, int fs)
+int GetNumOfTapps(double delta)
 {
-    int tapps = static_cast<int>((3.1f * fs / fc) + 0.5 - 1);
+    int tapps = static_cast<int>((3.1f / delta) + 0.5 - 1);
     if ( (tapps & 1) == 0)
     {
         ++tapps;
     }
     return tapps;
+}
+
+status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse)
+{
+    if (in.GetLength() < impluse.GetLength())
+    {
+        return -ERROR_ILLEGAL;
+    }
+
+    out.Resize(in.GetLength());
+
+    for (int i = 0; i < in.GetLength(); ++i)
+    {
+        out[i] = 0.0;
+        for (int k = 0; k < impluse.GetLength(); ++k)
+        {
+            out[i] += in[i - k] * impluse[k];
+        }
+    }
+    return NO_ERROR;
 }
 
 } // namespace fir {
