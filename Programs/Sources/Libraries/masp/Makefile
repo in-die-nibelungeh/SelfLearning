@@ -4,7 +4,7 @@ LIB=libasp.a
 
 MODULE_HEADER= \
 	Basics/Fir/Fir.h \
-	Basics/Fft/Ft.h \
+	Basics/Ft/Ft.h \
 	Basics/Iir/Iir.h \
 	Basics/Window/Window.h \
 	Resampler/Resampler.h \
@@ -12,7 +12,7 @@ MODULE_HEADER= \
 MODULE_SRC=	\
 	Basics/Fir/Fir.cpp \
 	Basics/Iir/Iir.cpp \
-	Basics/Fft/Ft.cpp \
+	Basics/Ft/Ft.cpp \
 	Basics/Window/Window.cpp \
 	Resampler/Resampler.cpp \
 
