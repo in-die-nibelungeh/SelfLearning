@@ -12,7 +12,7 @@ MODULE_HEADER= \
 MODULE_SRC=	\
 	Basics/Fir/Fir.cpp \
 	Basics/Iir/Iir.cpp \
-	Basics/Fft/Fft.h \
+	Basics/Fft/Fft.cpp \
 	Basics/Window/Window.cpp \
 	Resampler/Resampler.cpp \
 

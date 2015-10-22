@@ -8,8 +8,8 @@
 #define M_PI 3.14159265358979323846
 #endif // #ifndef M_PI
 
-namespace Fft
-{
+namespace masp {
+namespace ft {
 
 namespace
 {
@@ -227,4 +227,6 @@ status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<doub
     return NO_ERROR;
 }
 
-}; // namespace Fft
+} // namespace ft {
+} // namespace masp {
+
