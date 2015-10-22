@@ -164,7 +164,6 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     for (int i = 0; i < timeSeries.GetLength(); ++i)
     {
         const int N = complex.GetColumnLength();
-        double df = (double)i * g_Pi * 2 / N;
         timeSeries[i] = 0.0;
         for (int j = 0; j < N; ++j)
         {
