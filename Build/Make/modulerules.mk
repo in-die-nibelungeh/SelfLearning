@@ -1,6 +1,8 @@
 
 BIN ?= 
-NOECHO ?= 
+NOECHO ?= @
+OUTPUT_DIR ?= .
+OBJECT_DIR ?= .
 
 ifndef MY_AUDIO_ROOT
 $(error Define MY_AUDIO_ROOT)
@@ -10,6 +12,18 @@ ifdef LIB
 ifndef MODULE_NAME
 $(error Define MODULE_NAME)
 endif
+endif
+
+ifdef BIN
+MODULE_BIN_PATH := $(OUTPUT_DIR)/$(BIN)
+else
+MODULE_BIN_PATH :=
+endif
+
+ifdef LIB
+MODULE_LIB_PATH := $(OUTPUT_DIR)/$(LIB)
+else
+MODULE_LIB_PATH :=
 endif
 
 CC := $(TOOLCHAIN_PREFIX)gcc.exe
@@ -51,7 +65,6 @@ OBJ := $(MODULE_OBJ) $(ENTRY_SRC:*.cpp=.o)
 
 WARNINGS += -Wall \
 
-
 CPPFLAGS += \
 	$(addprefix -I,$(INCDIRS)) \
 	$(addprefix -L,$(LIBDIRS)) \
@@ -61,39 +74,43 @@ CPPFLAGS += \
 # Mkdir=if not exist @1 mkdir @1
 Mkdir=if [ ! -d "$(1)" ] ; then mkdir -p "$(1)" ; fi
 
-all: $(BIN)
-	@echo Succeeded in building $(BIN).
+all: build
+	@echo Succeeded in building.
 
-run: $(BIN)
-	@echo Running $(BIN) ...
-	@./$(BIN)
+run: $(MODULE_BIN_PATH)
+	@if [ -n "$(<)" ] ; then \
+		echo Running $(<) ... ; $(<) \
+	else \
+		echo Nothing to be done for \`$(@)\': BIN is not defined. ; \
+	fi
 
-build: $(BIN) lib
+build: $(MODULE_BIN_PATH) $(MODULE_LIB_PATH)
 
-lib: $(LIB)
+lib: $(MODULE_LIB_PATH)
 
-$(BIN): $(OBJ) $(INC)
-	$(CC) $(CPPFLAGS) -o $(BIN) $(OBJ) $(LIBS)
+$(MODULE_BIN_PATH): $(OBJ) $(INC)
+	$(NOECHO)$(call Mkdir,$(dir $@))
+	$(CC) $(CPPFLAGS) -o $@ $(OBJ) $(LIBS)
 
-$(LIB): $(MODULE_OBJ)
+$(MODULE_LIB_PATH): $(MODULE_OBJ)
 	@if [ -n "$(LIB)" ] ; then \
-		ar r $(LIB) $(MODULE_OBJ) ; \
+		ar r $@ $(MODULE_OBJ) ; \
 	else \
 		echo LIB is not define. ; \
 	fi
 
-install: $(LIB) $(MODULE_HEADER)
+install: $(MODULE_LIB_PATH) $(MODULE_HEADER)
 	@if [ -n "$(LIB)" ] ; then \
-		echo cp $(LIB) $(PROJECT_LIBDIR)/ ; \
-		cp $(LIB) $(PROJECT_LIBDIR)/ ; \
+		echo cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
+		cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 	fi
 	$(NOECHO)$(call Mkdir, $(MODULE_HEADER_INSTALL_DIR))
 	cp $(MODULE_HEADER) $(MODULE_HEADER_INSTALL_DIR)/
 
 clean: 
-	@rm -rf $(BIN) $(LIB) *.BAK *.o
+	@rm -rf $(MODULE_BIN_PATH) $(MODULE_LIB_PATH) *.BAK $(MODULE_OBJ)
 
-.cpp.o: $(INC)
-	$(CC) -c $(CPPFLAGS) $< -o $(<:.cpp=.o)
+%.o: %.cpp $(INC)
+	$(CC) -c $(CPPFLAGS) $< -o $@
 
 .PHONY: all lib install clean build run
