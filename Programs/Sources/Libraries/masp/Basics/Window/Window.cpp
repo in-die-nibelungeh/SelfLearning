@@ -123,7 +123,7 @@ void GenerateWindow(double w[], size_t N, int type, double arg)
     WindowFunctionType function = GetWindowFunction(type);
     ASSERT(function != NULL);
     double dt = 2 * g_Pi / N;
-    for (int i = 0; i < N; ++i)
+    for (unsigned int i = 0; i < N; ++i)
     {
         w[i] = function(i, dt, arg);
     }
@@ -136,7 +136,7 @@ void GenerateWindow(mcon::Vector<double>& w, int type, double arg)
     ASSERT(function != NULL);
 
     double dt = 2 * g_Pi / N;
-    for (int i = 0; i < N; ++i)
+    for (unsigned int i = 0; i < N; ++i)
     {
         w[i] = function(i, dt, arg);
     }
