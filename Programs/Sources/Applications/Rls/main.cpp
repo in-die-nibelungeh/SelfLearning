@@ -85,7 +85,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
     {
         mfio::Wave wave;
         mcon::Matrix<double> inputMatrix;
-        LOG("Loading input ... ");
+        LOG("Loading input from %s ... ", inputFile);
         status_t status = wave.Read(inputFile, inputMatrix);
 
         if (NO_ERROR != status)
@@ -105,6 +105,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
     }
 
     LOG("[Input]\n");
+    LOG("    File        : %s\n", inputFile);
     LOG("    SamplingRate: %d\n", fs);
     LOG("    Length      : %d\n", input.GetLength());
     LOG("\n");
@@ -113,7 +114,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
     {
         mfio::Wave wave;
         mcon::Matrix<double> referenceMatrix;
-        LOG("Loading audio reference ... ");
+        LOG("Loading audio reference from %s ... ", referenceFile);
         status_t status = wave.Read(referenceFile, referenceMatrix);
 
         if (NO_ERROR != status)
@@ -135,7 +136,8 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         reference = referenceMatrix[0];
     }
     LOG("[Reference]\n");
-    LOG("    Length      : %d\n", reference.GetLength());
+    LOG("    File  : %s\n", referenceFile);
+    LOG("    Length: %d\n", reference.GetLength());
     LOG("\n");
 
     if ( input.GetLength() > reference.GetLength() )
@@ -215,50 +217,37 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         LOG("\n");
         {
             const int length = resp.GetLength();
-            mcon::Matrix<double> complex(2, length);
-            mcon::Matrix<double> gp(2, length);
-
-            Fft::Ft(complex, resp);
-            Fft::ConvertToPolarCoords(gp, complex);
             const std::string ecsv(".csv");
-            // Gain
+            const std::string ewav(".wav");
+            mcon::Matrix<double> gp(2, length);
             {
-                mcon::Matrix<double> gain(2, length);
-                const double df = 1.0  * fs / M;
+                mcon::Matrix<double> complex(2, length);
+                Fft::Ft(complex, resp);
+                Fft::ConvertToPolarCoords(gp, complex);
+            }
+            // Gain/Phase/PulseSeries
+            {
+                mcon::Matrix<double> saved(4, length);
+                const double df = 1.0 / length;
                 const double max = gp[0].GetMaximum();
                 for (int i = 0; i < length; ++i)
                 {
-                    gain[0][i] = i*df;
-                    gain[1][i] = -20 * log10(gp[0][i]/max);
+                    saved[0][i] = i*df;
+                    saved[1][i] = -20 * log10(gp[0][i]/max);
+                    saved[2][i] = gp[1][i];
                 }
-                std::string fname = fbody + std::string("_gain") + ecsv;
+                saved[3] = resp;
+
+                std::string fname = fbody + ecsv;
                 mfio::Csv csv(fname);
-                csv.Write(",freq,Gain[dB]\n");
-                csv.Write(gain);
+                csv.Write(",freq,Gain[dB],Phase[rad],\n");
+                csv.Write(saved);
                 csv.Close();
                 LOG("Output: %s\n", fname.c_str());
             }
-            // Phase
             {
-                mcon::Matrix<double> phase(2, length);
-                const double df = 1.0  * fs / M;
-                for (int i = 0; i < length; ++i)
-                {
-                    phase[0][i] = i*df;
-                    phase[1][i] = gp[1][i]*180/M_PI;
-                }
-                std::string fname = fbody + std::string("_phase") + ecsv;
-                mfio::Csv csv(fname);
-                csv.Write(",freq,Phase[deg]\n");
-                csv.Write(phase);
-                csv.Close();
-                LOG("Output: %s\n", fname.c_str());
-            }
-            // TimeSeries Data of the estimated response.
-            {
-                std::string fname = fbody + std::string("_ts") + ecsv;
-                mfio::Csv::Write(fname, resp);
-                LOG("Output: %s\n", fname.c_str());
+                mfio::Wave wave(fs, 1, 32, mfio::Wave::IEEE_FLOAT);
+                wave.Write(fbody + ewav, resp);
             }
 
             // Rls logs
@@ -287,7 +276,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             LOG("Done\n");
             origin *= 32767.0/origin.GetMaximumAbsolute();
             const std::string ewav(".wav");
-            std::string fname = fbody + ewav;
+            std::string fname = fbody + std::string("_iconv") + ewav;
             LOG("Saving as %s\n", fname.c_str());
             mfio::Wave wave;
             wave.SetNumChannels(1);
