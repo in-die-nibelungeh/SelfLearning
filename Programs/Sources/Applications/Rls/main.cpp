@@ -229,13 +229,12 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             {
                 mcon::Matrix<double> saved(4, length);
                 const double df = 1.0 / length;
-                const double max = gp[0].GetMaximum();
                 for (int i = 0; i < length; ++i)
                 {
                     saved[0][i] = i*df;
-                    saved[1][i] = -20 * log10(gp[0][i]/max);
-                    saved[2][i] = gp[1][i];
                 }
+                saved[1] = gp[0];
+                saved[2] = gp[1];
                 saved[3] = resp;
 
                 std::string fname = fbody + ecsv;
