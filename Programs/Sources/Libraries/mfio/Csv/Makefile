@@ -1,0 +1,11 @@
+BIN=mfio_csv.exe
+
+INC=Csv.h
+MODULE_SRC=Csv.cpp
+
+CPPFLAGS += -O3
+
+WARNINGS +=  \
+	-Werror \
+
+include $(MY_AUDIO_ROOT)/Build/Make/modulerules.mk
