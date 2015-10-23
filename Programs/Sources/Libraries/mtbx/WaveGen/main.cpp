@@ -5,6 +5,8 @@
 #define NUM_SAMPLES 120
 #define NUM_TYPES 4
 
+using namespace mtbx;
+
 static int test_wavetype(void)
 {
     int i, j;

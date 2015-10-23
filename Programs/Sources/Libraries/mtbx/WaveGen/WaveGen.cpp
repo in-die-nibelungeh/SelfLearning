@@ -7,30 +7,36 @@
 #define DEFAULT_SAMPLING_RATE  48000
 #define DEFAULT_DUTY 0.5f
 
+namespace mtbx {
+
 const double WaveGen::g_Pi(M_PI);
 
 WaveGen::WaveGen()
-  : m_FrequencyBase(DEFAULT_BASE_FREQUENCY),
-    m_FrequencyCurrent(DEFAULT_BASE_FREQUENCY),
+    : m_SamplingRate(DEFAULT_SAMPLING_RATE),
+    m_Tick(1.0f/DEFAULT_SAMPLING_RATE),
+    m_Type(WT_SINE),
+    m_Duty(0.5),
+    m_FrequencyBase(DEFAULT_BASE_FREQUENCY),
     m_SweepEnable(false),
     m_SweepFactor(1.0f),
+    m_FrequencyCurrent(DEFAULT_BASE_FREQUENCY),
     m_PhaseCurrent(0),
-    m_ValueCurrent(0),
-    m_SamplingRate(DEFAULT_SAMPLING_RATE),
-    m_Tick(1.0f/DEFAULT_SAMPLING_RATE)
+    m_ValueCurrent(0)
 {
     SetWaveType(WT_SINE, DEFAULT_DUTY);
 }
 
 WaveGen::WaveGen(int samplingRate, double frequency, WaveType type, double duty)
-  : m_FrequencyBase(frequency),
-    m_FrequencyCurrent(frequency),
+    : m_SamplingRate(samplingRate),
+    m_Tick(1.0f/samplingRate),
+    m_Type(WT_SINE),
+    m_Duty(0.5),
+    m_FrequencyBase(frequency),
     m_SweepEnable(false),
     m_SweepFactor(1.0f),
+    m_FrequencyCurrent(frequency),
     m_PhaseCurrent(0),
-    m_ValueCurrent(0),
-    m_SamplingRate(samplingRate),
-    m_Tick(1.0f/samplingRate)
+    m_ValueCurrent(0)
 {
     // m_ValueCurrent is updated in SetWaveType
     SetWaveType(type, duty);
@@ -53,7 +59,6 @@ struct WaveGen::Variable WaveGen::GetVariable(void) const
 
 bool WaveGen::SetWaveType(WaveGen::WaveType type, double duty)
 {
-    bool ret = true;
     ASSERT(
         type == WT_SINE     ||
         type == WT_SAWTOOTH ||
@@ -228,7 +233,7 @@ void WaveGen::GenerateWaveform(mcon::Vector<double>& buffer, double amp)
 
 void WaveGen::GenerateWaveform(double buffer[], size_t n, double amp)
 {
-    for (int i = 0; i < n; ++i, ++(*this))
+    for (unsigned int i = 0; i < n; ++i, ++(*this))
     {
         buffer[i] = amp * GetValue();
     }
@@ -317,3 +322,5 @@ int WaveGen::GetSamplingRate(void) const
 {
     return m_SamplingRate;
 }
+
+} // namespace mtbx {

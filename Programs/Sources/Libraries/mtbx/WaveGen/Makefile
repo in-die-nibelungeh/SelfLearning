@@ -1,6 +1,5 @@
 
-BIN=wavgen.exe
-LIB=libwg.a
+BIN=mtbx_wavgen.exe
 
 MODULE_HEADER=WaveGen.h
 MODULE_SRC=WaveGen.cpp
