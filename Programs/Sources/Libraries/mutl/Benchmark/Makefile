@@ -1,11 +1,8 @@
 
-BIN=but.exe
-LIB=libbut.a
+BIN=mutl_benchmark.exe
 
-MODULE_HEADER=BenchUtil.h Stopwatch.h
+INC=Stopwatch.h
 MODULE_SRC=Stopwatch.cpp
-
-INC=$(MODULE_HEADER)
 
 CPPFLAGS += -O3
 

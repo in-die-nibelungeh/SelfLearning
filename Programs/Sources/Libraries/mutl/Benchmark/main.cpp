@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "BenchUtil.h"
+#include "Stopwatch.h"
 
 #if 0
 #include <chrono>
@@ -14,7 +14,7 @@ static void tst(void)
 
 static void test_stopwatch(void)
 {
-    mbut::Stopwatch sw;
+    mutl::Stopwatch sw;
     double d = 0.0;
     for ( int i = 0; i < 1000000000; ++i )
     {

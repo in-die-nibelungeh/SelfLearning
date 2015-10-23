@@ -1,6 +1,6 @@
 #include "Stopwatch.h"
 
-namespace mbut {
+namespace mutl {
 
 Stopwatch::Stopwatch()
   : m_Last(0.0)
@@ -30,4 +30,4 @@ double Stopwatch::GetRecord(void) const
    return m_Last;
 }
 
-} // namespace mbut {
+} // namespace mutl {
