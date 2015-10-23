@@ -104,8 +104,13 @@ install: $(MODULE_LIB_PATH) $(MODULE_HEADER)
 		echo cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 		cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 	fi
-	$(NOECHO)$(call Mkdir, $(MODULE_HEADER_INSTALL_DIR))
-	cp $(MODULE_HEADER) $(MODULE_HEADER_INSTALL_DIR)/
+	@if [ -n "$(MODULE_HEADER)" ] ; then \
+		$(call Mkdir,$(MODULE_HEADER_INSTALL_DIR)) ; \
+		cp $(MODULE_HEADER) $(MODULE_HEADER_INSTALL_DIR)/ ; \
+	fi
+	@if [ -z "$(LIB)" -a -z "$(MODULE_HEADER)" ] ; then \
+		echo Nothing to be done for \`$(@)\': Neither LIB nor MODULE_HEADER is defined. ; \
+	fi
 
 clean: 
 	@rm -rf $(MODULE_BIN_PATH) $(MODULE_LIB_PATH) *.BAK $(MODULE_OBJ)
