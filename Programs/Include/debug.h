@@ -22,8 +22,7 @@
  * THE SOFTWARE.
  */
 
-#ifndef _DEBUG_H_
-#define _DEBUG_H_
+#pragma once
 
 #include <stdio.h>
 
@@ -72,5 +71,3 @@
         (var)==(ans) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
 
 #define UNUSED(v) (void)(v)
-
-#endif // #ifndef _DEBUG_H_
