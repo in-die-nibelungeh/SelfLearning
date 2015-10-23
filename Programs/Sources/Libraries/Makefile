@@ -1,5 +1,5 @@
 
-SUBDIRS_EXCLUDE := 
+SUBDIRS_EXCLUDE := Makefile
 SUBDIRS := $(filter-out $(SUBDIRS_EXCLUDE), $(wildcard *))
 
 $(MAKECMDGOALS) _root: $(SUBDIRS)
