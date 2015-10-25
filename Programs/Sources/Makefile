@@ -1,5 +1,5 @@
 
-SUBDIRS_EXCLUDE := Makefile Include Library Samples
+SUBDIRS_EXCLUDE := Makefile Samples
 SUBDIRS := $(filter-out $(SUBDIRS_EXCLUDE), $(wildcard *))
 
 $(MAKECMDGOALS) _root: $(SUBDIRS)
