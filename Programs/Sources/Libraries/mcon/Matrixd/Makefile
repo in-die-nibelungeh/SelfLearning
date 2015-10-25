@@ -5,6 +5,9 @@ MODULE_SRC=
 
 INC=$(MODULE_HEADER) test.cpp
 
+INCDIRS += \
+	../Vectord \
+
 LIBS=-lwg -lutl
 
 CPPFLAGS += -O3
