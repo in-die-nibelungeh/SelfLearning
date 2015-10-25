@@ -77,9 +77,6 @@ public:
         }
         return v;
     }
-    // This cast doesn't seem called... Why?
-    // Are default ones already defined and called?
-    operator Vectord() const;
     operator void*() const
     {
         return reinterpret_cast<void*>(m_Address);
@@ -88,15 +85,6 @@ public:
     Vectord operator()(int offset, int length) const;
     double PushFromFront(double v);
     double PushFromBack(double v);
-    inline double Fifo(double v)
-    {
-        return PushFromBack(v);
-    }
-
-    inline double Unshift(double v)
-    {
-        return PushFromFront(v);
-    }
 
     Vectord& operator=(double v);
 
@@ -119,38 +107,50 @@ public:
     Vectord& operator-=(const Vectord& v);
     Vectord& operator*=(const Vectord& v);
     Vectord& operator/=(const Vectord& v);
-
+#if 0
     Matrixd ToMatrix(void) const;
     Matrixd Transpose(void) const;
     inline Matrixd T(void) const { return Transpose(); }
-
+#endif
     double GetMaximum(void) const;
     double GetMaximumAbsolute(void) const;
     double GetMinimum(void) const;
     double GetMinimumAbsolute(void) const;
 
     double GetSum(void) const;
+
+    double GetNorm(void) const;
+    bool Resize(int length);
+
+    inline int GetLength(void) const
+    {
+        return m_Length;
+    }
     inline double GetAverage(void) const
     {
         return GetSum()/GetLength();
     }
-
-    inline double GetNorm(void) const;
-    inline int GetLength(void) const { return m_Length; }
-    bool IsNull(void) const { return m_Length == 0; }
-    bool Resize(int length);
+    inline double Fifo(double v)
+    {
+        return PushFromBack(v);
+    }
+    inline double Unshift(double v)
+    {
+        return PushFromFront(v);
+    }
+    inline bool IsNull(void) const { return m_Length == 0; }
 
 private:
     // Private member functions.
-    int    Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
-    int    Smaller(int input) const { return m_Length < input ? m_Length : input; }
-    int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
-    int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
+    inline int    Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
+    inline int    Smaller(int input) const { return m_Length < input ? m_Length : input; }
+    inline int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
+    inline int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
     void   Allocate(void);
     double   Absolute(double v) const { return (v < 0) ? -v : v; }
     // Private member variables.
     double*  m_Address;
-    int    m_Length;
+    int      m_Length;
 };
 
 } // namespace mcon {

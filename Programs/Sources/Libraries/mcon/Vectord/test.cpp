@@ -4,7 +4,7 @@
 static void test_vector_api(void)
 {
     // Empty vector.
-    mcon::Vector<double> dvec;
+    mcon::Vectord dvec;
 
     // Zero length
     CHECK_VALUE(dvec.GetLength(), 0);
@@ -51,7 +51,7 @@ static void test_vector_api(void)
     {
         CHECK_VALUE(dvec[i], (i+1)*2-5);
     }
-    mcon::Vector<double> dvec2(length*2);
+    mcon::Vectord dvec2(length*2);
 
     for (int i = 0; i < dvec2.GetLength(); ++i)
     {
@@ -180,7 +180,7 @@ static void test_vector_api(void)
     // MaximumAbsolute/MinimumAbsolute
     {
         const int length = 6;
-        mcon::Vector<double> vec(length);
+        mcon::Vectord vec(length);
         // 1, -2, 3, -4, 5, -6
         for (int i = 0; i < length; ++i)
         {
@@ -196,7 +196,7 @@ static void test_vector_api(void)
     printf("[GetSum/Average/GetNorm]\n");
     {
         const int length = 10;
-        mcon::Vector<double> v(length);
+        mcon::Vectord v(length);
         for (int i = 0; i < length; ++i)
         {
             v[i] = i + 1;
