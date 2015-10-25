@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "types.h"
 #include "debug.h"
 
 namespace mcon {
@@ -39,47 +38,18 @@ class Matrixd;
         }                                     \
     } while(0)
 
-template <typename Type>
-class Vectord
-{
-public:
-
-    explicit Vectord(const int length = 0);
-    Vectord(const Vectord<Type>& v);
-    template <typename U> Vectord(const Vectord<U>& v);
-    ~Vectord();
-
-    // For const object
-    const Type& operator[](const int i) const
-    {
-        ASSERT (0 <= i && i < m_Length);
-        return m_Address[i];
-    }
-    // For non-const object
-    Type& operator[](const int i)
-    {
-        ASSERT (0 <= i && i < m_Length);
-        return m_Address[i];
-    }
 
     // Copy is to copy available data from src to dest without resizing the dest.
-    const Vectord<Type>& Copy(const Vectord<Type>& Vectord);
+    const Vectord& Copy(const Vectord& Vectord);
     // operator= make the same Vectord as the input Vectord.
-    Vectord<Type>& operator=(const Vectord<Type>& Vectord);
+    Vectord& operator=(const Vectord& Vectord);
 
-    template <typename U>
-    operator Vectord<U>() const
-    {
-        Vectord<U> v(GetLength());
-        MCON_ITERATION(i, m_Length, v[i] = static_cast<U>((*this)[i]));
-        return v;
-    }
     // This cast doesn't seem called... Why?
     // Are default ones already defined and called?
-    operator Vectord<Type>() const
+    operator Vectord() const
     {
         ASSERT(0);
-        Vectord<Type> v(GetLength());
+        Vectord v(GetLength());
         MCON_ITERATION(i, m_Length, v[i] = (*this)[i]);
         return v;
     }
@@ -89,9 +59,9 @@ public:
         return reinterpret_cast<void*>(m_Address);
     }
 
-    Vectord<Type> operator()(int offset, int length) const
+    Vectord operator()(int offset, int length) const
     {
-        Vectord<Type> carveout;
+        Vectord carveout;
         if (offset < 0 || GetLength() <= offset || length < 0)
         {
             // Null object.
@@ -128,38 +98,38 @@ public:
         return ret;
     }
 
-    Vectord<Type>& operator=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] = v); return *this; };
+    Vectord& operator=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] = v); return *this; };
 
-    const Vectord<Type> operator+(Type v) const { Vectord<Type> vec(*this);  vec += v; return vec; }
-    const Vectord<Type> operator-(Type v) const { Vectord<Type> vec(*this);  vec -= v; return vec; }
-    const Vectord<Type> operator*(Type v) const { Vectord<Type> vec(*this);  vec *= v; return vec; }
-    const Vectord<Type> operator/(Type v) const { Vectord<Type> vec(*this);  vec /= v; return vec; }
+    const Vectord operator+(Type v) const { Vectord vec(*this);  vec += v; return vec; }
+    const Vectord operator-(Type v) const { Vectord vec(*this);  vec -= v; return vec; }
+    const Vectord operator*(Type v) const { Vectord vec(*this);  vec *= v; return vec; }
+    const Vectord operator/(Type v) const { Vectord vec(*this);  vec /= v; return vec; }
 
-    const Vectord<Type> operator+(const Vectord<Type>& v) const { Vectord<Type> vec(*this);  vec += v; return vec; }
-    const Vectord<Type> operator-(const Vectord<Type>& v) const { Vectord<Type> vec(*this);  vec -= v; return vec; }
-    const Vectord<Type> operator*(const Vectord<Type>& v) const { Vectord<Type> vec(*this);  vec *= v; return vec; }
-    const Vectord<Type> operator/(const Vectord<Type>& v) const { Vectord<Type> vec(*this);  vec /= v; return vec; }
+    const Vectord operator+(const Vectord& v) const { Vectord vec(*this);  vec += v; return vec; }
+    const Vectord operator-(const Vectord& v) const { Vectord vec(*this);  vec -= v; return vec; }
+    const Vectord operator*(const Vectord& v) const { Vectord vec(*this);  vec *= v; return vec; }
+    const Vectord operator/(const Vectord& v) const { Vectord vec(*this);  vec /= v; return vec; }
 
-    Vectord<Type>& operator+=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
-    Vectord<Type>& operator-=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
-    Vectord<Type>& operator*=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
-    Vectord<Type>& operator/=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
+    Vectord& operator+=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] += v); return *this; }
+    Vectord& operator-=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] -= v); return *this; }
+    Vectord& operator*=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] *= v); return *this; }
+    Vectord& operator/=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] /= v); return *this; }
 
-    Vectord<Type>& operator+=(const Vectord<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
-    Vectord<Type>& operator-=(const Vectord<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
-    Vectord<Type>& operator*=(const Vectord<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
-    Vectord<Type>& operator/=(const Vectord<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
+    Vectord& operator+=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] += v[i]); return *this; }
+    Vectord& operator-=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] -= v[i]); return *this; }
+    Vectord& operator*=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
+    Vectord& operator/=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
 
-    inline Matrix<Type> T(void) const { return Transpose(); }
-    Matrix<Type> Transpose(void) const
+    inline Matrix T(void) const { return Transpose(); }
+    Matrix Transpose(void) const
     {
-        Matrix<Type> m(GetLength(), 1);
+        Matrix m(GetLength(), 1);
         MCON_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
         return m;
     }
-    Matrix<Type> ToMatrix(void) const
+    Matrix ToMatrix(void) const
     {
-        Matrix<Type> m(1, GetLength());
+        Matrix m(1, GetLength());
         m[0] = *this;
         return m;
     }
@@ -255,8 +225,8 @@ private:
     int    m_Length;
 };
 
-template <typename Type>
-void Vectord<Type>::Allocate(void)
+
+void Vectord::Allocate(void)
 {
     m_Address = PTR_CAST(Type*, NULL);
     if (m_Length > 0)
@@ -266,16 +236,16 @@ void Vectord<Type>::Allocate(void)
     }
 }
 
-template <typename Type>
-Vectord<Type>::Vectord(int length)
+
+Vectord::Vectord(int length)
     : m_Address(NULL),
     m_Length(length)
 {
     Allocate();
 }
 
-template <typename Type>
-Vectord<Type>::Vectord(const Vectord<Type>& v)
+
+Vectord::Vectord(const Vectord& v)
     : m_Address(PTR_CAST(Type*, NULL)),
     m_Length(v.GetLength())
 {
@@ -283,18 +253,18 @@ Vectord<Type>::Vectord(const Vectord<Type>& v)
     MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
 }
 
-template <typename Type>
+
 template <typename U>
-Vectord<Type>::Vectord(const Vectord<U>& v)
+Vectord::Vectord(const Vectord<U>& v)
     : m_Address(PTR_CAST(Type*, NULL)),
     m_Length(v.GetLength())
 {
     Allocate();
-    MCON_ITERATION(i, m_Length, (*this)[i] = static_cast<Type>(v[i]));
+    MCON_ITERATION(i, m_Length, (*this)[i] = static_cast(v[i]));
 }
 
-template <typename Type>
-Vectord<Type>::~Vectord()
+
+Vectord::~Vectord()
 {
     if (NULL != m_Address)
     {
@@ -304,15 +274,15 @@ Vectord<Type>::~Vectord()
     m_Length = 0;
 }
 
-template <typename Type>
-const Vectord<Type>& Vectord<Type>::Copy(const Vectord<Type>& v)
+
+const Vectord& Vectord::Copy(const Vectord& v)
 {
     MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] = v[i]);
     return *this;
 }
 
-template <typename Type>
-Vectord<Type>& Vectord<Type>::operator=(const Vectord<Type>& v)
+
+Vectord& Vectord::operator=(const Vectord& v)
 {
     // m_Length is updated in Resize().
     Resize(v.GetLength());
@@ -320,8 +290,8 @@ Vectord<Type>& Vectord<Type>::operator=(const Vectord<Type>& v)
     return *this;
 }
 
-template <typename Type>
-bool Vectord<Type>::Resize(int length)
+
+bool Vectord::Resize(int length)
 {
     if (length < 0)
     {
