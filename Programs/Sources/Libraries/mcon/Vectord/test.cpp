@@ -3,7 +3,7 @@
 
 static void test_vector_api(void)
 {
-    // Empty vector.
+    LOG("[Empty Vector]\n");
     mcon::Vectord dvec;
 
     // Zero length
@@ -11,7 +11,7 @@ static void test_vector_api(void)
     // IsNull() is true.
     CHECK_VALUE(dvec.IsNull(), true);
 
-    // Resize
+    LOG("[Resize]\n");
     const int length = 6;
     dvec.Resize(length);
     CHECK_VALUE(dvec.GetLength(), length);
@@ -27,6 +27,7 @@ static void test_vector_api(void)
         CHECK_VALUE(dvec[i], i);
     }
 
+    LOG("[operator?= (?=+-*/]\n");
     // operator+=(T)
     dvec += 1;
     for (int i = 0; i < length; ++i)
@@ -51,6 +52,7 @@ static void test_vector_api(void)
     {
         CHECK_VALUE(dvec[i], (i+1)*2-5);
     }
+    LOG("[Copy]\n");
     mcon::Vectord dvec2(length*2);
 
     for (int i = 0; i < dvec2.GetLength(); ++i)
@@ -70,6 +72,7 @@ static void test_vector_api(void)
             CHECK_VALUE(dvec2[i], -(i+1));
         }
     }
+    LOG("[operator=]\n");
     // Substitution
     dvec2 = dvec;
     for (int i = 0; i < length; ++i)
@@ -82,6 +85,7 @@ static void test_vector_api(void)
         dvec2[i] = i + 1;
     }
 
+    LOG("[operator?=]\n");
     dvec += dvec2;
     for (int i = 0; i < length; ++i)
     {
@@ -111,13 +115,21 @@ static void test_vector_api(void)
     {
         CHECK_VALUE(dvec[i], 10);
     }
-    // cast
+    LOG("[Cast]\n");
+#if 0
     mcon::Vector<int> ivec(dvec);
+#else
+    mcon::Vector<int> ivec(dvec.GetLength());
+    for (int i = 0; i < length; ++i)
+    {
+        ivec[i] = static_cast<int>(dvec[i]);
+    }
     for (int i = 0; i < length; ++i)
     {
         CHECK_VALUE(ivec[i], 10);
     }
-    // Carve-out
+#endif
+    LOG("[Carve-out]\n");
     for (int i = 0; i < dvec.GetLength(); ++i)
     {
         dvec[i] = i + 1;
@@ -141,7 +153,7 @@ static void test_vector_api(void)
         CHECK_VALUE(dvec2[i], i+2);
     }
     // Fifo
-    printf("[Fifo]\n");
+    LOG("[Fifo]\n");
     double v = dvec2.Fifo(5);
     CHECK_VALUE(v, 2);
     for (int i = 0; i < dvec2.GetLength(); ++i)
@@ -149,7 +161,7 @@ static void test_vector_api(void)
         CHECK_VALUE(dvec2[i], i+3);
     }
     // Unshift
-    printf("[Unshift]\n");
+    LOG("[Unshift]\n");
     v = dvec2.Unshift(2);
     CHECK_VALUE(v, 5);
     for (int i = 0; i < dvec2.GetLength(); ++i)
@@ -157,13 +169,16 @@ static void test_vector_api(void)
         CHECK_VALUE(dvec2[i], i+2);
     }
 
-    // Cast (default function?)
-    printf("[Cast]\n");
-    ivec = static_cast< mcon::Vector<int> >(dvec);
+    LOG("[Cast]\n");
+    CHECK_VALUE( static_cast<int>(dvec), dvec.GetLength());
+    CHECK_VALUE( static_cast<double>(dvec), dvec[0] );
+
+#if 0
+    LOG("[Cast]\n");
+    ivec = static_cast<int>(dvec);
     for (int i = 0; i < ivec.GetLength(); ++i)
     {
-        CHECK_VALUE(ivec[i], i+1);
-        CHECK_VALUE(dvec[i], i+1);
+        CHECK_VALUE(ivec[i], dvec.GetLength());
     }
     ivec = dvec;
     for (int i = 0; i < ivec.GetLength(); ++i)
@@ -171,12 +186,13 @@ static void test_vector_api(void)
         CHECK_VALUE(ivec[i], i+1);
         CHECK_VALUE(dvec[i], i+1);
     }
+#endif
     // Maximum/Minimum
-    printf("[GetMaximum]\n");
+    LOG("[GetMaximum]\n");
     CHECK_VALUE(dvec2.GetMaximum(),4);
-    printf("[GetMinimum]\n");
+    LOG("[GetMinimum]\n");
     CHECK_VALUE(dvec2.GetMinimum(),2);
-    printf("[GetMaximumAbsolute/GetMinimumAbsolute]\n");
+    LOG("[GetMaximumAbsolute/GetMinimumAbsolute]\n");
     // MaximumAbsolute/MinimumAbsolute
     {
         const int length = 6;
@@ -193,7 +209,7 @@ static void test_vector_api(void)
         CHECK_VALUE(max_abs, 6);
         CHECK_VALUE(min_abs, 1);
     }
-    printf("[GetSum/Average/GetNorm]\n");
+    LOG("[GetSum/Average/GetNorm]\n");
     {
         const int length = 10;
         mcon::Vectord v(length);
@@ -212,5 +228,5 @@ static void test_vector_api(void)
         UNUSED(norm);
         CHECK_VALUE(norm, 17);
     }
-    printf("END\n");
+    LOG("END\n");
 }

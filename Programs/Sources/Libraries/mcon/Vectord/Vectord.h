@@ -81,6 +81,14 @@ public:
     {
         return reinterpret_cast<void*>(m_Address);
     }
+    operator int() const
+    {
+        return GetLength();
+    }
+    operator double() const
+    {
+        return (*this)[0];
+    }
 
     Vectord operator()(int offset, int length) const;
     double PushFromFront(double v);
@@ -107,11 +115,6 @@ public:
     Vectord& operator-=(const Vectord& v);
     Vectord& operator*=(const Vectord& v);
     Vectord& operator/=(const Vectord& v);
-#if 0
-    Matrixd ToMatrix(void) const;
-    Matrixd Transpose(void) const;
-    inline Matrixd T(void) const { return Transpose(); }
-#endif
     double GetMaximum(void) const;
     double GetMaximumAbsolute(void) const;
     double GetMinimum(void) const;

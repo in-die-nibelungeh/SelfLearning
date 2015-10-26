@@ -127,21 +127,6 @@ Vectord& Vectord::operator-=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.Get
 Vectord& Vectord::operator*=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
 Vectord& Vectord::operator/=(const Vectord& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
 
-#if 0
-Matrixd Vectord::Transpose(void) const
-{
-    Matrixd m(GetLength(), 1);
-    MCON_ITERATION(i, GetLength(), m[i][0] = (*this)[i]);
-    return m;
-}
-Matrixd Vectord::ToMatrix(void) const
-{
-    Matrixd m(1, GetLength());
-    m[0] = *this;
-    return m;
-}
-#endif
-
 double Vectord::GetMaximum(void) const
 {
     double max = (*this)[0];
