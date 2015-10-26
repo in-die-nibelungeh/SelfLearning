@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+//#include <x86intrin.h>
+
 #include "debug.h"
 #include "Vectord.h"
 
@@ -48,7 +50,7 @@ Vectord::Vectord(int length)
 
 
 Vectord::Vectord(const Vectord& v)
-    : m_Address(PTR_CAST(double*, NULL)),
+    : m_Address(NULL),
     m_Length(v.GetLength())
 {
     Allocate();
@@ -61,7 +63,7 @@ Vectord::~Vectord()
     if (NULL != m_Address)
     {
         delete[] m_Address;
-        m_Address = PTR_CAST(double*, NULL);
+        m_Address = NULL;
     }
     m_Length = 0;
 }

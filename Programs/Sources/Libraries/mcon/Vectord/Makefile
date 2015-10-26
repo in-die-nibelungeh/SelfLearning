@@ -4,6 +4,7 @@ MODULE_HEADER=Vectord.h
 MODULE_SRC=Vectord.cpp
 
 INC=$(MODULE_HEADER) test.cpp tune.cpp
+INCDIRS += ../Vector
 
 LIBS=-lwg -lutl
 

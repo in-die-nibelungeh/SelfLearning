@@ -81,10 +81,6 @@ public:
     {
         return reinterpret_cast<void*>(m_Address);
     }
-    operator int() const
-    {
-        return GetLength();
-    }
     operator double() const
     {
         return (*this)[0];
@@ -93,6 +89,8 @@ public:
     Vectord operator()(int offset, int length) const;
     double PushFromFront(double v);
     double PushFromBack(double v);
+    double PopFromFront(double v);
+    double PopFromBack(double v);
 
     Vectord& operator=(double v);
 
@@ -133,24 +131,40 @@ public:
     {
         return GetSum()/GetLength();
     }
+    // Will be depricated.
     inline double Fifo(double v)
     {
         return PushFromBack(v);
+    }
+    inline double Stack(double v)
+    {
+        return PushFromBack(v);
+    }
+    inline double Pop(double v)
+    {
+        return PopFromBack(v);
+    }
+    inline double Shift(double v)
+    {
+        return PopFromFront(v);
     }
     inline double Unshift(double v)
     {
         return PushFromFront(v);
     }
-    inline bool IsNull(void) const { return m_Length == 0; }
+    inline bool IsNull(void) const
+    {
+        return m_Length == 0;
+    }
 
 private:
     // Private member functions.
-    inline int    Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
-    inline int    Smaller(int input) const { return m_Length < input ? m_Length : input; }
-    inline int    Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
-    inline int    Larger(int input) const { return m_Length < input ? input : m_Length ; }
-    void   Allocate(void);
-    double   Absolute(double v) const { return (v < 0) ? -v : v; }
+    inline int Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
+    inline int Smaller(int input) const { return m_Length < input ? m_Length : input; }
+    inline int Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
+    inline int Larger(int input) const { return m_Length < input ? input : m_Length ; }
+    inline double Absolute(double v) const { return (v < 0) ? -v : v; }
+    void  Allocate(void);
     // Private member variables.
     double*  m_Address;
     int      m_Length;

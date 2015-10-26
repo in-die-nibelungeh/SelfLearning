@@ -1,0 +1,3 @@
+#!/bin/sh
+PATH=`echo $PATH | tr ':' '\n' | grep -v /c/MinGW/bin | tr '\n' ':'`
+export PATH=/c/MinGW/bin:$PATH

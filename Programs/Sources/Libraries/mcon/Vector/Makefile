@@ -1,11 +1,11 @@
-BIN=buffer.exe
+BIN=mcon_vector.exe
 
-MODULE_HEADER=Vector.h Matrix.h
+MODULE_HEADER=Vector.h
 MODULE_SRC=
 
-INC=$(MODULE_HEADER) test_vector.cpp test_matrix.cpp benchmark_vector.cpp
+INC=$(MODULE_HEADER) test_vector.cpp benchmark_vector.cpp
 
-LIBS=-lwg -lbut
+LIBS=-lwg -lutl
 
 CPPFLAGS += -O3
 
