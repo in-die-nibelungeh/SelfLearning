@@ -37,8 +37,9 @@ public:
 
     explicit Vectord(const int length = 0);
     Vectord(const Vectord& v);
-    template <typename U> Vectord(const Vectord& v)
-        : m_Address(NULL),
+    template <typename U> Vectord(const Vector<U>& v)
+        : m_AddressBase(NULL),
+        m_AddressAligned(NULL),
         m_Length(v.GetLength())
     {
         Allocate();
@@ -53,13 +54,13 @@ public:
     const double& operator[](const int i) const
     {
         ASSERT (0 <= i && i < m_Length);
-        return m_Address[i];
+        return m_AddressAligned[i];
     }
     // For non-const object
     double& operator[](const int i)
     {
         ASSERT (0 <= i && i < m_Length);
-        return m_Address[i];
+        return m_AddressAligned[i];
     }
 
     // Copy is to copy available data from src to dest without resizing the dest.
@@ -70,8 +71,9 @@ public:
     template <typename U>
     operator Vector<U>() const
     {
-        Vector<U> v(GetLength());
-        for ( int i = 0; m_Length; ++i )
+        const int n = GetLength();
+        Vector<U> v(n);
+        for ( int i = 0; n; ++i )
         {
             v[i] = static_cast<U>((*this)[i]);
         }
@@ -79,7 +81,11 @@ public:
     }
     operator void*() const
     {
-        return reinterpret_cast<void*>(m_Address);
+        return reinterpret_cast<void*>(m_AddressAligned);
+    }
+    operator double*() const
+    {
+        return reinterpret_cast<double*>(m_AddressAligned);
     }
     operator double() const
     {
@@ -121,8 +127,12 @@ public:
     double GetSum(void) const;
 
     double GetNorm(void) const;
+    double GetDotProduct(Vectord& v) const;
+    Vectord GetCrossProduct(Vectord& v) const;
+
     bool Resize(int length);
 
+    // Inline functions.
     inline int GetLength(void) const
     {
         return m_Length;
@@ -132,11 +142,15 @@ public:
         return GetSum()/GetLength();
     }
     // Will be depricated.
-    inline double Fifo(double v)
+    inline double FifoIn(double v)
     {
         return PushFromBack(v);
     }
-    inline double Stack(double v)
+    inline double FifoOut(double v)
+    {
+        return PopFromFront(v);
+    }
+    inline double Push(double v)
     {
         return PushFromBack(v);
     }
@@ -156,17 +170,28 @@ public:
     {
         return m_Length == 0;
     }
+    inline double Dot(Vectord& v) const
+    {
+        return GetDotProduct(v);
+    }
+    inline Vectord Cross(Vectord& v) const
+    {
+        return GetCrossProduct(v);
+    }
 
 private:
     // Private member functions.
     inline int Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
-    inline int Smaller(int input) const { return m_Length < input ? m_Length : input; }
-    inline int Larger(int a1, int a2) const { return a1 > a2 ? a1 : a2; }
-    inline int Larger(int input) const { return m_Length < input ? input : m_Length ; }
-    inline double Absolute(double v) const { return (v < 0) ? -v : v; }
+    inline int Smaller(int input)      const { return m_Length < input ? m_Length : input; }
+    inline int Larger(int a1, int a2)  const { return a1 > a2 ? a1 : a2; }
+    inline int Larger(int input)       const { return m_Length < input ? input : m_Length ; }
+    inline double Absolute(double v)   const { return (v < 0) ? -v : v; }
     void  Allocate(void);
+    // Private class variables.
+    static const int g_Alignment = 32;
     // Private member variables.
-    double*  m_Address;
+    double*  m_AddressBase;
+    double*  m_AddressAligned;
     int      m_Length;
 };
 

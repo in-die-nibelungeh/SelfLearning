@@ -6,11 +6,11 @@ MODULE_SRC=Vectord.cpp
 INC=$(MODULE_HEADER) test.cpp tune.cpp
 INCDIRS += ../Vector
 
-LIBS=-lwg -lutl
+LIBS=-lutl
 
 CPPFLAGS += \
 	-O3 \
-	#-std=c++11 \
+	-mavx \
 
 WARNINGS +=  \
 	-Werror \

@@ -1,7 +1,7 @@
 
 #include "debug.h"
 
-static void test_vector_api(void)
+static void test_vectord_api(void)
 {
     LOG("[Empty Vector]\n");
     mcon::Vectord dvec;
@@ -154,7 +154,7 @@ static void test_vector_api(void)
     }
     // Fifo
     LOG("[Fifo]\n");
-    double v = dvec2.Fifo(5);
+    double v = dvec2.FifoIn(5);
     CHECK_VALUE(v, 2);
     for (int i = 0; i < dvec2.GetLength(); ++i)
     {
