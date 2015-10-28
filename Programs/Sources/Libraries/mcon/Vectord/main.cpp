@@ -310,8 +310,10 @@ double GetDotProduct(const double* _this, const double* ptr, int length)
     return accs[0] + accs[1] + accs[2] + accs[3];
 }
 
+
 int main(void)
 {
+#if 0
     // dot
     {
         const int len = 16;
@@ -583,6 +585,7 @@ int main(void)
         }
     }
     return 0;
+#endif
 
     test_vectord_api();
 

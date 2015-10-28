@@ -26,6 +26,8 @@
 #include <string.h>
 #include <math.h>
 
+#undef DEBUG
+
 #include "debug.h"
 #include "Vectord.h"
 
@@ -144,15 +146,14 @@ Vectord& Vectord::operator=(double v)
     double* const ptr = (*this);
     double* pEr = ptr;
     ASSERT_ALIGNED(ptr, g_Alignment);
-    *pEr = v;
-    const __m256d vv = _mm256_broadcast_sd(pEr);
+    const __m256d vv = _mm256_set_pd(v, v, v, v);
     const int length = GetLength();
     const int units = (length / unit) * unit;
     for ( ; pEr < ptr + units ; pEr += unit )
     {
         _mm256_store_pd(pEr, vv);
     }
-    for ( ; pEr < ptr + length; )
+    for ( ; pEr < ptr + length; ++pEr )
     {
         *pEr = v;
     }
@@ -175,22 +176,22 @@ Vectord& Vectord::operator+=(double v)
 #if 0
     MCON_ITERATION(i, m_Length, (*this)[i] += v);
 #else
-    double* ptr = (*this);
-    ASSERT_ALIGNED(ptr, g_Alignment);
-    const double ALIGN(32) _v[1] = {v};
-    ASSERT_ALIGNED(_v, g_Alignment);
-    const __m256d y = _mm256_broadcast_sd(_v);
+    double* const pBase = *this;
+    ASSERT_ALIGNED(pBase, g_Alignment);
+    double* pEr = pBase;
+    const int unit = 4;
     const int length = GetLength();
-    int done = 0;
-    for ( ; done < (length/4) * 4; done += 4, ptr += 4 )
+    const int units = (length / unit) * unit;
+    const __m256d vv = _mm256_set_pd(v, v, v, v);
+    for ( ; pEr < pBase + units; pEr += unit )
     {
-        __m256d x = _mm256_load_pd(ptr);
-        x = _mm256_add_pd(x, y);
-        _mm256_store_pd(ptr, x);
+        __m256d x = _mm256_load_pd(pEr);
+        x = _mm256_add_pd(x, vv);
+        _mm256_store_pd(pEr, x);
     }
-    for ( int i = done; i < length; ++i )
+    for ( ; pEr < pBase + length; ++pEr )
     {
-        (*this)[i] += v;
+        *pEr += v;
     }
 #endif
     return *this;
@@ -202,22 +203,22 @@ Vectord& Vectord::operator*=(double v)
 #if 0
     MCON_ITERATION(i, m_Length, (*this)[i] *= v);
 #else
-    double* ptr = m_AddressAligned;
-    ASSERT_ALIGNED(ptr, g_Alignment);
-    const double ALIGN(32) _v[1] = {v};
-    ASSERT_ALIGNED(_v, g_Alignment);
-    const __m256d y = _mm256_broadcast_sd(_v);
+    double* const pBase = *this;
+    ASSERT_ALIGNED(pBase, g_Alignment);
+    double* pEr = pBase;
+    const int unit = 4;
     const int length = GetLength();
-    int done = 0;
-    for ( ; done < (length/4) * 4; done += 4, ptr += 4 )
+    const int units = (length / unit) * unit;
+    const __m256d vv = _mm256_set_pd(v, v, v, v);
+    for ( ; pEr < pBase + units; pEr += unit )
     {
-        __m256d x = _mm256_load_pd(ptr);
-        x = _mm256_mul_pd(x, y);
-        _mm256_store_pd(ptr, x);
+        __m256d x = _mm256_load_pd(pEr);
+        x = _mm256_mul_pd(x, vv);
+        _mm256_store_pd(pEr, x);
     }
-    for ( int i = done; i < length; ++i )
+    for ( ; pEr < pBase + length; ++pEr )
     {
-        (*this)[i] += v;
+        *pEr *= v;
     }
 #endif
     return *this;

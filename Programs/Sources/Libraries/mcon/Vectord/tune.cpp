@@ -1,6 +1,6 @@
 #include "BenchUtil.h"
 
-static void benchmark_vector_api(void)
+static void benchmark_vectord_api(void)
 {
     printf("[Vector] START Benchmark\n");
     static const int length = 4*1024*1024;
