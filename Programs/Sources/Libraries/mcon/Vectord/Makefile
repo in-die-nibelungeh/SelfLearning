@@ -1,7 +1,7 @@
 BIN=mcon_vectord.exe
 
-MODULE_HEADER=Vectord.h
-MODULE_SRC=Vectord.cpp
+MODULE_HEADER=VectordBase.h Vectord.h
+MODULE_SRC=VectordBase.cpp Vectord.cpp
 
 INC=$(MODULE_HEADER) test.cpp tune.cpp
 INCDIRS += ../Vector
