@@ -329,22 +329,45 @@ static void test_vectord_api(void)
     }
     LOG("* [GetSum/Average/GetNorm]\n");
     {
-        const int length = 10;
-        mcon::Vectord v(length);
-        for (int i = 0; i < length; ++i)
+        const int lens[] = {1, 2, 3, 4, 5, 7, 8, 9, 31, 32, 33, 63, 64, 65};
+        for ( unsigned int i = 0; i < sizeof(lens)/sizeof(int); ++i )
         {
-            v[i] = i + 1;
+            const int n = lens[i];
+            LOG("    Lenght=%d:\n", n);
+            mcon::Vectord v(n);
+            double sum = 0;
+            double norm = 0;
+            for ( int k = 0; k < n; ++k )
+            {
+                v[k] = k + 1 - n/4;
+                sum += v[k];
+                norm += v[k]*v[k];
+            }
+            double ave = sum / n;
+            norm = sqrt(norm);
+            CHECK_VALUE(sum , v.GetSum());
+            CHECK_VALUE(ave , v.GetAverage());
+            CHECK_VALUE(norm, v.GetNorm());
         }
-        const double sum = v.GetSum();
-        const double ave = v.GetAverage();
-        UNUSED(sum);
-        UNUSED(ave);
-        CHECK_VALUE(sum, 55);
-        CHECK_VALUE(ave, 5.5);
-        v[length - 1] = 2;
-        const double norm = v.GetNorm();
-        UNUSED(norm);
-        CHECK_VALUE(norm, 17);
+    }
+    LOG("* [Dot]\n");
+    {
+        const int lens[] = {1, 2, 3, 4, 5, 7, 8, 9, 31, 32, 33, 63, 64, 65};
+        for ( unsigned int i = 0; i < sizeof(lens)/sizeof(int); ++i )
+        {
+            const int n = lens[i];
+            LOG("    Lenght=%d:\n", n);
+            mcon::Vectord v(n);
+            mcon::Vectord w(n);
+            double dot = 0;
+            for ( int k = 0; k < n; ++k )
+            {
+                v[k] = k + 1 - n/4;
+                w[k] = 3*n/4 - k - 1;
+                dot += v[k]*w[k];
+            }
+            CHECK_VALUE(dot, v.GetDotProduct(w));
+        }
     }
     LOG("END\n");
 }
