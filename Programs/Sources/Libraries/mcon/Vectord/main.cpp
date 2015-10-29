@@ -5,7 +5,8 @@
 
 #include "Vectord.h"
 
-#include "test_VectordBase.cpp"
+extern void test_VectordBase(void);
+extern void test_Vectord(void);
 
 //#include "tune.cpp"
 
@@ -589,6 +590,7 @@ int main(void)
 #endif
 
     test_VectordBase();
+    test_Vectord();
 
     return 0;
 }

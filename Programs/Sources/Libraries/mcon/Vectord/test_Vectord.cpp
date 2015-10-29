@@ -1,5 +1,6 @@
 
 #include "debug.h"
+#include "Vectord.h"
 
 static double _fabs(double v)
 {
@@ -20,7 +21,7 @@ void ShowVectord(const mcon::Vectord& v)
     printf("\n");
 }
 
-static void test_vectord_api(void)
+void test_Vectord(void)
 {
     LOG("* [Empty Vector]\n");
     mcon::Vectord dvec;
@@ -137,7 +138,6 @@ static void test_vectord_api(void)
     {
         CHECK_VALUE(dvec[i], 10);
     }
-    LOG("* [Cast]\n");
     LOG("* [Carve-out]\n");
     for (int i = 0; i < dvec.GetLength(); ++i)
     {
@@ -178,8 +178,6 @@ static void test_vectord_api(void)
         CHECK_VALUE(dvec2[i], i+2);
     }
 
-    LOG("* [Cast]\n");
-    CHECK_VALUE( static_cast<double>(dvec), dvec[0] );
     // Maximum/Minimum
     LOG("* [GetMaximum]\n");
     {

@@ -165,8 +165,7 @@ public:
     }
 
 private:
-    // Not significant in VectordBase,
-    // but not in Vectord.
+    // A special interface for Vectord, which allow m_AddressAligned to be NULL.
     explicit VectordBase(int length = 0)
         : m_AddressAligned(NULL)
         , m_Length(length)
