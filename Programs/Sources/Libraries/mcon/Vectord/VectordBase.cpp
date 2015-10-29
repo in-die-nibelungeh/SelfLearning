@@ -76,10 +76,6 @@ double VectordBase::PushFromFront(double v)
 
 VectordBase& VectordBase::operator=(double v)
 {
-    if (IsNull())
-    {
-        return *this;
-    }
     const int unit = 4;
     double* const ptr = (*this);
     double* pEr = ptr;

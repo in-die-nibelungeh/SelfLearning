@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "Vector.h"
 #include "debug.h"
+#include "Vector.h"
 
 namespace mcon {
 
@@ -38,13 +38,8 @@ public:
         : m_AddressAligned(addressAligned)
         , m_Length(length)
     {
-#ifdef DEBUG
-        if ( (reinterpret_cast<int>(addressAligned) % g_Alignment) != 0 )
-        {
-            printf("%s: Not aligned at %d (%p)\n", __func__, g_Alignment, addressAligned);
-        }
-#endif
-        //ASSERT_ALIGNED(addressAligned, g_Alignment);
+        ASSERT( addressAligned != NULL );
+        ASSERT_ALIGNED(addressAligned, g_Alignment);
     }
     ~VectordBase()
     {
@@ -159,10 +154,6 @@ public:
     inline double Unshift(double v)
     {
         return PushFromFront(v);
-    }
-    inline bool IsNull(void) const
-    {
-        return m_AddressAligned == NULL;
     }
     inline double Dot(VectordBase& v) const
     {

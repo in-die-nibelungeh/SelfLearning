@@ -26,10 +26,11 @@ void test_VectordBase(void)
     const int length = 6;
     double __attribute((aligned(32))) area[128];
     mcon::VectordBase dvec(area, length);
-    CHECK_VALUE(dvec.GetLength(), length);
-    // IsNull() is false.
-    CHECK_VALUE(dvec.IsNull(), false);
 
+    LOG("* [GetLength]\n");
+    CHECK_VALUE(dvec.GetLength(), length);
+
+    LOG("* [operator[]]\n");
     for (int i = 0; i < length; ++i)
     {
         dvec[i] = i;
