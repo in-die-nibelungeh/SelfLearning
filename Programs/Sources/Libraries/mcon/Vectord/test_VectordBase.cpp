@@ -1,5 +1,6 @@
 
 #include "debug.h"
+#include "VectordBase.h"
 
 static double _fabs(double v)
 {
@@ -20,16 +21,8 @@ void ShowVectordBase(const mcon::VectordBase& v)
     printf("\n");
 }
 
-static void test_VectordBase(void)
+void test_VectordBase(void)
 {
-    LOG("* [Empty Vector]\n");
-    mcon::VectordBase evec;
-
-    // Zero length
-    CHECK_VALUE(evec.GetLength(), 0);
-    // IsNull() is true.
-    CHECK_VALUE(evec.IsNull(), true);
-
     const int length = 6;
     double __attribute((aligned(32))) area[128];
     mcon::VectordBase dvec(area, length);

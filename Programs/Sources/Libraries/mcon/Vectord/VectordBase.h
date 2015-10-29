@@ -34,11 +34,6 @@ class VectordBase
     friend class Vectord;
 public:
 
-    explicit VectordBase(int length = 0)
-        : m_AddressAligned(NULL)
-        , m_Length(length)
-    {}
-
     VectordBase(double* addressAligned, int length)
         : m_AddressAligned(addressAligned)
         , m_Length(length)
@@ -179,6 +174,13 @@ public:
     }
 
 private:
+    // Not significant in VectordBase,
+    // but not in Vectord.
+    explicit VectordBase(int length = 0)
+        : m_AddressAligned(NULL)
+        , m_Length(length)
+    {}
+
     // Forbidden to be called.
     VectordBase& operator=(const VectordBase& v) { return *this; }
     // Private member functions.
