@@ -56,6 +56,7 @@ endif
 
 MODULE_OBJ := \
 	$(MODULE_SRC:.cpp=.o) \
+	$(SRC:.cpp=.o) \
 #	$(MODULE_SRC:.c=.o)   \
 #	$(MODULE_SRC:.s=.o)   \
 #	$(MODULE_SRC:.S=.o)
