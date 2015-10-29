@@ -3,7 +3,7 @@ BIN=mcon_vectord.exe
 MODULE_HEADER=VectordBase.h Vectord.h
 MODULE_SRC=VectordBase.cpp Vectord.cpp
 
-INC=$(MODULE_HEADER) test.cpp tune.cpp
+INC=$(MODULE_HEADER) test_VectordBase.cpp tune.cpp
 INCDIRS += ../Vector
 
 LIBS=-lutl

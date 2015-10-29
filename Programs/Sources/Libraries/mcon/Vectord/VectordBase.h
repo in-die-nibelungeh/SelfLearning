@@ -37,14 +37,19 @@ public:
     explicit VectordBase(int length = 0)
         : m_AddressAligned(NULL)
         , m_Length(length)
-    {
-    }
+    {}
 
     VectordBase(double* addressAligned, int length)
         : m_AddressAligned(addressAligned)
         , m_Length(length)
     {
-        ASSERT_ALIGNED(addressAligned, g_Alignment);
+#ifdef DEBUG
+        if ( (reinterpret_cast<int>(addressAligned) % g_Alignment) != 0 )
+        {
+            printf("%s: Not aligned at %d (%p)\n", __func__, g_Alignment, addressAligned);
+        }
+#endif
+        //ASSERT_ALIGNED(addressAligned, g_Alignment);
     }
     ~VectordBase()
     {
@@ -174,6 +179,8 @@ public:
     }
 
 private:
+    // Forbidden to be called.
+    VectordBase& operator=(const VectordBase& v) { return *this; }
     // Private member functions.
     inline int Smaller(int input)      const { return m_Length < input ? m_Length : input; }
     inline int Larger(int input)       const { return m_Length < input ? input : m_Length ; }
