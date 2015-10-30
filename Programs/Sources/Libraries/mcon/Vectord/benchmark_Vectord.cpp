@@ -162,15 +162,15 @@ void benchmark_Vectord(void)
         "GetNorm",
         "GetDotProduct"
     };
-    printf("%20s,", "");
+    printf("Samples");
     for ( unsigned int k = 0; k < numPatterns; ++k )
     {
-        printf("Samples,%d", samples[k]);
+        printf(",%d", samples[k]);
     }
     printf("\n");
     for ( int id = 0; id < NUM_IDS; ++id )
     {
-        printf("%20s", testNames[id]);
+        printf("%s", testNames[id]);
         for ( unsigned int k = 0; k < numPatterns; ++k )
         {
             printf(",%g", scores[id][k]);
