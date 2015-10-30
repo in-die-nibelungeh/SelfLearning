@@ -2,15 +2,7 @@
 
 #include "Stopwatch.h"
 
-#if 0
-#include <chrono>
-
-static void tst(void)
-{
-    auto start = std::chrono::system_clock::now();
-    auto end = std::chrono::system_clock::now();
-}
-#endif
+double g_Value = 0.0;
 
 static void test_stopwatch(void)
 {
@@ -21,7 +13,7 @@ static void test_stopwatch(void)
         d += i;
     }
     printf("Time consumed: %g\n", sw.Tick());
-    printf("ans=%f\n", d);
+    g_Value = d;
 }
 
 int main(void)

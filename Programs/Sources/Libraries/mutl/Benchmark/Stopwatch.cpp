@@ -1,33 +1,67 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+#include <math.h>
+
 #include "Stopwatch.h"
+
+namespace {
+    inline unsigned long long rdtsc()
+    {
+        unsigned long long ret;
+        __asm__ volatile ("rdtsc" : "=A" (ret));
+        return ret;
+    }
+} // anonymous
 
 namespace mutl {
 
 Stopwatch::Stopwatch()
-  : m_Last(0.0)
-{
-    gettimeofday(&m_Tv, NULL);
-}
+    : m_LastScore(0)
+    , m_Base(rdtsc())
+{}
 
 Stopwatch::~Stopwatch() {}
 
 double Stopwatch::Tick(void)
 {
-    struct timeval ts;
+    unsigned long long int end = rdtsc();
 
-    gettimeofday(&ts, NULL);
+    m_LastScore = end - m_Base;
+    if (end <= m_Base)
+    {
+        m_LastScore += pow(2, 64);
+    }
 
-    m_Last =
-        (ts.tv_sec - m_Tv.tv_sec) +
-        (ts.tv_usec - m_Tv.tv_usec) / 1.0e+6;
+    m_Base = end;
 
-    m_Tv = ts;
-
-    return m_Last;
+    return m_LastScore;
 }
 
-double Stopwatch::GetRecord(void) const
+double Stopwatch::GetLastRecord(void) const
 {
-   return m_Last;
+   return m_LastScore;
 }
 
 } // namespace mutl {

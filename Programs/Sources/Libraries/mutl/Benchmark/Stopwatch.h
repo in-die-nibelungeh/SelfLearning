@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include <sys/time.h>
-
 namespace mutl {
 
 class Stopwatch
@@ -34,10 +32,14 @@ public:
     Stopwatch();
     ~Stopwatch();
     double Tick(void);
-    double GetRecord(void) const;
+    double GetLastRecord(void) const;
+    inline double Push()
+    {
+        return Tick();
+    }
 private:
-    double m_Last;
-    struct timeval m_Tv;
+    double m_LastScore;
+    unsigned long long int m_Base;
 };
 
 } // namespace mutl {
