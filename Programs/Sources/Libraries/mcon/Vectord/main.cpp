@@ -7,6 +7,7 @@
 
 extern void test_VectordBase(void);
 extern void test_Vectord(void);
+extern void benchmark_Vectord();
 
 //#include "tune.cpp"
 
@@ -588,9 +589,9 @@ int main(void)
     }
     return 0;
 #endif
-
     test_VectordBase();
     test_Vectord();
+    benchmark_Vectord();
 
     return 0;
 }
