@@ -239,6 +239,12 @@ public:
         MCON_ITERATION( i, GetLength(), squareSum += (*this)[i] * (*this)[i]);
         return sqrt(squareSum);
     }
+    inline double GetDotProduct(Vector<Type>& v) const
+    {
+        double dot = 0;
+        MCON_ITERATION( i, GetLength(), dot += (*this)[i] * v[i]);
+        return dot;
+    }
 
     int GetLength(void) const { return m_Length; }
     bool IsNull(void) const { return m_Length == 0; }
