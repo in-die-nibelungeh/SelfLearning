@@ -25,6 +25,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <assert.h>
 
 #define TOSTR(n) TOSTR_(n)
 #define TOSTR_(n) #n
@@ -50,16 +51,27 @@
     do { if (!(c)) \
     {         \
         printf("ASSERT at %d in %s: " #c "\n", __LINE__, __FILE__); \
-        *((int*)0) = 0; \
+        assert(c); \
     } } while (0)
 
 #endif // #ifndef ASSERT
+
+#ifndef ASSERT_ALIGNED
+#define ASSERT_ALIGNED(p, n) \
+    do { if (!( (reinterpret_cast<int>(p) % (n)) == 0 )) \
+    {         \
+        printf("ASSERT (aligned) at %d in %s: " #p " %% " #n "(%p/%x)=%x\n", __LINE__, __FILE__, p, n, reinterpret_cast<int>(p) % (n)); \
+        assert((reinterpret_cast<int>(p) % (n)) == 0); \
+    } } while (0)
+
+#endif // #ifndef ASSERT_ALIGNED
 
 #else  // #if defined(DEBUG)
 
 #define DEBUG_LOG(...)
 #define CHECK(cond)
 #define ASSERT(c)
+#define ASSERT_ALIGNED(p, n)
 
 #endif // #if defined(DEBUG)
 
@@ -67,7 +79,7 @@
 #define ERROR_LOG(...) fprintf(stderr, "[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
 
 #define CHECK_VALUE(var, ans)  \
-    LOG("[%s] " #var"=%g (ans=%g)\n", \
-        (var)==(ans) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
+    LOG("    [%s] " #var"=%g (correct=%g)\n", \
+        static_cast<double>(((var)-(ans))*((var)-(ans))) < (1.e-12) ? "OK" : "NG", static_cast<double>(var), static_cast<double>(ans))
 
 #define UNUSED(v) (void)(v)
