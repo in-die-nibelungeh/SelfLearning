@@ -4,6 +4,8 @@ NOECHO ?= @
 OUTPUT_DIR ?= .
 OBJECT_DIR ?= .
 
+TOOLCHAIN_PREFIX ?= mingw32-
+
 ifndef MY_AUDIO_ROOT
 $(error Define MY_AUDIO_ROOT)
 endif
