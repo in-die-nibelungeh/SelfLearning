@@ -1,16 +1,20 @@
 BIN=mcon_matrixd.exe
 
 MODULE_HEADER=Matrixd.h
-MODULE_SRC=
+MODULE_SRC=Matrixd.cpp
 
-INC=$(MODULE_HEADER) test.cpp
+INC=$(MODULE_HEADER)
+SRC=test_Matrixd.cpp ../Vectord/Vectord.cpp ../Vectord/VectordBase.cpp
 
 INCDIRS += \
+	../Vector  \
 	../Vectord \
 
-LIBS=-lwg -lutl
+LIBS=-lutl
 
-CPPFLAGS += -O3
+CPPFLAGS += \
+	-O3 \
+	-mavx \
 
 WARNINGS +=  \
 	-Werror \

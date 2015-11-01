@@ -18,7 +18,7 @@ void DumpMatrix(mcon::Matrixd&m, const char* fmt = NULL)
     }
 }
 
-#include "test.cpp"
+extern void test_Matrixd(void);
 
 static void test_matrix_determinant(void)
 {
@@ -158,7 +158,7 @@ int main(void)
     test_transpose();
     test_matrix_multiply();
     test_matrix_determinant();
-    test_matrix_api();
+    test_Matrixd();
     test_matrix_inverse();
 
     return 0;
