@@ -20,7 +20,7 @@ void DumpMatrix(mcon::Matrixd&m, const char* fmt = NULL)
 
 extern void test_Matrixd(void);
 
-static void test_matrix_determinant(void)
+void test_matrix_determinant(void)
 {
     int numArray = 4;
     int numData= 4;
@@ -46,7 +46,7 @@ static void test_matrix_determinant(void)
     CHECK_VALUE(mat1.Determinant(), 1);
 }
 
-static void test_matrix_inverse(void)
+void test_matrix_inverse(void)
 {
     int numArray = 4;
     int numData= 4;
@@ -98,7 +98,7 @@ static void test_matrix_inverse(void)
 
 }
 
-static void test_matrix_multiply(void)
+void test_matrix_multiply(void)
 {
     int numArray = 3;
     int numData= 4;
@@ -125,7 +125,7 @@ static void test_matrix_multiply(void)
     DumpMatrix(mat3, "%f");
 }
 
-static void test_transpose(void)
+void test_transpose(void)
 {
     int numArray = 3, numData= 5;
     mcon::Matrixd mat(numArray, numData);
@@ -155,11 +155,11 @@ static void test_transpose(void)
 
 int main(void)
 {
-    test_transpose();
-    test_matrix_multiply();
-    test_matrix_determinant();
+    //test_transpose();
+    //test_matrix_multiply();
+    //test_matrix_determinant();
     test_Matrixd();
-    test_matrix_inverse();
+    //test_matrix_inverse();
 
     return 0;
 }

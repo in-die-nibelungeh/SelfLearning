@@ -43,10 +43,41 @@ namespace mcon {
 class Matrixd
 {
 public:
-    Matrixd(int rowLength = 0, int columnLength = 0);
-    Matrixd(const Matrixd& m);
+    Matrixd(int rowLength = 0, int columnLength = 0)
+        : m_RowLength(rowLength)
+        , m_ColumnLength(columnLength)
+        , m_Address(NULL)
+    {
+        ASSERT( (rowLength == 0 && columnLength == 0) || (rowLength != 0 && columnLength != 0));
+        Allocate();
+    }
+
+    Matrixd(const Matrixd& m)
+        : m_RowLength(m.GetRowLength())
+        , m_ColumnLength(m.GetColumnLength())
+        , m_Address(NULL)
+    {
+        Allocate();
+        VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
+        for (int i = 0; i < GetRowLength(); ++i, ++ptr)
+        {
+            *ptr = m[i];
+        }
+    }
+
     template <typename U>
-    Matrixd(const Matrix<U>& m);
+    Matrixd(const Matrix<U>& m)
+        : m_RowLength(m.GetRowLength())
+        , m_ColumnLength(m.GetColumnLength())
+        , m_Address(NULL)
+    {
+        Allocate();
+        VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
+        for (int i = 0; i < GetRowLength(); ++i, ++ptr)
+        {
+            *ptr = m[i];
+        }
+    }
 
     ~Matrixd();
 
@@ -62,32 +93,27 @@ public:
         return *(reinterpret_cast<VectordBase*>(m_Address) + i);
     }
 
-    Matrixd& operator=(const Matrixd& m);
-
     const Matrixd operator+(double v) const;
     const Matrixd operator-(double v) const;
     const Matrixd operator*(double v) const;
     const Matrixd operator/(double v) const;
-
-    const Matrixd operator+(const Matrixd& m) const;
-    const Matrixd operator-(const Matrixd& m) const;
-    const Matrixd operator*(const Matrixd& m) const;
-    const Matrixd operator/(const Matrixd& m) const;
 
     Matrixd& operator+=(double v);
     Matrixd& operator-=(double v);
     Matrixd& operator*=(double v);
     Matrixd& operator/=(double v);
 
+    Matrixd& operator=(const Matrixd& m);
+
+    const Matrixd operator+(const Matrixd& m) const;
+    const Matrixd operator-(const Matrixd& m) const;
+    const Matrixd operator*(const Matrixd& m) const;
+    const Matrixd operator/(const Matrixd& m) const;
+
     Matrixd& operator+=(const Matrixd& m);
     Matrixd& operator-=(const Matrixd& m);
     Matrixd& operator*=(const Matrixd& m);
     Matrixd& operator/=(const Matrixd& m);
-
-    inline Matrixd T(void) const { return Transpose(); }
-    inline Matrixd I(void) const { return Inverse(); }
-    double D(void) const { return Determinant(); }
-    inline static Matrixd E(int size) { return Identify(size); }
 
     Matrixd Transpose(void) const;
     Matrixd Multiply(const Matrixd& m) const;
@@ -96,11 +122,21 @@ public:
     Matrixd GetCofactorMatrix(int row, int col) const;
     double GetCofactor(int row, int col) const;
 
-    static Matrixd Identify(int size);
-    bool IsNull(void) const { return m_RowLength == 0; }
-    int GetRowLength(void) const { return m_RowLength; }
-    int GetColumnLength(void) const { return m_ColumnLength; }
     bool Resize(int, int);
+
+    static Matrixd Identify(int size);
+
+    // Inline functions.
+    inline bool IsNull(void) const { return m_Address == NULL; }
+    inline int GetRowLength(void) const { return m_RowLength; }
+    inline int GetColumnLength(void) const { return m_ColumnLength; }
+
+    // Aliases
+    inline Matrixd T(void) const { return Transpose(); }
+    inline Matrixd I(void) const { return Inverse(); }
+    inline double  D(void) const { return Determinant(); }
+    inline static Matrixd E(int size) { return Identify(size); }
+
 private:
     // Member functions (private).
     void Allocate      (void);
@@ -111,19 +147,5 @@ private:
     int m_ColumnLength;
     uint8_t* m_Address;
 };
-
-template <typename U>
-Matrixd::Matrixd(const Matrix<U>& m)
-    : m_RowLength(m.GetRowLength())
-    , m_ColumnLength(m.GetColumnLength())
-    , m_Address(NULL)
-{
-    Allocate();
-    VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
-    for (int i = 0; i < GetRowLength(); ++i, ++ptr)
-    {
-        *ptr = m[i];
-    }
-}
 
 } // namespace mcon {

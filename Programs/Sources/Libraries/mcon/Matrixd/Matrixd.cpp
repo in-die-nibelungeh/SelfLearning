@@ -98,29 +98,6 @@ void Matrixd::Allocate(void)
     }
 }
 
-
-
-Matrixd::Matrixd(int rowLength, int columnLength)
-    : m_RowLength(rowLength)
-    , m_ColumnLength(columnLength)
-    , m_Address(NULL)
-{
-    Allocate();
-}
-
-Matrixd::Matrixd(const Matrixd& m)
-    : m_RowLength(m.GetRowLength())
-    , m_ColumnLength(m.GetColumnLength())
-    , m_Address(NULL)
-{
-    Allocate();
-    VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
-    for (int i = 0; i < GetRowLength(); ++i, ++ptr)
-    {
-        *ptr = m[i];
-    }
-}
-
 Matrixd::~Matrixd()
 {
     if (m_Address != NULL)
