@@ -56,6 +56,16 @@ public:
         memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
     }
 
+    Vectord(const VectordBase& v)
+        : VectordBase(v.GetLength())
+        , m_AddressBase(NULL)
+    {
+        bool status = Allocate();
+        UNUSED(status);
+        ASSERT(status == true);
+        memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
+    }
+
     template <typename U> Vectord(const Vector<U>& v)
         : VectordBase(v.GetLength())
         , m_AddressBase(NULL)

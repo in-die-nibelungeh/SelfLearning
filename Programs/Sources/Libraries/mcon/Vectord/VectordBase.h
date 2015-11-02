@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <string.h>
+
 #include "debug.h"
 #include "Vector.h"
 
@@ -32,14 +34,15 @@ namespace mcon {
 class VectordBase
 {
     friend class Vectord;
+    friend class Matrixd;
 public:
 
-    VectordBase(double* addressAligned, int length)
-        : m_AddressAligned(addressAligned)
+    VectordBase(void* addressAligned, int length)
+        : m_AddressAligned(reinterpret_cast<double*>(addressAligned))
         , m_Length(length)
     {
         ASSERT( addressAligned != NULL );
-        ASSERT_ALIGNED(addressAligned, g_Alignment);
+        ASSERT_ALIGNED( addressAligned, g_Alignment );
     }
     ~VectordBase()
     {
@@ -172,7 +175,12 @@ private:
     {}
 
     // Forbidden to be called.
-    VectordBase& operator=(const VectordBase& v) { return *this; }
+    VectordBase& operator=(const VectordBase& v)
+    {
+        ASSERT(v.GetLength() == GetLength());
+        memcpy(*this, v, GetLength() * sizeof(double));
+        return *this;
+    }
     // Private member functions.
     inline int Smaller(int input)      const { return m_Length < input ? m_Length : input; }
     inline int Larger(int input)       const { return m_Length < input ? input : m_Length ; }
