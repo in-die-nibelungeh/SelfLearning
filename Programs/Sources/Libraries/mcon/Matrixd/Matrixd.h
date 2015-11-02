@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include <new>
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -47,17 +46,23 @@ public:
         : m_RowLength(rowLength)
         , m_ColumnLength(columnLength)
         , m_Address(NULL)
+        , m_BufferBase(NULL)
     {
         ASSERT( (rowLength == 0 && columnLength == 0) || (rowLength != 0 && columnLength != 0));
-        Allocate();
+        bool status = Allocate();
+        UNUSED(status);
+        ASSERT(true == status);
     }
 
     Matrixd(const Matrixd& m)
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
+        , m_BufferBase(NULL)
     {
-        Allocate();
+        bool status = Allocate();
+        UNUSED(status);
+        ASSERT(true == status);
         VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
         for (int i = 0; i < GetRowLength(); ++i, ++ptr)
         {
@@ -70,8 +75,11 @@ public:
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
+        , m_BufferBase(NULL)
     {
-        Allocate();
+        bool status = Allocate();
+        UNUSED(status);
+        ASSERT(true == status);
         VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
         for (int i = 0; i < GetRowLength(); ++i, ++ptr)
         {
@@ -139,13 +147,14 @@ public:
 
 private:
     // Member functions (private).
-    void Allocate      (void);
+    bool Allocate(void);
     int Smaller(int length) const { return (length > m_RowLength) ? m_RowLength : length; };
 
     // Member variables (private).
     int m_RowLength;
     int m_ColumnLength;
     uint8_t* m_Address;
+    double* m_BufferBase;
 };
 
 } // namespace mcon {

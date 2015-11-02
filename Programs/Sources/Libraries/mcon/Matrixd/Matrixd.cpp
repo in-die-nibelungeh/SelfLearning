@@ -70,32 +70,36 @@ Matrixd Matrixd::Identify(int size)
     return I;
 }
 
-void Matrixd::Allocate(void)
+bool Matrixd::Allocate(void)
 {
     const int align = 32;
     const unsigned int unit = align / sizeof(double);
-    int amari = m_ColumnLength % unit;
 
+    if ( m_RowLength == 0 )
+    {
+        return true;
+    }
+    const int lengthAligned = m_ColumnLength + m_ColumnLength % unit;
     int size = m_RowLength * sizeof(VectordBase)
                    + (align - 1)
-                   + (m_ColumnLength + amari) *  sizeof(double);
-
+                   + lengthAligned * m_RowLength * sizeof(double);
     m_Address = new uint8_t[size];
-    ASSERT(m_Address != NULL);
-
-    const int length = m_ColumnLength + m_ColumnLength % unit;
-    uint8_t* ptr = reinterpret_cast<uint8_t*>(m_Address);
-    uint8_t* bufferBase = ptr + sizeof(VectordBase);
+    if (m_Address == NULL)
+    {
+        return false;
+    }
+    uint8_t* structBase = m_Address;
+    uint8_t* bufferBase = structBase + sizeof(VectordBase) * m_RowLength;
     while ( (reinterpret_cast<int>(bufferBase) % align) != 0 )
     {
         ++bufferBase;
     }
-    double* base = reinterpret_cast<double*>(bufferBase);
-    for ( int k = 0; k < m_RowLength; ++k, ptr += sizeof(VectordBase), base += length )
+    m_BufferBase = reinterpret_cast<double*>(bufferBase);
+    for ( int k = 0; k < m_RowLength; ++k, structBase += sizeof(VectordBase))
     {
-        new (ptr) VectordBase(base, length);
-
+        new (structBase) VectordBase(m_BufferBase + lengthAligned * k, m_ColumnLength);
     }
+    return true;
 }
 
 Matrixd::~Matrixd()
@@ -104,6 +108,7 @@ Matrixd::~Matrixd()
     {
         delete[] m_Address;
         m_Address = NULL;
+        m_BufferBase = NULL;
     }
     m_RowLength = 0;
     m_ColumnLength = 0;

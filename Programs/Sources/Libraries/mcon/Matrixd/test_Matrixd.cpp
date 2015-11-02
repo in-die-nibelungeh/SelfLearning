@@ -17,7 +17,7 @@ void test_Matrixd(void)
         const int row = 5;
         const int col = 6;
         mcon::Matrixd m(row, col);
-        CHECK_VALUE(m.IsNull(), true);
+        CHECK_VALUE(m.IsNull(), false);
         CHECK_VALUE(m.GetRowLength(), row);
         CHECK_VALUE(m.GetColumnLength(), col);
         for ( int i = 0; i < row; ++i )

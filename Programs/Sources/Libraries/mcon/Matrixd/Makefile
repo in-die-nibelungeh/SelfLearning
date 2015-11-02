@@ -3,7 +3,7 @@ BIN=mcon_matrixd.exe
 MODULE_HEADER=Matrixd.h
 MODULE_SRC=Matrixd.cpp
 
-INC=$(MODULE_HEADER)
+INC=$(MODULE_HEADER) ../Vectord/Vectord.h ../Vectord/VectordBase.h
 SRC=test_Matrixd.cpp ../Vectord/Vectord.cpp ../Vectord/VectordBase.cpp
 
 INCDIRS += \
