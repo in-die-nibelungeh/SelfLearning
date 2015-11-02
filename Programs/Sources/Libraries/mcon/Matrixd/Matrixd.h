@@ -46,7 +46,7 @@ public:
         : m_RowLength(rowLength)
         , m_ColumnLength(columnLength)
         , m_Address(NULL)
-        , m_BufferBase(NULL)
+        , m_ObjectBase(NULL)
     {
         ASSERT( (rowLength == 0 && columnLength == 0) || (rowLength != 0 && columnLength != 0));
         bool status = Allocate();
@@ -58,12 +58,12 @@ public:
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
-        , m_BufferBase(NULL)
+        , m_ObjectBase(NULL)
     {
         bool status = Allocate();
         UNUSED(status);
         ASSERT(true == status);
-        VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
+        VectordBase* ptr = m_ObjectBase;
         for (int i = 0; i < GetRowLength(); ++i, ++ptr)
         {
             *ptr = m[i];
@@ -75,12 +75,12 @@ public:
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
-        , m_BufferBase(NULL)
+        , m_ObjectBase(NULL)
     {
         bool status = Allocate();
         UNUSED(status);
         ASSERT(true == status);
-        VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
+        VectordBase* ptr = m_ObjectBase;
         for (int i = 0; i < GetRowLength(); ++i, ++ptr)
         {
             *ptr = m[i];
@@ -92,13 +92,13 @@ public:
     const VectordBase& operator[](int i) const
     {
         ASSERT(0 <= i && i < m_RowLength);
-        return *(reinterpret_cast<VectordBase*>(m_Address) + i);
+        return *(m_ObjectBase + i);
     }
 
     VectordBase& operator[](int i)
     {
         ASSERT(0 <= i && i < m_RowLength);
-        return *(reinterpret_cast<VectordBase*>(m_Address) + i);
+        return *(m_ObjectBase + i);
     }
 
     const Matrixd operator+(double v) const;
@@ -150,11 +150,12 @@ private:
     bool Allocate(void);
     int Smaller(int length) const { return (length > m_RowLength) ? m_RowLength : length; };
 
+    static const int g_Alignment = 32;
     // Member variables (private).
     int m_RowLength;
     int m_ColumnLength;
-    uint8_t* m_Address;
-    double* m_BufferBase;
+    void* m_Address;
+    VectordBase* m_ObjectBase;
 };
 
 } // namespace mcon {
