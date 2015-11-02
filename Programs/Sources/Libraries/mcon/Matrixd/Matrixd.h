@@ -24,9 +24,6 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <sys/types.h>
-
 #include "debug.h"
 #include "VectordBase.h"
 

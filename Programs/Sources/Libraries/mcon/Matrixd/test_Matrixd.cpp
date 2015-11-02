@@ -1,6 +1,4 @@
 
-#include "VectordBase.h"
-#include "Vectord.h"
 #include "Matrixd.h"
 
 void test_Matrixd(void)
@@ -298,10 +296,10 @@ void test_Matrixd(void)
         }
     }
 
-    LOG("* [Determinant]\n");
     {
-        int numArray = 4;
-        int numData= 4;
+        LOG("* [Determinant]\n");
+        const int numArray = 4;
+        const int numData= 4;
         mcon::Matrixd m1(numArray, numData);
         m1[0][0] = 2;
         m1[0][1] = -2;
@@ -322,10 +320,10 @@ void test_Matrixd(void)
         CHECK_VALUE(m1.D(), 120);
     }
 
-    LOG("* [Inverse]\n");
     {
-        int numArray = 4;
-        int numData= 4;
+        LOG("* [Inverse]\n");
+        const int numArray = 4;
+        const int numData= 4;
         mcon::Matrixd m1(numArray, numData);
         m1[0][0] = 3;
         m1[0][1] = 2;
@@ -343,8 +341,8 @@ void test_Matrixd(void)
         m1[3][1] = 0;
         m1[3][2] = 2;
         m1[3][3] = 1;
-        mcon::Matrixd m2(m1.Inverse());
-        mcon::Matrixd m3(m1.Multiply(m2));
+        const mcon::Matrixd m2(m1.Inverse());
+        const mcon::Matrixd m3(m1.Multiply(m2));
         for ( int i = 0; i < numArray; ++i )
         {
             for ( int k = 0; k < numArray; ++k )

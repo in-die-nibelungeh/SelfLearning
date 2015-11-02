@@ -169,9 +169,11 @@ Matrixd Matrixd::Multiply(const Matrixd& m) const
 {
     if ( GetColumnLength() != m.GetRowLength() )
     {
-        return *this;
+        Matrixd null;
+        return null;
     }
     Matrixd multiplied(GetRowLength(), m.GetColumnLength());
+#if 0
     for (int row = 0; row < multiplied.GetRowLength(); ++row)
     {
         for (int col = 0; col < multiplied.GetColumnLength(); ++col)
@@ -184,6 +186,16 @@ Matrixd Matrixd::Multiply(const Matrixd& m) const
             multiplied[row][col] = v;
         }
     }
+#else
+    Matrixd transposed(m.T());
+    for (int row = 0; row < multiplied.GetRowLength(); ++row)
+    {
+        for (int col = 0; col < multiplied.GetColumnLength(); ++col)
+        {
+            multiplied[row][col] = (*this)[row].Dot(transposed[col]);
+        }
+    }
+#endif
     return multiplied;
 }
 
@@ -256,9 +268,6 @@ double Matrixd::Determinant(void) const
     {
         for (int row = 0; row < GetRowLength(); ++row)
         {
-            //Matrixd m(CoFactor(row, 0));
-            //DumpMatrix(m, "%f");
-            //double v = m.Determinant() * sign * (*this)[row][0];
             det += GetCofactor(row, 0) * (*this)[row][0];
         }
     }
@@ -290,10 +299,7 @@ Matrixd Matrixd::Inverse(void) const
         {
             int sign = ((row + col) & 1) ? -1 : 1;
             Matrixd m(GetCofactorMatrix(row, col));
-            printf("cof[%d, %d]\n", row, col);
-            //DumpMatrix(m, "%f");
             inversed[col][row] = GetCofactor(row, col) / det;
-            printf("det=%f\n", inversed[row][col]);
         }
     }
 #else
