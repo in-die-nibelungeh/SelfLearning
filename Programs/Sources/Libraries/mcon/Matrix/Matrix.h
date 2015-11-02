@@ -198,7 +198,7 @@ Matrix<Type>::~Matrix()
         }
         delete[] m_Array;
     }
-    m_Array = PTR_CAST(Vector<Type>**, NULL);
+    m_Array = NULL;
     m_RowLength = 0;
     m_ColumnLength = 0;
 }

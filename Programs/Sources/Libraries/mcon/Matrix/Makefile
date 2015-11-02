@@ -5,6 +5,9 @@ MODULE_SRC=
 
 INC=$(MODULE_HEADER)
 
+INCDIRS += \
+	../Vector  \
+
 LIBS=
 
 CPPFLAGS += -O3

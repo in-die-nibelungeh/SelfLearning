@@ -164,7 +164,6 @@ int main(void)
     test_transpose();
     test_matrix_multiply();
     test_matrix_determinant();
-    test_matrix_api();
     test_matrix_inverse();
 
     return 0;
