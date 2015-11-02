@@ -19,6 +19,7 @@ void test_Matrixd(void)
         CHECK_VALUE(m.IsNull(), false);
         CHECK_VALUE(m.GetRowLength(), row);
         CHECK_VALUE(m.GetColumnLength(), col);
+
 #define VALUE(i, k) ((i+1)*10 + (k+1))
         for ( int i = 0; i < row; ++i )
         {
@@ -127,6 +128,98 @@ void test_Matrixd(void)
             for ( int k = 0; k < col; ++k )
             {
                 CHECK_VALUE(m[i][k], -added);
+            }
+        }
+    }
+    {
+#define VALUE1(i, k) ((i+1)*10 + (k+1))
+#define VALUE2(i, k) ((i+1) + (k+1)*10)
+
+        const int row = 5;
+        const int col = 6;
+        mcon::Matrixd m1(row, col);
+        mcon::Matrixd m2(row, col);
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                m1[i][k] = VALUE1(i, k);
+                m2[i][k] = VALUE2(i, k);
+            }
+        }
+        LOG("* [operator+=(Matrixd&)]\n");
+        m1 += m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m1[i][k], VALUE1(i, k) + VALUE2(i, k));
+            }
+        }
+        LOG("* [operator-=(Matrixd&)]\n");
+        m1 -= m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m1[i][k], VALUE1(i, k));
+            }
+        }
+        LOG("* [operator*=(Matrixd&)]\n");
+        m1 *= m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m1[i][k], VALUE1(i, k) * VALUE2(i, k));
+            }
+        }
+        LOG("* [operator/=(Matrixd&)]\n");
+        m1 /= m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m1[i][k], VALUE1(i, k));
+            }
+        }
+#undef VALUE1
+#undef VALUE2
+        mcon::Matrixd m3(row, col);
+        LOG("* [operator+(Matrixd&)]\n");
+        m3 = m1 + m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m3[i][k], m1[i][k] + m2[i][k]);
+            }
+        }
+        LOG("* [operator-(Matrixd&)]\n");
+        m3 = m1 - m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m3[i][k], m1[i][k] - m2[i][k]);
+            }
+        }
+        LOG("* [operator*(Matrixd&)]\n");
+        m3 = m1 * m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m3[i][k], m1[i][k] * m2[i][k]);
+            }
+        }
+        LOG("* [operator/(Matrixd&)]\n");
+        m3 = m1 / m2;
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                CHECK_VALUE(m3[i][k], m1[i][k] / m2[i][k]);
             }
         }
     }

@@ -128,60 +128,21 @@ bool Matrixd::Resize(int rowLength, int columnLength)
     {
         return false;
     }
-#if 0
-    if (rowLength != m_RowLength)
+    if (m_Address != NULL)
     {
-        Vectord** ptr = NULL;
-        if (rowLength > 0)
-        {
-            ptr = new Vectord*[rowLength];
-            ASSERT(NULL != ptr);
-            for (int i = 0; i < rowLength; ++i)
-            {
-                ptr[i] = NULL;
-            }
-        }
-
-        for (int i = 0; i < Smaller(rowLength); ++i)
-        {
-            ptr[i] = m_Array[i];
-            m_Array[i] = NULL;
-        }
-        for (int i = 0; i < rowLength; ++i)
-        {
-            if (ptr[i] == NULL)
-            {
-                ptr[i] = new Vectord(columnLength);
-                ASSERT(ptr[i] != NULL);
-            }
-        }
-        for (int i = 0; i < m_RowLength; ++i)
-        {
-            if (m_Array[i] != NULL)
-            {
-                delete m_Array[i];
-                m_Array[i] = NULL;
-            }
-        }
-        delete[] m_Array;
-        m_Array = ptr;
-        m_RowLength = rowLength;
+        delete[] reinterpret_cast<uint8_t*>(m_Address);
+        m_Address = NULL;
+        m_ObjectBase = NULL;
     }
+    m_RowLength = rowLength;
     m_ColumnLength = columnLength;
-
-    bool status = true;
-    for (int i = 0; i < m_RowLength; ++i)
-    {
-        status &= (*m_Array[i]).Resize(m_ColumnLength);
-    }
-#endif
-    return true;
+    return Allocate();
 }
 
 Matrixd& Matrixd::operator=(const Matrixd& m)
 {
     Resize(m.GetRowLength(), m.GetColumnLength());
-    VectordBase* ptr = reinterpret_cast<VectordBase*>(m_Address);
+    VectordBase* ptr = m_ObjectBase;
     for (int i = 0; i < GetRowLength(); ++i, ++ptr )
     {
         *ptr = m[i];

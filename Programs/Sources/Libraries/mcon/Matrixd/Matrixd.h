@@ -125,10 +125,10 @@ public:
     Matrixd& operator*=(const Matrixd& m);
     Matrixd& operator/=(const Matrixd& m);
 
+    double Determinant(void) const;
     Matrixd Transpose(void) const;
     Matrixd Multiply(const Matrixd& m) const;
     Matrixd Inverse(void) const;
-    double Determinant(void) const;
     Matrixd GetCofactorMatrix(int row, int col) const;
     double GetCofactor(int row, int col) const;
 
