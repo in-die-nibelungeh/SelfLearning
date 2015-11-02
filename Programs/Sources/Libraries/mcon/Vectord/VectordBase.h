@@ -121,8 +121,8 @@ public:
     double GetSum(void) const;
 
     double GetNorm(void) const;
-    double GetDotProduct(VectordBase& v) const;
-    VectordBase GetCrossProduct(VectordBase& v) const;
+    double GetDotProduct(const VectordBase& v) const;
+    VectordBase GetCrossProduct(const VectordBase& v) const;
 
     // Inline functions.
     inline int GetLength(void) const
@@ -158,7 +158,7 @@ public:
     {
         return PushFromFront(v);
     }
-    inline double Dot(VectordBase& v) const
+    inline double Dot(const VectordBase& v) const
     {
         return GetDotProduct(v);
     }

@@ -450,7 +450,7 @@ double VectordBase::GetNorm(void) const
     return sqrt(squaredSum);
 }
 
-double VectordBase::GetDotProduct(VectordBase& v) const
+double VectordBase::GetDotProduct(const VectordBase& v) const
 {
     const int length = GetLength();
     const int unit = 4;
