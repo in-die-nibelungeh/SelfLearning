@@ -101,6 +101,8 @@ public:
         return *(m_ObjectBase + i);
     }
 
+    Matrixd& operator=(double v);
+
     const Matrixd operator+(double v) const;
     const Matrixd operator-(double v) const;
     const Matrixd operator*(double v) const;

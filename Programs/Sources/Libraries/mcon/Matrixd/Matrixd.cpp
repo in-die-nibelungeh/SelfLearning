@@ -46,6 +46,8 @@ namespace mcon {
 // ‚±‚ñ‚È‚ñ‚µ‚½‚¢
 // typedef Matrixd(1, n) Vectord(n);
 
+Matrixd& Matrixd::operator=(double v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }
+
 const Matrixd Matrixd::operator+(double v) const { Matrixd mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
 const Matrixd Matrixd::operator-(double v) const { Matrixd mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] -= v); return mat; }
 const Matrixd Matrixd::operator*(double v) const { Matrixd mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] *= v); return mat; }
