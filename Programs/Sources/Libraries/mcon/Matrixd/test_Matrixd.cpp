@@ -223,5 +223,137 @@ void test_Matrixd(void)
             }
         }
     }
+    LOG("* [Resize]\n");
+    {
+        const int row = 5;
+        const int col = 6;
+        const int inc = 2;
+        mcon::Matrixd m1(row, col);
+        for ( int i = 0; i < row; ++i )
+        {
+            for ( int k = 0; k < col; ++k )
+            {
+                m1[i][k] = 1.0;
+            }
+        }
+        m1.Resize(row+inc, col+inc);
+        CHECK_VALUE(row+inc, m1.GetRowLength());
+        CHECK_VALUE(col+inc, m1.GetColumnLength());
+        for ( int i = 0; i < row+inc; ++i )
+        {
+            for ( int k = 0; k < col+inc; ++k )
+            {
+                m1[i][k] = 1.0;
+            }
+        }
+    }
+    LOG("* [Transpose]\n");
+    {
+        const int numArray = 3, numData= 5;
+        mcon::Matrixd m(numArray, numData);
+        for (int i = 0; i < numArray; ++i)
+        {
+            for (int j = 0; j < numData; ++j)
+            {
+                m[i][j] = (i+1)*10+(j+1);
+            }
+        }
+
+        mcon::Matrixd mt(m.Transpose());
+        for (int i = 0; i < mt.GetRowLength(); ++i)
+        {
+            for (int k = 0; k < mt.GetColumnLength(); ++k)
+            {
+                CHECK_VALUE(mt[i][k], m[k][i]);
+            }
+        }
+    }
+
+    LOG("* [Multiply]\n");
+    {
+        const int numArray = 3;
+        const int numData= 4;
+        mcon::Matrixd m1(numArray, numData);
+        for (int c = 1, i = 0; i < numArray; ++i)
+        {
+            for (int j = 0; j < numData; ++j, ++c)
+            {
+                m1[i][j] = c;
+            }
+        }
+        mcon::Matrixd m2(m1.T());
+        mcon::Matrixd m3(m1.Multiply(m2));
+
+        const double m4 [numArray][numArray] = {
+            { 30,  70, 110},
+            { 70, 174, 278},
+            {110, 278, 446},
+        };
+        for ( int i = 0; i < numArray; ++i )
+        {
+            for ( int k = 0; k < numArray; ++k )
+            {
+                CHECK_VALUE(m3[i][k], m4[i][k]);
+            }
+        }
+    }
+
+    LOG("* [Determinant]\n");
+    {
+        int numArray = 4;
+        int numData= 4;
+        mcon::Matrixd m1(numArray, numData);
+        m1[0][0] = 2;
+        m1[0][1] = -2;
+        m1[0][2] = 4;
+        m1[0][3] = 2;
+        m1[1][0] = 2;
+        m1[1][1] = -1;
+        m1[1][2] = 6;
+        m1[1][3] = 3;
+        m1[2][0] = 3;
+        m1[2][1] = -2;
+        m1[2][2] = 12;
+        m1[2][3] = 12;
+        m1[3][0] = -1;
+        m1[3][1] = 3;
+        m1[3][2] = -4;
+        m1[3][3] = 4;
+        CHECK_VALUE(m1.D(), 120);
+    }
+
+    LOG("* [Inverse]\n");
+    {
+        int numArray = 4;
+        int numData= 4;
+        mcon::Matrixd m1(numArray, numData);
+        m1[0][0] = 3;
+        m1[0][1] = 2;
+        m1[0][2] = 1;
+        m1[0][3] = 0;
+        m1[1][0] = 1;
+        m1[1][1] = 2;
+        m1[1][2] = 3;
+        m1[1][3] = 4;
+        m1[2][0] = 2;
+        m1[2][1] = 1;
+        m1[2][2] = 0;
+        m1[2][3] = 1;
+        m1[3][0] = 2;
+        m1[3][1] = 0;
+        m1[3][2] = 2;
+        m1[3][3] = 1;
+        mcon::Matrixd m2(m1.Inverse());
+        mcon::Matrixd m3(m1.Multiply(m2));
+        for ( int i = 0; i < numArray; ++i )
+        {
+            for ( int k = 0; k < numArray; ++k )
+            {
+                double correct = ( k == i ) ? 1.0 : 0.0;
+                CHECK_VALUE(m3[i][k], correct);
+            }
+        }
+    }
+
     return ;
 }

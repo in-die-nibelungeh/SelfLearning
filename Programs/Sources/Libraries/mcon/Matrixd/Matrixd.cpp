@@ -91,7 +91,7 @@ bool Matrixd::Allocate(void)
     {
         return true;
     }
-    const int lengthAligned = m_ColumnLength + m_ColumnLength % unit;
+    const int lengthAligned = ((m_ColumnLength + (unit - 1)) / unit) * unit;
     int size = m_RowLength * sizeof(VectordBase)
                    + (align - 1)
                    + lengthAligned * m_RowLength * sizeof(double);
@@ -276,11 +276,9 @@ Matrixd Matrixd::Inverse(void) const
     double det = Determinant();
     if ( 0 == det )
     {
-        printf("Det=Zero\n");
         return *this;
     }
     // Calculate Inversed-Matrixd by Cofactors.
-    printf("Determinant=%f\n", det);
     int rowCount = GetRowLength();
     int colCount = GetColumnLength();
     Matrixd inversed(rowCount, colCount);
