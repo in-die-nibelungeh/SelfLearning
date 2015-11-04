@@ -7,10 +7,10 @@
 #include "status.h"
 #include "types.h"
 #include "debug.h"
-#include "Matrix.h"
-#include "FileIo.h"
 
-#include "Fft.h"
+#include "mcon.h"
+#include "mfio.h"
+#include "masp.h"
 
 #define POW2(x) ((x)*(x))
 
@@ -23,10 +23,10 @@ status_t Normalize(mcon::Vector<double>& vec)
     mcon::Matrix<double> gp(2, vec.GetLength());
 
     LOG("Ft ... ");
-    Fft::Ft(complex, vec);
+    masp::ft::Ft(complex, vec);
     LOG("Done\n");
     LOG("Convert to gain and phsae ... ");
-    Fft::ConvertToGainPhase(gp, complex);
+    masp::ft::ConvertToPolarCoords(gp, complex);
     LOG("Done\n");
 
     // Normalizing
@@ -206,8 +206,8 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             mcon::Matrix<double> gp(2, length);
             {
                 mcon::Matrix<double> complex(2, length);
-                Fft::Ft(complex, resp);
-                Fft::ConvertToPolarCoords(gp, complex);
+                masp::ft::Ft(complex, resp);
+                masp::ft::ConvertToPolarCoords(gp, complex);
             }
             // Gain/Phase/PulseSeries
             {

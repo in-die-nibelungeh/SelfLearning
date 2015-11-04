@@ -5,7 +5,7 @@ MODULE_SRC=
 
 INC=$(MODULE_HEADER)
 
-LIBS=-lfio -lfft
+LIBS=-lfio -lasp
 
 CPPFLAGS += -O3
 
