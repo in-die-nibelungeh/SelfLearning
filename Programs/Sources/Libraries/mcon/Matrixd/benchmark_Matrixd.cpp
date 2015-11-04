@@ -10,7 +10,6 @@ double g_Global;
 void benchmark_Matrixd(void)
 {
     static const int KiB = 1024;
-    static const int MiB = 1024 * KiB;
 
     enum {
         ID_TRANSPOSE,
@@ -21,16 +20,13 @@ void benchmark_Matrixd(void)
     };
 
     mutl::Stopwatch sw;
-    const int samples[] = {
+    const int samples[] = { // N x N
+           4,
+          16,
+          64,
+         256,
            1 * KiB,
            4 * KiB,
-          16 * KiB,
-          64 * KiB,
-         256 * KiB,
-           1 * MiB,
-           4 * MiB,
-          16 * MiB,
-          64 * MiB,
     };
     const unsigned int numPatterns = sizeof(samples) / sizeof(int);
     double scores[NUM_IDS][numPatterns];
@@ -40,10 +36,9 @@ void benchmark_Matrixd(void)
     {
         const int n = samples[i];
         LOG("Benchmark with the length of %d ... ", n);
-        mcon::Matrixd md1(n);
-        mcon::Matrix<double> mc1(n);
-
-#define VALUE(i, k) ((i+1)*10 + (k+1))
+        mcon::Matrixd md1(n, n);
+        mcon::Matrix<double> mc1(n, n);
+#define VALUE(i, k) ( i == k ? 1 : 0 )
 
         for ( int k = 0; k < n; ++k )
         {
@@ -54,6 +49,7 @@ void benchmark_Matrixd(void)
                 mc1[k][l] = v;
             }
         }
+#undef VALUE
         // Transpose
         int id = 0;
         {
