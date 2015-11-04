@@ -46,7 +46,6 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     }
 
     audioOut.Resize(audioIn.GetLength());
-#if 1
     for (int i = 0; i < audioIn.GetLength(); ++i)
     {
         audioOut[i] = 0.0;
@@ -55,21 +54,6 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
             audioOut[i] += audioIn[i - k] * impluse[k];
         }
     }
-#else
-    mcon::Vector<double> window(M);
-
-    window = 0;
-
-    for (int i = 0; i < audioIn.GetLength(); ++i)
-    {
-        audioOut[i] = 0.0;
-        window.Fifo(audioIn[i]);
-        for (int k = 0; k < M; ++k)
-        {
-            audioOut[i] += window[M - k - 1] * impluse[k];
-        }
-    }
-#endif
     return NO_ERROR;
 }
 
@@ -307,34 +291,6 @@ int main(int argc, char* argv[])
     std::string reference;
     std::string input;
     int tapps = 256;
-#if 0
-    {
-        mfio::Wave wave;
-        mcon::Matrix<double> m;
-        wave.Read("101-st.wav", m);
-        wave.SetNumChannels(1);
-        wave.Write("101-st-left.wav", m[0]);
-    }
-    return 0;
-#endif
-#if 0
-    const int N = 4;
-    mcon::Vector<double> imp(N);
-    imp = 0.1;
-    imp[0] = 1.0;
-    mcon::Vector<double> in(10*N);
-    for ( int i = 0; i < in.GetLength(); ++i )
-    {
-        in[i] = i + 1;
-    }
-    mcon::Vector<double> output;
-    Convolution(output, in, imp);
-    for ( int i = 0 ; i < output.GetLength(); ++i )
-    {
-        printf("%d\t%g\n", i+1, output[i]);
-    }
-    return 0;
-#endif
     if ( argc < 3 )
     {
         usage();
