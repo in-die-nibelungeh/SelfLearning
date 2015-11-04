@@ -29,8 +29,7 @@
 
 #include "status.h"
 #include "types.h"
-#include "Vector.h"
-#include "Matrix.h"
+#include "mcon.h"
 
 namespace mfio {
 

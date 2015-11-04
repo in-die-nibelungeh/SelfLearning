@@ -155,9 +155,9 @@ status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
     status = ReadMetaData(fd, dataPosition, dataSize);
     if (NO_ERROR != status)
     {
-        goto END;
+        fclose(fd);
+        return status;
     }
-
     const int bytes = GetBitDepth() / 8;
     const int length = dataSize / bytes;
     if (false == buffer.Resize(length))
@@ -196,7 +196,7 @@ status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
     }
 END:
     fclose(fd);
-    return NO_ERROR;
+    return status;
 }
 
 status_t Wave::Read(const char* path, double** buffer, int* length)

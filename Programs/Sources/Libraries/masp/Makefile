@@ -16,6 +16,13 @@ MODULE_SRC=	\
 	Basics/Window/Window.cpp \
 	Resampler/Resampler.cpp \
 
+INCDIRS = \
+	Basics/Ft \
+	Basics/Fir \
+	Basics/Iir \
+	Basics/Window \
+	Resampler \
+
 INC=$(MODULE_HEADER)
 
 CPPFLAGS += -O3
