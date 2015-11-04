@@ -1,4 +1,5 @@
 
+#include "Vectord.h"
 #include "Matrixd.h"
 
 void test_Matrixd(void)
@@ -80,6 +81,30 @@ void test_Matrixd(void)
             for ( int k = 0; k < col; ++k )
             {
                 CHECK_VALUE(m1[i][k], m[i][k]);
+            }
+        }
+        LOG("* [Matrixd(const VectordBase&)]\n");
+        {
+            mcon::Vectord v(row);
+#define VALUE(i) ((i+1)*10+i+1)
+            for ( int i = 0; i < row; ++i )
+            {
+                v[i] = VALUE(i);
+            }
+#undef VALUE
+            mcon::Matrixd m1(v);
+            CHECK_VALUE(m1.GetRowLength(), 1);
+            CHECK_VALUE(m1.GetColumnLength(), v.GetLength());
+            for ( int i = 0; i < v.GetLength(); ++i )
+            {
+                CHECK_VALUE(m1[0][i], v[i]);
+            }
+            mcon::Matrixd m2(v, true);
+            CHECK_VALUE(m2.GetRowLength(), v.GetLength());
+            CHECK_VALUE(m2.GetColumnLength(), 1);
+            for ( int i = 0; i < v.GetLength(); ++i )
+            {
+                CHECK_VALUE(m2[i][0], v[i]);
             }
         }
         LOG("* [operator+(double)]\n");
