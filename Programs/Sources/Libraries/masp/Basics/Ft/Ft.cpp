@@ -1,5 +1,8 @@
 #include <math.h>
 
+//#undef DEBUG
+
+#include "debug.h"
 #include "types.h"
 #include "status.h"
 #include "mcon.h"
@@ -28,13 +31,13 @@ namespace
     int Count1(int v)
     {
         int ans = 0;
-        for (int i = 0; 0 < sizeof(v); ++i)
+        for (unsigned int i = 0; i < sizeof(v) * 8; ++i)
         {
             ans += ((v >> i) & 0x1) ? 1 : 0;
         }
         return ans;
     }
-    int BitReverse(int v, int w)
+    int BitReverse(int v, int w) // value, width
     {
         int x = 0;
         for (int i = 0; i < w; ++i)
@@ -51,20 +54,167 @@ status_t Fft(double real[], double imag[], double td[], int n)
     {
         return -ERROR_ILLEGAL;
     }
-
-    int iter = Ilog2(n);
-
-    for (int i = 0; i < iter; ++i)
-    {
-        for (int j = 0; j < ((i+1) << 1); ++j)
-        {
-        }
-    }
     return NO_ERROR;
 }
 
 status_t Ifft(double td[], double real[], double imag[], int n)
 {
+    return NO_ERROR;
+}
+
+status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries)
+{
+    const int N = timeSeries.GetLength();
+    if (Count1(N) != 1)
+    {
+        return -ERROR_ILLEGAL;
+    }
+    bool status = complex.Resize(2, N);
+    if (false == status)
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
+    mcon::Vector<double>& real = complex[0];
+    mcon::Vector<double>& imag = complex[1];
+
+    const double df = 2.0 * g_Pi / N;
+
+    mcon::Vector<double> sinTable(N/2);
+    mcon::Vector<double> cosTable(N/2);
+
+    for (int i = 0; i < N/2; ++i)
+    {
+        sinTable[i] = sin(df * i);
+        cosTable[i] = cos(df * i);
+    }
+    // Substitute beforehand
+    real = timeSeries;
+    imag = 0;
+
+    int innerLoop = N/2;
+    int outerLoop = 1;
+    DEBUG_LOG("N=%d\n", N);
+
+    // Decimation in frequency.
+    for ( ; 0 < innerLoop; innerLoop >>= 1, outerLoop <<= 1)
+    {
+        DEBUG_LOG("inner=%d, outer=%d\n", innerLoop, outerLoop);
+        for ( int outer = 0; outer < outerLoop; ++outer )
+        {
+            const int& ofs = innerLoop;
+            for ( int k = 0; k < innerLoop; ++k )
+            {
+                const int dofs = outer * ofs * 2;
+                const double r1 = real[k+dofs];
+                const double i1 = imag[k+dofs];
+                const double r2 = real[k+ofs+dofs];
+                const double i2 = imag[k+ofs+dofs];
+
+                real[k+dofs] = r1 + r2;
+                imag[k+dofs] = i1 + i2;
+                const int idx = k * outerLoop;
+                DEBUG_LOG("ofs=%d, dofs=%d, k=%d, idx=%d\n", ofs, dofs, k, idx);
+                real[k+ofs+dofs] =   (r1 - r2) * cosTable[idx] + (i1 - i2) * sinTable[idx];
+                imag[k+ofs+dofs] = - (r1 - r2) * sinTable[idx] + (i1 - i2) * cosTable[idx];
+            }
+        }
+    }
+    // Bit-reverse
+    const int width = Ilog2(N);
+    DEBUG_LOG("width=%d\n", width);
+    for ( int i = 0; i < N; ++i )
+    {
+        const int k = BitReverse(i, width);
+        if (k == i || k < i)
+        {
+            continue;
+        }
+        const double real_temp = real[k];
+        const double imag_temp = imag[k];
+        real[k] = real[i];
+        imag[k] = imag[i];
+        real[i] = real_temp;
+        imag[i] = imag_temp;
+    }
+    return NO_ERROR;
+}
+
+status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex)
+{
+    const int N = complex.GetRowLength();
+    if (Count1(N) != 1)
+    {
+        return -ERROR_ILLEGAL;
+    }
+    bool status = timeSeries.Resize(N);
+    if (false == status)
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
+    const mcon::Vector<double>& real = complex[0];
+    const mcon::Vector<double>& imag = complex[1];
+
+    const double df = 2.0 * g_Pi / N;
+
+    mcon::Vector<double> sinTable(N/2);
+    mcon::Vector<double> cosTable(N/2);
+
+    for (int i = 0; i < N/2; ++i)
+    {
+        sinTable[i] = sin(df * i);
+        cosTable[i] = cos(df * i);
+    }
+#if 0
+    // Substitute beforehand
+    real = timeSeries;
+    imag = 0;
+
+    int innerLoop = N/2;
+    int outerLoop = 1;
+    DEBUG_LOG("N=%d\n", N);
+
+    // Decimation in frequency.
+    for ( ; 0 < innerLoop; innerLoop >>= 1, outerLoop <<= 1)
+    {
+        DEBUG_LOG("inner=%d, outer=%d\n", innerLoop, outerLoop);
+        for ( int outer = 0; outer < outerLoop; ++outer )
+        {
+            const int& ofs = innerLoop;
+            for ( int k = 0; k < innerLoop; ++k )
+            {
+                const int dofs = outer * ofs * 2;
+                const double r1 = real[k+dofs];
+                const double i1 = imag[k+dofs];
+                const double r2 = real[k+ofs+dofs];
+                const double i2 = imag[k+ofs+dofs];
+
+                real[k+dofs] = r1 + r2;
+                imag[k+dofs] = i1 + i2;
+                const int idx = k * outerLoop;
+                DEBUG_LOG("ofs=%d, dofs=%d, k=%d, idx=%d\n", ofs, dofs, k, idx);
+                real[k+ofs+dofs] =   (r1 - r2) * cosTable[idx] + (i1 - i2) * sinTable[idx];
+                imag[k+ofs+dofs] = - (r1 - r2) * sinTable[idx] + (i1 - i2) * cosTable[idx];
+            }
+        }
+    }
+    // Bit-reverse
+    const int width = Ilog2(N);
+    DEBUG_LOG("width=%d\n", width);
+    for ( int i = 0; i < N; ++i )
+    {
+        const int k = BitReverse(i, width);
+        if (k == i || k < i)
+        {
+            continue;
+        }
+        const double real_temp = real[k];
+        const double imag_temp = imag[k];
+        real[k] = real[i];
+        imag[k] = imag[i];
+        real[i] = real_temp;
+        imag[i] = imag_temp;
+    }
+#endif
     return NO_ERROR;
 }
 

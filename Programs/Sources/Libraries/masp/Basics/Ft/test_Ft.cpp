@@ -151,9 +151,84 @@ static void test_gp_complex(void)
     }
 }
 
+static void test_fft(void)
+{
+    const int fs = 4800;
+    const int n = 128; //fs;
+    mtbx::WaveGen wg(fs, FREQ_BASE, mtbx::WaveGen::WT_SINE);
+    wg.Reset();
+    //wg.SetSweepParam(FREQ_BASE*20, (double)n/fs, true);
+
+    mcon::Vector<double> buffer(n);
+    wg.GenerateWaveform(buffer);
+
+    mcon::Matrix<double> ft(2, n);
+    mcon::Matrix<double> fft(2, n);
+
+    masp::ft::Ft(ft, buffer);
+    masp::ft::Fft(fft, buffer);
+
+    // Check
+    {
+#define POW2(v) ((v)*(v))
+        double err = 0;
+        for ( int i = 0; i < n; ++i )
+        {
+            err += POW2(ft[0][i] - fft[0][i]);
+            err += POW2(ft[1][i] - fft[1][i]);
+        }
+        err = sqrt(err);
+        CHECK_VALUE(err, 0);
+    }
+
+    {
+        mcon::Matrix<double> saved(5, n);
+        const double df = (double)fs/n;
+
+        for ( int i = 0; i < n; ++i )
+        {
+            saved[0][i] = df * i;
+        }
+        saved[1] = ft[0];
+        saved[2] = fft[0];
+        saved[3] = ft[1];
+        saved[4] = fft[1];
+
+        {
+            mcon::Matrix<double> gp(2, n);
+            masp::ft::ConvertToGainPhase(gp, ft);
+            saved[1] = gp[0];
+            saved[3] = gp[1];
+
+            masp::ft::ConvertToGainPhase(gp, fft);
+            saved[2] = gp[0];
+            saved[4] = gp[1];
+        }
+
+        mfio::Csv csv("fft.csv");
+
+        csv.Write(",freq,gain1,gain2,phase1,phase2\n");
+        csv.Write(saved);
+        csv.Close();
+    }
+    return ;
+
+    // Not, yet.
+    mcon::Vector<double> ifft(n);
+    masp::ft::Ift(ifft, fft);
+    {
+        printf("time,orig,td,td1\n");
+        for (int i = 1; i < n/10; ++i)
+        {
+            printf("%d,%f,%f,%f\n", i, buffer[i],ifft[i], 0.0);
+        }
+    }
+}
+
 void test_Ft(void)
 {
     test_ft();
     test_ft_buffer();
     test_gp_complex();
+    test_fft();
 }

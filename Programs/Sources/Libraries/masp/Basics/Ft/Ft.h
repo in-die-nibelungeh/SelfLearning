@@ -36,7 +36,9 @@ status_t Ft  (double realPart[], double imaginaryPart[], const double timeSeries
 status_t Ift (double timeSeries[], const double realPart[], const double imaginaryPart[], int numData);
 
 status_t Ft  (mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries);
+status_t Fft (mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries);
 status_t Ift (mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex);
+status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex);
 
 status_t ConvertToPolarCoords(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex);
 
