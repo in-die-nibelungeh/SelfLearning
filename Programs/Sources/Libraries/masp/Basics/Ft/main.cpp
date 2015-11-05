@@ -1,10 +1,10 @@
 
-extern void tests(void);
-extern void tunes(void);
+extern void test_Ft(void);
+extern void benchmark_Ft(void);
 
 int main(void)
 {
-    tests();
-    tunes();
+    test_Ft();
+    benchmark_Ft();
     return 0;
 }

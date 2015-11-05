@@ -151,7 +151,7 @@ static void test_gp_complex(void)
     }
 }
 
-void tests(void)
+void test_Ft(void)
 {
     test_ft();
     test_ft_buffer();

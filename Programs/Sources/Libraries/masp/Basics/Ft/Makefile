@@ -4,7 +4,7 @@ MODULE_HEADER=Ft.h
 MODULE_SRC=Ft.cpp
 
 INC=$(MODULE_HEADER)
-SRC=test.cpp tune.cpp
+SRC=test_Ft.cpp benchmark_Ft.cpp
 
 LIBS=-ltbx -lutl -lfio
 

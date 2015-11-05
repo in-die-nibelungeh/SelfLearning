@@ -75,7 +75,7 @@ static void tune_ft(void)
     }
 }
 
-void tunes(void)
+void benchmark_Ft(void)
 {
     tune_ft();
 }
