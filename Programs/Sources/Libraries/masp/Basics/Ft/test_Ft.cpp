@@ -157,7 +157,6 @@ static void test_fft(void)
     const int n = 128; //fs;
     mtbx::WaveGen wg(fs, FREQ_BASE, mtbx::WaveGen::WT_SINE);
     wg.Reset();
-    //wg.SetSweepParam(FREQ_BASE*20, (double)n/fs, true);
 
     mcon::Vector<double> buffer(n);
     wg.GenerateWaveform(buffer);
@@ -165,12 +164,11 @@ static void test_fft(void)
     mcon::Matrix<double> ft(2, n);
     mcon::Matrix<double> fft(2, n);
 
-    masp::ft::Ft(ft, buffer);
+    masp::ft::Ft (ft , buffer);
     masp::ft::Fft(fft, buffer);
-
     // Check
-    {
 #define POW2(v) ((v)*(v))
+    {
         double err = 0;
         for ( int i = 0; i < n; ++i )
         {
@@ -180,7 +178,8 @@ static void test_fft(void)
         err = sqrt(err);
         CHECK_VALUE(err, 0);
     }
-
+#undef POW2
+    // Save to check.
     {
         mcon::Matrix<double> saved(5, n);
         const double df = (double)fs/n;

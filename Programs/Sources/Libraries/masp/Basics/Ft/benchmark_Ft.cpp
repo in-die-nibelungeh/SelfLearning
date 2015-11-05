@@ -75,7 +75,47 @@ static void tune_ft(void)
     }
 }
 
+static const int KiB = 1024;
+static const int MiB = KiB * KiB;
+
+void benchmark_Fft(void)
+{
+    mcon::Vector<double> ts;
+    mcon::Matrix<double> ft;
+    mcon::Matrix<double> fft;
+
+    const int sizes[] =
+    {
+         64,
+        256,
+          1 * KiB,
+          4 * KiB,
+         16 * KiB,
+         64 * KiB,
+        256 * KiB,
+          1 * MiB,
+          4 * MiB
+    };
+    for ( unsigned int k = 0; k < sizeof(sizes)/sizeof(int); ++k )
+    {
+        const int N = sizes[k];
+        bool status = ts.Resize(N);
+        if ( false == status ) { break; }
+        status = ft.Resize(2, N);
+        if ( false == status ) { break; }
+        status = fft.Resize(2, N);
+        if ( false == status ) { break; }
+        mutl::Stopwatch sw;
+        masp::ft::Ft(ft, ts);
+        const double scoreFt = sw.Push();
+        masp::ft::Fft(fft, ts);
+        const double scoreFft = sw.Push();
+        printf("size=%7d: Ratio %g\n", N, scoreFt / scoreFft);
+    }
+}
+
 void benchmark_Ft(void)
 {
+    benchmark_Fft();
     tune_ft();
 }
