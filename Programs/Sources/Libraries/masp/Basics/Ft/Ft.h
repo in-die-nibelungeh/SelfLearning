@@ -40,7 +40,7 @@ status_t Ift (mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
 
 status_t ConvertToPolarCoords(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex);
 
-status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
+inline status_t ConvertToGainPhase(mcon::Matrix<double>& gainPhase, const mcon::Matrix<double>& complex)
 {
     return ConvertToPolarCoords(gainPhase, complex);
 }

@@ -4,10 +4,10 @@
 
 #include <string>
 
-#include "Fft.h"
-#include "FileIo.h"
-#include "Vector.h"
-#include "BenchUtil.h"
+#include "Ft.h"
+#include "mfio.h"
+#include "mcon.h"
+#include "mutl.h"
 
 static void tune_ft(void)
 {
@@ -29,20 +29,20 @@ static void tune_ft(void)
     mcon::Matrix<double> complex(2, n);
     mcon::Matrix<double> gp(2, n);
     mcon::Vector<double> ift(n);
-    mbut::Stopwatch sw;
-    status = Fft::Ft(complex, sweep);
+    mutl::Stopwatch sw;
+    status = masp::ft::Ft(complex, sweep);
     if (NO_ERROR != status)
     {
         LOG("An error occured: error=%d\n", status);
     }
     LOG("Time consumed for Ft : %f [sec]\n", sw.Tick());
-    status = Fft::ConvertToPolarCoords(gp, complex);
+    status = masp::ft::ConvertToPolarCoords(gp, complex);
     if (NO_ERROR != status)
     {
         LOG("An error occured: error=%d\n", status);
     }
     LOG("Time consumed for Gp : %f [sec]\n", sw.Tick());
-    status = Fft::Ift(ift, complex);
+    status = masp::ft::Ift(ift, complex);
     if (NO_ERROR != status)
     {
         LOG("An error occured: error=%d\n", status);
@@ -75,7 +75,7 @@ static void tune_ft(void)
     }
 }
 
-static void tunes(void)
+void tunes(void)
 {
     tune_ft();
 }

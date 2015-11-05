@@ -1,9 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
-#include "test.cpp"
-#include "tune.cpp"
+extern void tests(void);
+extern void tunes(void);
 
 int main(void)
 {

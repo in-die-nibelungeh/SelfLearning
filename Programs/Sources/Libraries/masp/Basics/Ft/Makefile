@@ -1,12 +1,12 @@
-BIN=fft.exe
-LIB=libfft.a
+BIN=masp_ft.exe
 
-MODULE_HEADER=Fft.h
-MODULE_SRC=Fft.cpp
+MODULE_HEADER=Ft.h
+MODULE_SRC=Ft.cpp
 
-INC=$(MODULE_HEADER) test.cpp tune.cpp
+INC=$(MODULE_HEADER)
+SRC=test.cpp tune.cpp
 
-LIBS=-lwg -lbut -lfio
+LIBS=-ltbx -lutl -lfio
 
 CPPFLAGS += -O3
 
