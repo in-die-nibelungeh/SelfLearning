@@ -180,6 +180,7 @@ static void test_fft(void)
     }
 #undef POW2
     // Save to check.
+    if(0)
     {
         mcon::Matrix<double> saved(5, n);
         const double df = (double)fs/n;
@@ -210,17 +211,41 @@ static void test_fft(void)
         csv.Write(saved);
         csv.Close();
     }
-    return ;
 
     // Not, yet.
     mcon::Vector<double> ifft(n);
-    masp::ft::Ift(ifft, fft);
+    mcon::Vector<double> ift(n);
+    masp::ft::Ift(ift, fft);
+    masp::ft::Ift(ift, fft);
+    masp::ft::Ifft(ifft, fft);
+    // Check
+#define POW2(v) ((v)*(v))
     {
-        printf("time,orig,td,td1\n");
-        for (int i = 1; i < n/10; ++i)
+        double err = 0;
+        for ( int i = 0; i < n; ++i )
         {
-            printf("%d,%f,%f,%f\n", i, buffer[i],ifft[i], 0.0);
+            err += POW2(ift[i] - ifft[i]);
         }
+        err = sqrt(err);
+        CHECK_VALUE(err, 0);
+    }
+#undef POW2
+    {
+        mcon::Matrix<double> saved(3, n);
+        const double df = (double)fs/n;
+
+        for ( int i = 0; i < n; ++i )
+        {
+            saved[0][i] = df * i;
+        }
+        saved[1] = ift;
+        saved[2] = ifft;
+
+        mfio::Csv csv("ifft.csv");
+
+        csv.Write(",freq,ift,ifft\n");
+        csv.Write(saved);
+        csv.Close();
     }
 }
 

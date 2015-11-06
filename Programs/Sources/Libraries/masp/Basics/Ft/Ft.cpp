@@ -149,24 +149,24 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
 
 status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex)
 {
-    const int N = complex.GetRowLength();
+    const int N = complex.GetColumnLength();
     if (Count1(N) != 1)
     {
         return -ERROR_ILLEGAL;
     }
-    bool status = timeSeries.Resize(N);
-    if (false == status)
+    mcon::Vector<double> tsPair;
+    mcon::Vector<double> sinTable;
+    mcon::Vector<double> cosTable;
+
+    if ( false == timeSeries.Resize(N)
+        || false == tsPair.Resize(N)
+        || false == sinTable.Resize(N)
+        || false == cosTable.Resize(N) )
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-#if 0
-    const mcon::Vector<double>& real = complex[0];
-    const mcon::Vector<double>& imag = complex[1];
 
     const double df = 2.0 * g_Pi / N;
-
-    mcon::Vector<double> sinTable(N/2);
-    mcon::Vector<double> cosTable(N/2);
 
     for (int i = 0; i < N/2; ++i)
     {
@@ -174,55 +174,57 @@ status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
         cosTable[i] = cos(df * i);
     }
     // Substitute beforehand
-    real = timeSeries;
-    imag = 0;
+    timeSeries = complex[0];
+    tsPair = complex[1];
 
     int innerLoop = N/2;
     int outerLoop = 1;
-    DEBUG_LOG("N=%d\n", N);
 
     // Decimation in frequency.
     for ( ; 0 < innerLoop; innerLoop >>= 1, outerLoop <<= 1)
     {
-        DEBUG_LOG("inner=%d, outer=%d\n", innerLoop, outerLoop);
+        //DEBUG_LOG("inner=%d, outer=%d\n", innerLoop, outerLoop);
         for ( int outer = 0; outer < outerLoop; ++outer )
         {
-            const int& ofs = innerLoop;
+            const int& step = innerLoop;
+            const int ofs = outer * step * 2;
+            // Easier to look into.
+            void* _pTs = timeSeries;
+            void* _pTsPair = tsPair;
+            double* pTsL     = reinterpret_cast<double*>(_pTs) + ofs;
+            double* pTsPairL = reinterpret_cast<double*>(_pTsPair) + ofs;
+            double* pTsH     = reinterpret_cast<double*>(_pTs) + ofs + step;
+            double* pTsPairH = reinterpret_cast<double*>(_pTsPair) + ofs + step;
             for ( int k = 0; k < innerLoop; ++k )
             {
-                const int dofs = outer * ofs * 2;
-                const double r1 = real[k+dofs];
-                const double i1 = imag[k+dofs];
-                const double r2 = real[k+ofs+dofs];
-                const double i2 = imag[k+ofs+dofs];
+                const double r1 = pTsL[k];
+                const double i1 = pTsPairL[k];
+                const double r2 = pTsH[k];
+                const double i2 = pTsPairH[k];
 
-                real[k+dofs] = r1 + r2;
-                imag[k+dofs] = i1 + i2;
                 const int idx = k * outerLoop;
-                DEBUG_LOG("ofs=%d, dofs=%d, k=%d, idx=%d\n", ofs, dofs, k, idx);
-                real[k+ofs+dofs] =   (r1 - r2) * cosTable[idx] + (i1 - i2) * sinTable[idx];
-                imag[k+ofs+dofs] = - (r1 - r2) * sinTable[idx] + (i1 - i2) * cosTable[idx];
+                pTsL[k]     = r1 + r2;
+                pTsPairL[k] = i1 + i2;
+                pTsH[k]     =   (r1 - r2) * cosTable[idx] - (i1 - i2) * sinTable[idx];
+                pTsPairH[k] =   (r1 - r2) * sinTable[idx] + (i1 - i2) * cosTable[idx];
+                //DEBUG_LOG("step=%d, ofs=%d, k=%d, idx=%d\n", step, ofs, k, idx);
             }
         }
     }
     // Bit-reverse
     const int width = Ilog2(N);
-    DEBUG_LOG("width=%d\n", width);
+    //DEBUG_LOG("width=%d\n", width);
     for ( int i = 0; i < N; ++i )
     {
         const int k = BitReverse(i, width);
-        if (k == i || k < i)
+        if (k < i)
         {
             continue;
         }
-        const double real_temp = real[k];
-        const double imag_temp = imag[k];
-        real[k] = real[i];
-        imag[k] = imag[i];
-        real[i] = real_temp;
-        imag[i] = imag_temp;
+        const double ts_temp = timeSeries[k] / N;
+        timeSeries[k] = timeSeries[i] / N;
+        timeSeries[i] = ts_temp;
     }
-#endif
     return NO_ERROR;
 }
 
