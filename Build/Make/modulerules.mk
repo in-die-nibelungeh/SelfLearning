@@ -28,8 +28,8 @@ else
 MODULE_LIB_PATH :=
 endif
 
-CC := $(TOOLCHAIN_PREFIX)gcc.exe
-LD := $(TOOLCHAIN_PREFIX)ld.exe
+CC := $(TOOLCHAIN_PREFIX)gcc
+LD := $(TOOLCHAIN_PREFIX)ld
 
 LIBS += -lstdc++ -lm
 
