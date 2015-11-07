@@ -1,6 +1,6 @@
 
 MODULE_NAME := mcon
-LIB=libcon.a
+LIB=libmcon.a
 
 MODULE_HEADER= \
 	Vector/Vector.h \
@@ -10,6 +10,7 @@ MODULE_HEADER= \
 	Matrixd/Matrixd.h \
 
 MODULE_SRC=	\
+	Vectord/VectordBase.cpp \
 	Vectord/Vectord.cpp \
 	Matrixd/Matrixd.cpp \
 
@@ -22,6 +23,6 @@ INCDIRS += \
 	Matrixd \
 
 WARNINGS += -Werror
-CPPFLAGS += -O3
+CPPFLAGS += -O3 -mavx
 
 include $(MY_AUDIO_ROOT)/Build/Make/modulerules.mk

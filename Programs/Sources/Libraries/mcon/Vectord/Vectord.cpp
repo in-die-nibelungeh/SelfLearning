@@ -67,7 +67,7 @@ Vectord& Vectord::operator=(const Vectord& v)
 double* Align(double* ptr, int align)
 {
     const unsigned char* aligned = reinterpret_cast<const unsigned char*>(ptr);
-    while (reinterpret_cast<int>(aligned) % align) { ++aligned; }
+    while (reinterpret_cast<long unsigned int>(aligned) % align) { ++aligned; }
     return const_cast<double*>(reinterpret_cast<const double*>(aligned));
 }
 

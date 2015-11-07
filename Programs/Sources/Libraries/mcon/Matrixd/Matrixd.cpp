@@ -36,7 +36,7 @@ namespace {
     double* Align(void* ptr, int align)
     {
         const uint8_t* aligned = reinterpret_cast<const uint8_t*>(ptr);
-        while (reinterpret_cast<int>(aligned) % align) { ++aligned; }
+        while (reinterpret_cast<long unsigned int>(aligned) % align) { ++aligned; }
         return const_cast<double*>(reinterpret_cast<const double*>(aligned));
     }
 } // anonymous
