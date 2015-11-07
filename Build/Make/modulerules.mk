@@ -81,8 +81,8 @@ all: build
 	@echo Succeeded in building.
 
 run: $(MODULE_BIN_PATH)
-	@if [ -n "$(<)" ] ; then \
-		echo Running $(<) ... ; $(<) \
+	@if [ -n "$(MODULE_BIN_PATH)" ] ; then \
+		echo Running $(MODULE_BIN_PATH) ... ; $(MODULE_BIN_PATH) \
 	else \
 		echo Nothing to be done for \`$(@)\': BIN is not defined. ; \
 	fi
