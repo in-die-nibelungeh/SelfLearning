@@ -1,4 +1,4 @@
-#include "BenchUtil.h"
+#include "mutl.h"
 
 static void benchmark_vector_api(void)
 {
@@ -7,7 +7,7 @@ static void benchmark_vector_api(void)
 
     mcon::Vector<double> vec(length);
 
-    mbut::Stopwatch sw;
+    mutl::Stopwatch sw;
     for (int i = 0; i < 1024; ++i)
     {
         mcon::Vector<double> vec2(vec);
