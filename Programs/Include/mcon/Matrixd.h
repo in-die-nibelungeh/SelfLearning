@@ -51,6 +51,28 @@ public:
         ASSERT(true == status);
     }
 
+    Matrixd(const VectordBase& v, bool transpose = false)
+        : m_RowLength(transpose ? v.GetLength() : 1)
+        , m_ColumnLength(transpose ? 1 : v.GetLength())
+        , m_Address(NULL)
+        , m_ObjectBase(NULL)
+    {
+        bool status = Allocate();
+        UNUSED(status);
+        ASSERT(true == status);
+        if (true == transpose)
+        {
+            for (int i = 0; i < v.GetLength(); ++i)
+            {
+                m_ObjectBase[i][0] = v[i];
+            }
+        }
+        else
+        {
+            m_ObjectBase[0] = v;
+        }
+    }
+
     Matrixd(const Matrixd& m)
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
@@ -60,10 +82,9 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(true == status);
-        VectordBase* ptr = m_ObjectBase;
-        for (int i = 0; i < GetRowLength(); ++i, ++ptr)
+        for (int i = 0; i < GetRowLength(); ++i)
         {
-            *ptr = m[i];
+            m_ObjectBase[i] = m[i];
         }
     }
 
@@ -77,10 +98,9 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(true == status);
-        VectordBase* ptr = m_ObjectBase;
-        for (int i = 0; i < GetRowLength(); ++i, ++ptr)
+        for (int i = 0; i < GetRowLength(); ++i)
         {
-            *ptr = m[i];
+            *m_ObjectBase[i] = m[i];
         }
     }
 
