@@ -73,7 +73,7 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(status == true);
-        for ( int i = 0; GetLength(); ++i )
+        for ( int i = 0; i < GetLength(); ++i )
         {
             (*this)[i] = static_cast<double>(v[i]);
         }
