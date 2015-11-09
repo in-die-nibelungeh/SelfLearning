@@ -135,10 +135,10 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         const int n = input.GetLength();
         const int M = tapps;
         double c = 0.001; // an appropriately small number
-        mcon::Matrix<double> P = mcon::Matrix<double>::E(M);
-        mcon::Matrix<double> h(M, 1);
-        const mcon::Vector<double>& d = reference;
-        mcon::Vector<double> uv(M);
+        mcon::Matrixd P = mcon::Matrixd::E(M);
+        mcon::Matrixd h(M, 1);
+        const mcon::Vectord d(reference);
+        mcon::Vectord uv(M);
         mcon::Vector<double> e(n);
         mcon::Vector<double> eta(n);
         mcon::Vector<double> J(n);
@@ -157,15 +157,15 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         {
             uv.Unshift(input[i]);
             U[i] = uv.GetNorm(); // logs
-            const mcon::Matrix<double>& u = uv.Transpose();
-            mcon::Matrix<double> k(P.Multiply(u)); // numerator
-            const mcon::Matrix<double>& denominator = u.Transpose().Multiply(P).Multiply(u);
+            const mcon::Matrixd u(uv, true); // Transposed
+            mcon::Matrixd k(P.Multiply(u)); // numerator
+            const mcon::Matrixd& denominator = u.Transpose().Multiply(P).Multiply(u);
             ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
             const double denom = w * denominator[0][0] + 1;
             k /= denom;
             k *= w;
             K[i] = k.Transpose()[0].GetNorm(); // logs
-            const mcon::Matrix<double>& m = u.Transpose().Multiply(h);
+            const mcon::Matrixd& m = u.Transpose().Multiply(h);
             ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
             eta[i] = d[i] - m[0][0]; // logs
             h += k * eta[i];
@@ -309,6 +309,8 @@ int main(int argc, char* argv[])
         usage();
         return 0;
     }
+	// Display messages real-time
+    setvbuf(stdout, NULL, _IONBF, 0);
 
     LOG("Input: %s\n", input.c_str());
     LOG("Reference: %s\n", reference.c_str());

@@ -1,11 +1,11 @@
-BIN=rls.exe
+BIN=rls
 
 MODULE_HEADER=
 MODULE_SRC=
 
 INC=$(MODULE_HEADER)
 
-LIBS=-lfio -lasp
+LIBS=-lfio -lasp -lmcon
 
 CPPFLAGS += -O3
 
