@@ -14,7 +14,8 @@ int main(void)
 }
 #endif
 
-#include "Class.h"
+#include "ClassA.h"
+#include "ClassB.h"
 
 int main(void)
 {
