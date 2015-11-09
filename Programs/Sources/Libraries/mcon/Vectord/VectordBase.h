@@ -27,9 +27,11 @@
 #include <string.h>
 
 #include "debug.h"
-#include "Vector.h"
 
 namespace mcon {
+
+template <typename Type>
+class Vector;
 
 class VectordBase
 {

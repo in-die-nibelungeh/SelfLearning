@@ -1,4 +1,6 @@
 
+#include <math.h>
+
 #include "debug.h"
 #include "VectordBase.h"
 

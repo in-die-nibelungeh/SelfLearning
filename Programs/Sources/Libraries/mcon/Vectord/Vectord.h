@@ -32,6 +32,9 @@
 
 namespace mcon {
 
+template <typename Type>
+class Vector;
+
 class Vectord : public VectordBase
 {
 public:
@@ -79,6 +82,18 @@ public:
         }
     }
     ~Vectord();
+
+    template <typename U> operator=(const Vector<U>& v)
+    {
+        bool status = Resize(v.GetLength());
+        UNUSED(status);
+        ASSERT(status == true);
+        for ( int i = 0; i < GetLength(); ++i )
+        {
+            (*this)[i] = static_cast<double>(v[i]);
+        }
+        return *this;
+    }
 
     // operator= make the same Vectord as the input Vectord.
     Vectord& operator=(const Vectord& Vectord);

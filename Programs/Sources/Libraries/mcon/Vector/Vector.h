@@ -28,6 +28,7 @@
 
 #include "types.h"
 #include "debug.h"
+#include "VectordBase.h"
 
 namespace mcon {
 
@@ -48,6 +49,7 @@ public:
 
     explicit Vector(const int length = 0);
     Vector(const Vector<Type>& v);
+    Vector(const VectordBase& v);
     template <typename U> Vector(const Vector<U>& v);
     ~Vector();
 
@@ -284,6 +286,15 @@ Vector<Type>::Vector(int length)
 
 template <typename Type>
 Vector<Type>::Vector(const Vector<Type>& v)
+    : m_Address(NULL),
+    m_Length(v.GetLength())
+{
+    Allocate();
+    MCON_ITERATION(i, m_Length, (*this)[i] = v[i]);
+}
+
+template <typename Type>
+Vector<Type>::Vector(const VectordBase& v)
     : m_Address(NULL),
     m_Length(v.GetLength())
 {
