@@ -18,8 +18,8 @@ int main(void)
 
 int main(void)
 {
-    ClassA a;
-    ClassB b;
+    ClassA a(2);
+    ClassB<int> b(3);
 
     a = b;
     b = a;
