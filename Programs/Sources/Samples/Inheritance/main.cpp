@@ -42,8 +42,7 @@ public:
          printf("%s\n", __func__);
          const int align = 16;
          m_AddressBase = new double[n+align-1];
-         unsigned char* ptr = reinterpret_cast<unsigned
-char*>(m_AddressBase);
+         unsigned char* ptr = reinterpret_cast<unsigned char*>(m_AddressBase);
          while ( (reinterpret_cast<int>(ptr) % align) != 0) ptr++;
          m_AddressAligned = ptr;
          printf("Base=%p\n", m_AddressBase);
