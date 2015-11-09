@@ -1,6 +1,6 @@
 
 MODULE_NAME := mtbx
-LIB=libtbx.a
+LIB=libmtbx.a
 
 MODULE_HEADER= \
 	WaveGen/WaveGen.h \

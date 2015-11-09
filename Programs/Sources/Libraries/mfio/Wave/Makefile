@@ -1,4 +1,4 @@
-BIN=mfio_wave.exe
+BIN=mfio_wave
 
 INC=Wave.h
 MODULE_SRC=Wave.cpp

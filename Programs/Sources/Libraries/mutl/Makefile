@@ -1,6 +1,6 @@
 
 MODULE_NAME := mutl
-LIB=libutl.a
+LIB=libmutl.a
 
 MODULE_HEADER= \
 	Benchmark/Stopwatch.h \

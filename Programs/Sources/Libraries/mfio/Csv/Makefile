@@ -1,4 +1,4 @@
-BIN=mfio_csv.exe
+BIN=mfio_csv
 
 INC=Csv.h
 MODULE_SRC=Csv.cpp

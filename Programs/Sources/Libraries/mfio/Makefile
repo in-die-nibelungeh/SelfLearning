@@ -1,6 +1,6 @@
 
 MODULE_NAME := mfio
-LIB=libfio.a
+LIB=libmfio.a
 
 MODULE_HEADER= \
 	Csv/Csv.h \

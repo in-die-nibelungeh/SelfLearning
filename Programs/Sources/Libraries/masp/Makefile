@@ -1,6 +1,6 @@
 
 MODULE_NAME := masp
-LIB=libasp.a
+LIB=libmasp.a
 
 MODULE_HEADER= \
 	Basics/Fir/Fir.h \
