@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string>
 
-#include "Vector.h"
-#include "FileIo.h"
+#include "debug.h"
+#include "mcon.h"
+#include "mfio.h"
 #include "Resampler.h"
 
 static void test_resampler(void)
@@ -23,7 +24,7 @@ static void test_resampler(void)
     {
         mcon::Vector<double> coefs;
         resampler.GetCoefficients(coefs);
-        printf("Length=%d\n", coefs.GetLength());
+        LOG("Length=%d\n", coefs.GetLength());
 
     }
     {
@@ -42,7 +43,7 @@ static void test_resampler(void)
     {
         mcon::Vector<double> coefs;
         resampler.GetCoefficients(coefs);
-        printf("Length=%d\n", coefs.GetLength());
+        LOG("Length=%d\n", coefs.GetLength());
 
     }
     {
@@ -52,6 +53,28 @@ static void test_resampler(void)
 
         mfio::Wave w(targetFs, wave.GetNumChannels(), wave.GetBitDepth());
         w.Write(fbody + std::string("_resampled2.wav"), output);
+    }
+    // サンプルの数を変更する
+    // ==> 実質的に周波数変換？
+    // ==> 違う気がする...
+    {
+        const int N = 100;
+        const double ratio = 1/1.5;
+        const double fp = 0.35;
+        const double fs = 0.45;
+        const double ripple = 0.01;
+        const double decay = 80;
+        mcon::Vector<double> src(N);
+        for (int k = 0; k < N; ++k)
+        {
+            src[k] = k;
+        }
+        resampler.Initialize(N, static_cast<int>(ratio * N), fp, fs);
+        resampler.MakeFilterBySpec(ripple, decay);
+
+        mcon::Vector<double> dst;
+        resampler.Convert(dst, src);
+        mfio::Csv::Write("sample_count_convert.csv", dst);
     }
 }
 

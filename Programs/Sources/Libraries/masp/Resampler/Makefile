@@ -1,7 +1,6 @@
 
-BIN=resampler.exe
-LIB=libsrc.a
-LIBS=-lwin -lfir -lfio -lfft
+BIN=masp_resampler
+LIBS=-lmasp -lmfio
 
 MODULE_HEADER=Resampler.h
 MODULE_SRC=Resampler.cpp
