@@ -31,7 +31,7 @@
 namespace mutl {
 namespace interp {
 
-class Linear
+class Spline
 {
 public:
     static status_t Interpolate(mcon::Vector<double>& output, const mcon::Vector<double>& input, int sampleCount);
