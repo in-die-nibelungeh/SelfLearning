@@ -1,4 +1,4 @@
-BIN=ft.exe
+BIN=ft
 
 MODULE_HEADER=
 MODULE_SRC=

@@ -85,7 +85,7 @@ status_t Analyze(const char* inputFile)
             {
                 matrix[0][i] = 1.0 * i / N;
             }
-            matrix[1] = polar[0];//20 * log10(polar[0][i]);
+            matrix[1] = polar[0];
             matrix[2] = polar[1];
             matrix[3] = input;
 
