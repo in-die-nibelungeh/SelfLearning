@@ -26,6 +26,8 @@
 
 #include <time.h>
 
+#include "Clockwatch.h"
+
 namespace mutl {
 
 class Stopwatch
@@ -34,7 +36,16 @@ public:
     Stopwatch();
     ~Stopwatch();
     double Tick(void);
-    double GetLastRecord(void) const;
+    void Correlate();
+
+    inline double GetLastRecord(void) const
+    {
+       return m_LastScore;
+    }
+    inline bool IsCorrelated() const
+    {
+        return m_Correlated;
+    }
     inline double Push()
     {
         return Tick();
@@ -42,8 +53,11 @@ public:
 private:
     double m_LastScore;
     union {
-        struct timespec ts;
+        struct timespec ts; // Time Stamp
     } m_Base;
+    double m_CorrelationFactor;
+    bool m_Correlated;
+    Clockwatch m_Clockwatch;
 };
 
 } // namespace mutl {

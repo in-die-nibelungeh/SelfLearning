@@ -22,7 +22,11 @@
  * THE SOFTWARE.
  */
 
+
+#include <unistd.h> // sleep
+
 #include "debug.h"
+#include "Clockwatch.h"
 #include "Stopwatch.h"
 
 namespace mutl {
@@ -30,6 +34,9 @@ namespace mutl {
 Stopwatch::Stopwatch()
     : m_LastScore(0)
     , m_Base()
+    , m_CorrelationFactor(0.0)
+    , m_Correlated(false)
+    , m_Clockwatch()
 {
     clock_gettime(CLOCK_REALTIME, &m_Base.ts);
 }
@@ -39,27 +46,39 @@ Stopwatch::~Stopwatch()
 
 double Stopwatch::Tick(void)
 {
-    struct timespec ts;
-
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    long int sec  = ts.tv_sec - m_Base.ts.tv_sec;
-    long int nsec = ts.tv_nsec - m_Base.ts.tv_nsec;
-    if (nsec < 0)
+    if (IsCorrelated())
     {
-        nsec += 1000000000L;
-        sec  -= 1;
+        m_LastScore = m_CorrelationFactor  * m_Clockwatch.Tick();
     }
-    m_LastScore = sec + nsec * 1.0e-9;
+    else
+    {
+        struct timespec ts;
 
-    m_Base.ts = ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        long int sec  = ts.tv_sec - m_Base.ts.tv_sec;
+        long int nsec = ts.tv_nsec - m_Base.ts.tv_nsec;
+        if (nsec < 0)
+        {
+            nsec += 1000000000L;
+            sec  -= 1;
+        }
+        m_LastScore = sec + nsec * 1.0e-9;
+
+        m_Base.ts = ts;
+    }
 
     return m_LastScore;
 }
 
-double Stopwatch::GetLastRecord(void) const
+void Stopwatch::Correlate()
 {
-   return m_LastScore;
+    const int sleepPeriod = 1;
+    m_CorrelationFactor = sleepPeriod;
+    m_Clockwatch.Tick();
+    sleep(sleepPeriod);
+    m_CorrelationFactor /= m_Clockwatch.Tick();
+    m_Correlated = true;
 }
 
 } // namespace mutl {

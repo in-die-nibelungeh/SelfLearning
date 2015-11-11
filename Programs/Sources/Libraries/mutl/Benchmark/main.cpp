@@ -99,7 +99,7 @@ static void test_methods(void)
     printf("CLOCKS_PER_SEC : %d\n", CLOCKS_PER_SEC);
     printf("sysconf(_SC_CLK_TCK) : %ld\n", sysconf(_SC_CLK_TCK));
 
-#if 1
+#if 0
     mutl::Clockwatch cw;
     mutl::Stopwatch sw;
     for (int k = 0; k < 10; ++k)
@@ -189,22 +189,32 @@ void test_stopwatch(void)
     mutl::Stopwatch sw;
     const int a = 0;
     int b;
-    int limit = 100;
-    for ( int k = 0; k < 6; ++k, limit *= 10)
+    for (int m = 0; m < 2; ++m )
     {
-        sw.Tick();
-        // ŽžŠÔ‚ðŒv‘ª‚·‚éˆ—
-        for ( int i = 0; i < limit; ++i )
+        int limit = 100;
+        if (m != 0)
         {
-            __asm__ volatile(
-            ".rept 1000\n"
-            "  add %[a], %[b]\n"
-            ".endr\n"
-            :[b]"=r"(b)
-            :[a]"r"(a)
-            );
+            printf("Correlating ... ");
+            sw.Correlate();
+            printf("Done\n");
         }
-        printf("Time consumed: %g\n", sw.Tick());
+
+        for ( int k = 0; k < 6; ++k, limit *= 10)
+        {
+            sw.Tick();
+            // ŽžŠÔ‚ðŒv‘ª‚·‚éˆ—
+            for ( int i = 0; i < limit; ++i )
+            {
+                __asm__ volatile(
+                ".rept 1000\n"
+                "  add %[a], %[b]\n"
+                ".endr\n"
+                :[b]"=r"(b)
+                :[a]"r"(a)
+                );
+            }
+            printf("Time consumed: %g\n", sw.Tick());
+        }
     }
 }
 
