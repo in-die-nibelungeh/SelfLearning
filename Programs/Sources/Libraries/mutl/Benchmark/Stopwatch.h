@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <time.h>
+
 namespace mutl {
 
 class Stopwatch
@@ -39,7 +41,9 @@ public:
     }
 private:
     double m_LastScore;
-    unsigned long long int m_Base;
+    union {
+        struct timespec ts;
+    } m_Base;
 };
 
 } // namespace mutl {

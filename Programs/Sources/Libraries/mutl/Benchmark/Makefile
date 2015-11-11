@@ -1,8 +1,8 @@
 
 BIN=mutl_benchmark.exe
 
-INC=Stopwatch.h
-MODULE_SRC=Stopwatch.cpp
+INC=Stopwatch.h Clockwatch.h
+MODULE_SRC=Stopwatch.cpp Clockwatch.cpp
 
 CPPFLAGS += -O3
 

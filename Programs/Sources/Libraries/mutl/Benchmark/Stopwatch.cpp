@@ -22,39 +22,37 @@
  * THE SOFTWARE.
  */
 
-#include <math.h>
-
+#include "debug.h"
 #include "Stopwatch.h"
-
-namespace {
-    inline unsigned long long rdtsc()
-    {
-        unsigned long long ret;
-        __asm__ volatile ("rdtsc" : "=A" (ret));
-        return ret;
-    }
-} // anonymous
 
 namespace mutl {
 
 Stopwatch::Stopwatch()
     : m_LastScore(0)
-    , m_Base(rdtsc())
-{}
+    , m_Base()
+{
+    clock_gettime(CLOCK_REALTIME, &m_Base.ts);
+}
 
-Stopwatch::~Stopwatch() {}
+Stopwatch::~Stopwatch()
+{}
 
 double Stopwatch::Tick(void)
 {
-    unsigned long long int end = rdtsc();
+    struct timespec ts;
 
-    m_LastScore = end - m_Base;
-    if (end <= m_Base)
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    long int sec  = ts.tv_sec - m_Base.ts.tv_sec;
+    long int nsec = ts.tv_nsec - m_Base.ts.tv_nsec;
+    if (nsec < 0)
     {
-        m_LastScore += pow(2, 64);
+        nsec += 1000000000L;
+        sec  -= 1;
     }
+    m_LastScore = sec + nsec * 1.0e-9;
 
-    m_Base = end;
+    m_Base.ts = ts;
 
     return m_LastScore;
 }
