@@ -25,11 +25,18 @@
 #include "Clockwatch.h"
 
 namespace {
-    inline uint64_t rdtsc()
+    inline uint64_t GetTickCount()
     {
         uint64_t ret;
-//        __asm__ volatile ("rdtsc" : "=A" (ret));
+#if defined(__x86_64) && __x86_64 == 1
         __asm__ volatile ("rdtsc; shlq $32, %%rdx; orq %%rdx, %%rax" : "=A" (ret) :: "%rdx");
+#else
+#if defined(_X86_) && _X86_ == 1
+        __asm__ volatile ("rdtsc" : "=A" (ret));
+#else
+#error Unknow platform
+#endif
+#endif
         return ret;
     }
 } // anonymous
@@ -38,7 +45,7 @@ namespace mutl {
 
 Clockwatch::Clockwatch()
     : m_LastScore(0)
-    , m_Base(rdtsc())
+    , m_Base(GetTickCount())
 {}
 
 Clockwatch::~Clockwatch()
@@ -46,7 +53,7 @@ Clockwatch::~Clockwatch()
 
 uint64_t Clockwatch::Tick(void)
 {
-    uint64_t end = rdtsc();
+    uint64_t end = GetTickCount();
     if (end <= m_Base)
     {
         m_LastScore = __LONG_MAX__ - m_Base + end + 1;
