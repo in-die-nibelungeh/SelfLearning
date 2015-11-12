@@ -57,35 +57,39 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
+    // 全要素を初期化
     equation = 0;
-    // r=0
+
+    // r=0 (開始点の方程式)
     {
         const int r = 0;
-        equation[r][r - 0] = 2;
+        equation[r][r    ] = 2;
         equation[r][r + 1] = 1;
     }
 
-    // r=N-2
+    // r=N-3 (終端の方程式)
     {
         const int r = N - 3;
         equation[r][r - 1] = 1;
-        equation[r][r - 0] = 2;
+        equation[r][r    ] = 2;
     }
 
-    // r=1:N-3
+    // r=1:N-4 (端点以外の方程式を設定)
     for ( int r = 1; r < equation.GetRowLength() - 1; ++r )
     {
-        equation[r][r - 1] = 1;//h[r];
-        equation[r][r - 0] = 2;//(h[r] + h[r+1]) * 2;
-        equation[r][r + 1] = 1;//h[r+1];
+        equation[r][r - 1] = 1; // h[r];
+        equation[r][r    ] = 2; // (h[r] + h[r+1]) * 2;
+        equation[r][r + 1] = 1; // h[r+1];
     }
     // v を代入
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
-        equation[r][N - 2] = input[r+2] - input[r+1] * 2 + input[r];
+        equation[r][N - 2] = input[r+2] - 2 * input[r+1] + input[r];
     }
+    //--------------------------------
     // Gauss-Jordan
-    // 各列を正規化
+    //--------------------------------
+    // 各行を正規化
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
@@ -105,20 +109,20 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         }
         if ( IsNearlyEqualZero(maximum) )
         {
-            // Ending...
+            // ここに到達することはないはず。
             DEBUG_LOG(" ~ 0 at r=%d\n", r);
             output.Resize(0); // NULL を返す。
             return -ERROR_ILLEGAL;
         }
         // 必要なら入れ替える
-        if ( r!= index )
+        if ( r != index )
         {
             mcon::Vector<double> tmp(equation[r]);
             equation[r] = equation[index];
             equation[index] = tmp;
         }
-        // index が必要なのはここまで。後は r を使用する。
-        // 注目している行について、注目している列の値を 1.0 にする
+        // 上で入れ替えたので 以降では index は不要、r を使用する。
+        // 注目している行の、注目している列の値を 1.0 にする
         equation[r] /= maximum;
 
         // 他の行から引く。
@@ -142,6 +146,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         u[k+1] = equation[k][N - 2];
     }
+    // u を取り出したのでもう不要、メモリを解放しておく
     equation.Resize(0, 0);
 
     // 係数計算
@@ -163,7 +168,6 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         d[k] = input[k];
     }
     // 両端の値はループ外で代入しておく。
-    // 終端の値はループ外で処理しようとすると、範囲外アクセスを生じるので注意。
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
     output[0] = input[0];
     output[sampleCount - 1] = input[N - 1];
@@ -173,7 +177,9 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         const int index = static_cast<int>(position); // 入力配列インデックス (整数)
         const double frac = position - index;         // 小数部
         DEBUG_LOG("k=%d, frac=%g, index=%d, (a, b, c, d)=(%g, %g, %g, %g)\n", k, frac, index, a[index], b[index], c[index], d[index]);
-        output[k] = a[index] * pow(frac, 3) + b[index] * pow(frac, 2) + c[index] * frac + d[index];
+        const double frac2 = frac * frac;
+        const double frac3 = frac * frac2;
+        output[k] = a[index] * frac3 + b[index] * frac2 + c[index] * frac + d[index];
     }
     return NO_ERROR;
 }
