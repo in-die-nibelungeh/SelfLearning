@@ -24,40 +24,18 @@
 
 #pragma once
 
-#include <time.h>
-
-#include "Clockwatch.h"
+#include "mcon.h"
+#include "status.h"
+#include "types.h"
 
 namespace mutl {
+namespace interp {
 
-class Stopwatch
+class Spline
 {
 public:
-    Stopwatch();
-    ~Stopwatch();
-    double Tick(void);
-    void Correlate();
-
-    inline double GetLastRecord(void) const
-    {
-       return m_LastScore;
-    }
-    inline bool IsCorrelated() const
-    {
-        return m_Correlated;
-    }
-    inline double Push()
-    {
-        return Tick();
-    }
-private:
-    double m_LastScore;
-    union {
-        struct timespec ts; // Time Stamp
-    } m_Base;
-    double m_CorrelationFactor;
-    bool m_Correlated;
-    Clockwatch m_Clockwatch;
+    static status_t Interpolate(mcon::Vector<double>& output, const mcon::Vector<double>& input, int sampleCount);
 };
 
+} // namespace interp {
 } // namespace mutl {

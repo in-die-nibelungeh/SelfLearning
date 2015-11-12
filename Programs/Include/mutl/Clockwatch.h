@@ -24,40 +24,24 @@
 
 #pragma once
 
-#include <time.h>
-
-#include "Clockwatch.h"
+#include <stdint.h>
 
 namespace mutl {
 
-class Stopwatch
+class Clockwatch
 {
 public:
-    Stopwatch();
-    ~Stopwatch();
-    double Tick(void);
-    void Correlate();
-
-    inline double GetLastRecord(void) const
-    {
-       return m_LastScore;
-    }
-    inline bool IsCorrelated() const
-    {
-        return m_Correlated;
-    }
-    inline double Push()
+    Clockwatch();
+    ~Clockwatch();
+    uint64_t Tick();
+    uint64_t GetLastRecord(void) const;
+    inline uint64_t Push()
     {
         return Tick();
     }
 private:
-    double m_LastScore;
-    union {
-        struct timespec ts; // Time Stamp
-    } m_Base;
-    double m_CorrelationFactor;
-    bool m_Correlated;
-    Clockwatch m_Clockwatch;
+    uint64_t m_LastScore;
+    uint64_t m_Base;
 };
 
 } // namespace mutl {
