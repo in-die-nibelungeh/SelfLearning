@@ -58,14 +58,6 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
     equation = 0;
-#if 0
-    mcon::Vector<double> h;
-    if ( false == h.Resize(N-1) )
-    {
-        return -ERROR_CANNOT_ALLOCATE_MEMORY;
-    };
-    h = 1;
-#endif
     // r=0
     {
         const int r = 0;
@@ -75,7 +67,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
 
     // r=N-2
     {
-        const int r = N - 2;
+        const int r = N - 3;
         equation[r][r - 1] = 1;
         equation[r][r - 0] = 2;
     }
@@ -98,7 +90,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
     }
-    for ( int r = 0; r < equation.GetRowLength() - 1; ++r )
+    for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
         // 注目している列の中で、最大値を持つ列を探す。
         int index = r;
@@ -139,40 +131,6 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
             equation[m] -= (equation[r] * equation[m][r]);
         }
     }
-#if 0
-    for (int iter = 0; iter < rowCount; ++iter)
-    {
-        // Find a row which m[row][i] is zero.
-        bool isFound = false;
-        for (int i = iter; i < rowCount; ++i)
-        {
-            if (fabs(m[i][iter]) > threshold)
-            {
-                Vector<Type> vec(m[i]);
-                m[i] = m[iter];
-                vec /= vec[iter];
-                m[iter] = vec;
-                isFound = true;
-                break;
-            }
-        }
-        // Give-up...
-        if (false == isFound)
-        {
-            return *this;
-        }
-        for (int i = 0; i < rowCount; ++i)
-        {
-            if (i != iter)
-            {
-                Vector<Type> vec(m[iter]);
-                vec *= m[i][iter];
-                m[i] -= vec;
-            }
-        }
-    }
-#endif
-
     mcon::Vector<double> u;
     if ( false == u.Resize(N) )
     {
@@ -180,7 +138,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     };
     u[0] = 0;
     u[N-1] = 0;
-    for ( int k = 0; k < u.GetLength() - 1; ++k )
+    for ( int k = 0; k < u.GetLength() - 2; ++k )
     {
         u[k+1] = equation[k][N - 2];
     }
@@ -188,7 +146,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
 
     // 係数計算
     mcon::Matrix<double> coefficients;
-    if ( false == coefficients.Resize(N-1, 4) ) // 4 は a, b, c, d
+    if ( false == coefficients.Resize(4, N-1) ) // 4 は a, b, c, d
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
@@ -201,7 +159,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         a[k] = (u[k+1] - u[k]) / 6;
         b[k] = u[k] / 2;
-        c[k] = (u[k+1] - u[k]) - (2 * u[k] + u[k+1]) / 6;
+        c[k] = (input[k+1] - input[k]) - (2 * u[k] + u[k+1]) / 6;
         d[k] = input[k];
     }
     // 両端の値はループ外で代入しておく。
@@ -214,10 +172,9 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         const double position = k * step;             // 換算した位置 (小数)
         const int index = static_cast<int>(position); // 入力配列インデックス (整数)
         const double frac = position - index;         // 小数部
-        DEBUG_LOG("k=%d, pos=%g, index=%d\n", k, position, index);
-        output[k] = a[index] * pow(frac, 3) + b[index] * pow(frac, 3) + c[index] * frac + d[index];
+        DEBUG_LOG("k=%d, frac=%g, index=%d, (a, b, c, d)=(%g, %g, %g, %g)\n", k, frac, index, a[index], b[index], c[index], d[index]);
+        output[k] = a[index] * pow(frac, 3) + b[index] * pow(frac, 2) + c[index] * frac + d[index];
     }
-
     return NO_ERROR;
 }
 

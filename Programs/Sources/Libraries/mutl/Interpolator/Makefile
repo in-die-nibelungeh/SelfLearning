@@ -1,6 +1,7 @@
 
 BIN=mutl_interp
 
+LIBS=-lmfio
 INC=Spline.h Linear.h
 MODULE_SRC=Spline.cpp Linear.cpp
 

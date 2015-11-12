@@ -19,7 +19,7 @@ void test_linear()
 
     {
         mcon::Matrix<double> saved(2, newN);
-
+        saved = 0;
         memcpy(saved[0], data, sizeof(double) * data.GetLength());
         saved[1] = output;
         mfio::Csv::Write("linear.csv", saved);
@@ -36,19 +36,26 @@ void test_spline()
         data[k] = VALUE(k);
     }
     mcon::Vector<double> output;
-    mutl::interp::Spline::Interpolate(output, data, static_cast<int>(newN));
+    int status = mutl::interp::Spline::Interpolate(output, data, static_cast<int>(newN));
 
+    if ( status == 0)
     {
         mcon::Matrix<double> saved(2, newN);
-
+        saved = 0;
         memcpy(saved[0], data, sizeof(double) * data.GetLength());
         saved[1] = output;
         mfio::Csv::Write("spline.csv", saved);
+    }
+    else
+    {
+        printf("Failed...\n");
     }
 }
 
 int main(void)
 {
+    // Display messages real-time
+    setvbuf(stdout, NULL, _IONBF, 0);
     //test_linear();
     test_spline();
     return 0;
