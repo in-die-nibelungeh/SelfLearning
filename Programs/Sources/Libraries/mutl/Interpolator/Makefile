@@ -1,10 +1,8 @@
 
 BIN=mutl_interp
 
-INC=Linear.h
-MODULE_SRC=Linear.cpp
-
-LIBS=-lmfio
+INC=Spline.h Linear.h
+MODULE_SRC=Spline.cpp Linear.cpp
 
 CPPFLAGS += -O3
 
