@@ -32,7 +32,9 @@
 
 #if defined(DEBUG)
 
+#ifndef DEBUG_LOG
 #define DEBUG_LOG(...) printf("[" __FILE__ " at " TOSTR(__LINE__) "]: " __VA_ARGS__)
+#endif
 
 #define CHECK(cond)                \
     do {                           \
@@ -58,10 +60,10 @@
 
 #ifndef ASSERT_ALIGNED
 #define ASSERT_ALIGNED(p, n) \
-    do { if (!( (reinterpret_cast<int>(p) % (n)) == 0 )) \
+    do { if (!( (reinterpret_cast<long unsigned  int>(p) % (n)) == 0 )) \
     {         \
-        printf("ASSERT (aligned) at %d in %s: " #p " %% " #n "(%p/%x)=%x\n", __LINE__, __FILE__, p, n, reinterpret_cast<int>(p) % (n)); \
-        assert((reinterpret_cast<int>(p) % (n)) == 0); \
+        printf("ASSERT (aligned) at %d in %s: " #p " %% " #n "(%p/%x)=%lx\n", __LINE__, __FILE__, p, n, reinterpret_cast<long unsigned int>(p) % (n)); \
+        assert((reinterpret_cast<long unsigned int>(p) % (n)) == 0); \
     } } while (0)
 
 #endif // #ifndef ASSERT_ALIGNED

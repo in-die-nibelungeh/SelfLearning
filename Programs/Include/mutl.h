@@ -25,3 +25,6 @@
 #pragma once
 
 #include "mutl/Stopwatch.h"
+#include "mutl/Clockwatch.h"
+#include "mutl/Linear.h"
+#include "mutl/Spline.h"
