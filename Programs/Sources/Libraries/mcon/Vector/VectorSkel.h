@@ -32,77 +32,69 @@ namespace mcon {
 template <typename Type>
 class VectorSkel
 {
+    friend class Vector;
 public:
-    explicit VectorSkel(int length = 0)
+    explicit VectorSkel(Type* address = NULL, uint length = 0)
         : m_Length(length)
-        , m_Address(NULL)
+        , m_Address(address)
     {}
-    ~VectorSkel()
+
+    virtual ~VectorSkel()
     {
         m_Length = 0;
         m_Address = NULL;
     }
-    const Type& operator[](const int i) const
+    virtual const Type& operator[](uint i) const
     {
         ASSERT (m_Address != NULL);
-        ASSERT (0 <= i && i < GetLength());
+        ASSERT (i < GetLength());
         return m_Address[i];
     }
 
-    Type& operator[](const int i)
+    virtual operator=(VectorSkel<Type>& v)
+    {
+        int smaller = v.GetLength() > GetLenth() ? GetLenth() : v.GetLenth();
+        memcpy(*this, v, v.GetLength());
+    }
+
+    template <typename U>
+    virtual operator=(VectorSkel<U>& v)
+    {
+        int smaller = v.GetLength() > GetLenth() ? GetLenth() : v.GetLenth();
+        for ( int k = 0; k < smaller; ++k )
+        {
+            (*this)[k] = static_csat<Type>(v[k]);
+        }
+    }
+
+    virtual Type& operator[](uint i)
     {
         ASSERT (m_Address != NULL);
-        ASSERT (0 <= i && i < GetLength());
+        ASSERT (i < GetLength());
         return m_Address[i];
     }
 
-    inline int GetLength(void) const
+    virtual inline operator void* () const
+    {
+        return m_Address;
+    }
+
+    virtual inline operator Type* () const
+    {
+        return m_Address;
+    }
+
+    virtual inline int GetLength(void) const
     {
         return m_Length;
     }
 
-    inline operator void* () const
-    {
-        return m_Address;
-    }
-
-    inline operator Type* () const
-    {
-        return m_Address;
-    }
-
-    virtual bool Resize(int length)
-    {
-        if (length < 0)
-        {
-            return false;
-        }
-        if (length == GetLength())
-        {
-            return true;
-        }
-        if (NULL != m_Address)
-        {
-            delete[] m_Address;
-            m_Address = NULL;
-        }
-        if (0 < length)
-        {
-            m_Address = new Type[length];
-            if (NULL == m_Address)
-            {
-                return false;
-            }
-            m_Length = length;
-        }
-        return true;
-    }
-    inline bool IsNull() const
+    virtual inline bool IsNull() const
     {
         return m_Address == NULL;
     }
 private:
-    int m_Length;
+    uint m_Length;
     Type* m_Address;
 };
 
