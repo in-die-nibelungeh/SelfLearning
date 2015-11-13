@@ -154,6 +154,22 @@ public:
     Vector<Type>& operator*=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] *= v[i]); return *this; }
     Vector<Type>& operator/=(const Vector<Type>& v) { MCON_ITERATION(i, Smaller(v.GetLength()), (*this)[i] /= v[i]); return *this; }
 
+    void Initialize(int offset = 0, int step = 1)
+    {
+        for ( int k = 0; k < GetLength(); ++k )
+        {
+            (*this)[k] = offset + step * k;
+        }
+    }
+
+    void Initialize( Type (*initializer)(int, size_t) )
+    {
+        for ( int k = 0; k < GetLength(); ++k )
+        {
+            (*this)[k] = initializer(k, GetLength());
+        }
+    }
+
     inline Matrix<Type> T(void) const { return Transpose(); }
     Matrix<Type> Transpose(void) const
     {

@@ -1,7 +1,14 @@
 
+#include <math.h>
+
 #include "debug.h"
 
-static void test_vector_api(void)
+double initializer(int i, size_t n)
+{
+    return log10( static_cast<double>(i + 1) / n );
+}
+
+void test_vector_api(void)
 {
     // Empty vector.
     mcon::Vector<double> dvec;
@@ -211,6 +218,32 @@ static void test_vector_api(void)
         const double norm = v.GetNorm();
         UNUSED(norm);
         CHECK_VALUE(norm, 17);
+    }
+    printf("[Initialize]\n");
+    {
+        const int length = 10;
+        mcon::Vector<double> v(length);
+        v.Initialize();
+        for (int i = 0; i < length; ++i)
+        {
+            CHECK_VALUE(v[i], i);
+        }
+        v.Initialize(1);
+        for (int i = 0; i < length; ++i)
+        {
+            CHECK_VALUE(v[i], i+1);
+        }
+        v.Initialize(1, 2);
+        for (int i = 0; i < length; ++i)
+        {
+            CHECK_VALUE(v[i], i*2+1);
+        }
+        v.Initialize(initializer);
+        for (int i = 0; i < length; ++i)
+        {
+            CHECK_VALUE(v[i], initializer(i, length));
+        }
+
     }
     printf("END\n");
 }
