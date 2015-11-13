@@ -2,6 +2,9 @@
 #include <math.h>
 #define MAXN 1010
 
+#include "mcon.h"
+#include "mfio.h"
+
 void spline_cal_u(int n, double x[], double y[], double u[]);
 double spline(int n, double x[], double y[], double u[],
           double xx);
@@ -16,31 +19,39 @@ int gauss_jordan(int n, double a[][MAXN], double b[]);
 /*=============================================================*/
 int main(void)
 {
-   double x[MAXN], y[MAXN], u[MAXN];
-   double xmin, xmax;
-   int n,i, nplot;
-   double px[MAXN], py[MAXN];
+    double x[MAXN], y[MAXN], u[MAXN];
+    //double xmin, xmax;
+    const int n = 10;
 
-   xmin = -1.0;
-   xmax = 1.0;
-   n=10;
+    //   xmin = -1.0;
+    //   xmax = 1.0;
 
-   for(i=0; i<=n; i++){
-     x[i]=xmin+i*(xmax-xmin)/n;
-     y[i]=VALUE(i);//1.0/(1.0+25*x[i]*x[i]);
-   }
-   spline_cal_u(n,x,y,u);
-   nplot = 1000;
-   for(i=0; i<=nplot; i++){
-     px[i]=xmin+i*(xmax-xmin)/(nplot);
-     py[i]=spline(n, x, y, u, px[i]);
-   }
+    for(int i=0; i<=n; i++)
+    {
+        x[i]=i*10;//xmin+i*(xmax-xmin)/n;
+        y[i]=VALUE(i*10);//1.0/(1.0+25*x[i]*x[i]);
+    }
 
-   (void)px;
-   (void)py;
-   // mk_graph(nplot, px, xmin, xmax, py, -0.5, 1.5);
+    spline_cal_u(n,x,y,u);
+    for(int i=0; i<=n; i++)
+    {
+        printf("u[%d]=%g\n", i, u[i]);
+    }
+    const int nplot = 101;
+    mcon::Matrix<double> mat(2, nplot);
+    mcon::Vector<double>& px = mat[0];
+    mcon::Vector<double>& py = mat[1];
 
-   return 0;
+    for(int i=0; i<nplot; i++)
+    {
+        px[i]=i;//xmin+i*(xmax-xmin)/(nplot);
+        py[i]=spline(n, x, y, u, px[i]);
+    }
+
+    mfio::Csv::Write("spline.csv", mat);
+    // mk_graph(nplot, px, xmin, xmax, py, -0.5, 1.5);
+
+    return 0;
 }
 
 /*=============================================================*/
