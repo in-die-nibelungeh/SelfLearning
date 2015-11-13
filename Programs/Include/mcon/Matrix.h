@@ -104,6 +104,25 @@ public:
         }
         return I;
     }
+/*
+    void Initialize(int offset = 0, int step = 1)
+    {
+        for ( int r = 0; r < GetRowLength(); ++r )
+        {
+            (*this)[r].Initialize(offset, step);
+        }
+    }
+*/
+    void Initialize( Type (*initializer)(int, size_t, int, size_t) )
+    {
+        for ( int r = 0; r < GetRowLength(); ++r )
+        {
+            for ( int c = 0; c < GetColumnLength(); ++c )
+            {
+                (*this)[r][c] = initializer(r, GetRowLength(), c, GetColumnLength());
+            }
+        }
+    }
 
     bool IsNull(void) const { return m_RowLength == 0; }
     int GetRowLength(void) const { return m_RowLength; }
