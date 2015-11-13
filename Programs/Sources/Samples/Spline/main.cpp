@@ -28,7 +28,7 @@ int main(void)
 
     for(int i=0; i<=n; i++)
     {
-        x[i]=i*10;//xmin+i*(xmax-xmin)/n;
+        x[i]=i;//xmin+i*(xmax-xmin)/n;
         y[i]=VALUE(i*10);//1.0/(1.0+25*x[i]*x[i]);
     }
 
@@ -44,7 +44,7 @@ int main(void)
 
     for(int i=0; i<nplot; i++)
     {
-        px[i]=i;//xmin+i*(xmax-xmin)/(nplot);
+        px[i]=i/10.0;//xmin+i*(xmax-xmin)/(nplot);
         py[i]=spline(n, x, y, u, px[i]);
     }
 
