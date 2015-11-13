@@ -63,7 +63,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     // r=0 (開始点の方程式)
     {
         const int r = 0;
-        equation[r][r    ] = 2;
+        equation[r][r    ] = 4;
         equation[r][r + 1] = 1;
     }
 
@@ -71,20 +71,20 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         const int r = N - 3;
         equation[r][r - 1] = 1;
-        equation[r][r    ] = 2;
+        equation[r][r    ] = 4;
     }
 
     // r=1:N-4 (端点以外の方程式を設定)
     for ( int r = 1; r < equation.GetRowLength() - 1; ++r )
     {
         equation[r][r - 1] = 1; // h[r];
-        equation[r][r    ] = 2; // (h[r] + h[r+1]) * 2;
+        equation[r][r    ] = 4; // (h[r] + h[r+1]) * 2;
         equation[r][r + 1] = 1; // h[r+1];
     }
     // v を代入
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
-        equation[r][N - 2] = input[r+2] - 2 * input[r+1] + input[r];
+        equation[r][N - 2] = 6 * (input[r+2] - 2 * input[r+1] + input[r]);
     }
     //--------------------------------
     // Gauss-Jordan
