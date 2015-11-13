@@ -7,6 +7,7 @@ INC=$(MODULE_HEADER)
 
 INCDIRS += \
 	../Vector  \
+	../Vectord  \
 
 LIBS=
 

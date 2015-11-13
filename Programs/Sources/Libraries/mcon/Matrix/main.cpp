@@ -26,6 +26,63 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
     }
 }
 
+double initializer(int row, size_t rowLength, int column, size_t columnLength)
+{
+    return (row+rowLength) + (column+columnLength) * 10;
+}
+
+void test_Matrix()
+{
+    const int row = 4;
+    const int col = 4;
+
+    mcon::Matrix<double> m;
+
+    CHECK_VALUE(m.IsNull(), false);
+    CHECK_VALUE(m.GetRowLength(), 0);
+    CHECK_VALUE(m.GetColumnLength(), 0);
+
+    bool status = m.Resize(row, col);
+    CHECK_VALUE(status, true);
+    CHECK_VALUE(m.GetRowLength(), row);
+    CHECK_VALUE(m.GetColumnLength(), col);
+
+    const double init = 0;
+    m = init;
+
+    for ( int k = 0; k < m.GetRowLength(); ++k )
+    {
+        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        {
+            CHECK_VALUE(m[k][n], init);
+        }
+    }
+
+    m = 1;
+
+    // Initialize
+/*
+    m.Initialize();
+    for ( int k = 0; k < m.GetRowLength(); ++k )
+    {
+        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        {
+            CHECK_VALUE(m[k][n], n);
+        }
+    }
+    m.Initialize( 1 );
+    m.Initialize( 1,  2);
+*/
+    m.Initialize( initializer );
+    for ( int k = 0; k < m.GetRowLength(); ++k )
+    {
+        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        {
+            CHECK_VALUE(m[k][n], initializer(k, m.GetRowLength(), n, m.GetColumnLength()));
+        }
+    }
+}
+
 static void test_matrix_determinant(void)
 {
     int numArray = 4;
@@ -165,6 +222,6 @@ int main(void)
     test_matrix_multiply();
     test_matrix_determinant();
     test_matrix_inverse();
-
+    test_Matrix();
     return 0;
 }

@@ -57,6 +57,7 @@ public:
     }
 
     Matrix<Type>& operator=(const Matrix<Type>& m);
+    Matrix<Type>& operator=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }
 
     const Matrix<Type> operator+(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
     const Matrix<Type> operator-(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] -= v); return mat; }
@@ -102,6 +103,25 @@ public:
             I[i][i] = 1;
         }
         return I;
+    }
+/*
+    void Initialize(int offset = 0, int step = 1)
+    {
+        for ( int r = 0; r < GetRowLength(); ++r )
+        {
+            (*this)[r].Initialize(offset, step);
+        }
+    }
+*/
+    void Initialize( Type (*initializer)(int, size_t, int, size_t) )
+    {
+        for ( int r = 0; r < GetRowLength(); ++r )
+        {
+            for ( int c = 0; c < GetColumnLength(); ++c )
+            {
+                (*this)[r][c] = initializer(r, GetRowLength(), c, GetColumnLength());
+            }
+        }
     }
 
     bool IsNull(void) const { return m_RowLength == 0; }
