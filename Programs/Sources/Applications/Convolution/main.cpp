@@ -151,11 +151,16 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
             return status;
         }
         LOG("Levelaring ... \n");
-        for ( int ch = 0; ch < output.GetRowLength(); ++ch )
+        double max = output[0].GetMaximumAbsolute();
+        for ( int ch = 1; ch < output.GetRowLength(); ++ch )
         {
-            const double max = output[ch].GetMaximumAbsolute();
-            output[ch] *= (32767.0/max);
+            const double _max = output[ch].GetMaximumAbsolute();
+            if ( max < _max )
+            {
+                max = _max;
+            }
         }
+        output *= (32767.0/max);
         LOG("Done\n");
         {
             fbody  = std::string(inputFile);
@@ -166,9 +171,10 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
         }
         LOG("\n");
         {
+            const int ch = output.GetRowLength();
             std::string fname = fbody + std::string(".wav");
             LOG("Saving as %s ... ", fname.c_str());
-            mfio::Wave wave(fs, 1, 16);
+            mfio::Wave wave(fs, ch, 16);
             wave.Write(fname, output);
             LOG("Done\n");
         }
