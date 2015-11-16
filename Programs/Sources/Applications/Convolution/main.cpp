@@ -118,8 +118,8 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
             return -ERROR_ILLEGAL;
         }
     }
-    if (system.GetRowLength() == 1
-        || system.GetRowLength() == input.GetRowLength())
+    if (system.GetRowLength() != 1
+        && system.GetRowLength() != input.GetRowLength())
     {
         ERROR_LOG("Illegal channel counts: %d (system)\n", system.GetRowLength());
         ERROR_LOG("The number of system's should be 1 or the same as input's (%d) \n", input.GetRowLength());
@@ -154,7 +154,7 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
         for ( int ch = 0; ch < output.GetRowLength(); ++ch )
         {
             const double max = output[ch].GetMaximumAbsolute();
-            output[ch] /= (32767.0/max);;
+            output[ch] *= (32767.0/max);
         }
         LOG("Done\n");
         {
