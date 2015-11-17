@@ -7,8 +7,8 @@
 #include "status.h"
 #include "types.h"
 #include "debug.h"
-#include "Matrix.h"
-#include "FileIo.h"
+#include "mcon.h"
+#include "mfio.h"
 #include "masp.h"
 
 status_t Analyze(const char* inputFile);
