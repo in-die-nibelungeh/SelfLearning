@@ -105,6 +105,7 @@ $(MODULE_LIB_PATH): $(MODULE_OBJ)
 install: $(MODULE_LIB_PATH) $(MODULE_HEADER)
 	@if [ -n "$(LIB)" ] ; then \
 		echo cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
+		$(call Mkdir,$(PROJECT_LIBDIR)) ; \
 		cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 	fi
 	@if [ -n "$(MODULE_HEADER)" ] ; then \
