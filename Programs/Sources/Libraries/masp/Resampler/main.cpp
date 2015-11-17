@@ -59,7 +59,7 @@ static void test_resampler(void)
     // ==> ˆá‚¤‹C‚ª‚·‚é...
     {
         const int N = 100;
-        const double ratio = 1/1.5;
+        const double ratio = 1.5;
         const double fp = 0.35;
         const double fs = 0.45;
         const double ripple = 0.01;
@@ -69,7 +69,7 @@ static void test_resampler(void)
         {
             src[k] = k;
         }
-        resampler.Initialize(N, static_cast<int>(ratio * N), fp, fs);
+        resampler.Initialize(static_cast<int>(ratio * N), N, fp, fs);
         resampler.MakeFilterBySpec(ripple, decay);
 
         mcon::Vector<double> dst;

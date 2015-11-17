@@ -6,11 +6,10 @@
 #include "Matrixd.h"
 
 double g_Global;
+const int KiB = 1024;
 
 void benchmark_Matrixd(void)
 {
-    static const int KiB = 1024;
-
     enum {
         ID_TRANSPOSE,
         ID_MULTIPLY,
@@ -24,9 +23,11 @@ void benchmark_Matrixd(void)
            4,
           16,
           64,
+/*
          256,
            1 * KiB,
            4 * KiB,
+*/
     };
     const unsigned int numPatterns = sizeof(samples) / sizeof(int);
     double scores[NUM_IDS][numPatterns];
