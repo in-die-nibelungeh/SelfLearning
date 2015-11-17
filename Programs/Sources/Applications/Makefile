@@ -1,5 +1,5 @@
 
-SUBDIRS_EXCLUDE := Makefile
+SUBDIRS_EXCLUDE := Makefile SpeakerCorrection
 SUBDIRS := $(filter-out $(SUBDIRS_EXCLUDE), $(wildcard *))
 
 $(MAKECMDGOALS) _root: $(SUBDIRS)
