@@ -10,9 +10,10 @@ double spline(int n, double x[], double y[], double u[],
           double xx);
 void mk_graph(int n, double x[], double x1, double x2,
           double y[], double y1, double y2);
-int gauss_jordan(int n, double a[][MAXN], double b[]);
+int gauss_jordan(int n, double b[]);
 
 #define VALUE(k) (((k) - 10) * ((k) - 40) * ((k) - 80) * 1.0e-4)
+mcon::Matrix<double> a;
 
 /*=============================================================*/
 /* main function                                               */
@@ -22,7 +23,11 @@ int main(void)
     double x[MAXN], y[MAXN], u[MAXN];
     //double xmin, xmax;
     const int n = 10;
-
+    if ( false == a.Resize(n+1, n+1) )
+    {
+        printf("Couldn't continue ...\n");
+        return 0;
+    }
     //   xmin = -1.0;
     //   xmax = 1.0;
 
@@ -57,7 +62,6 @@ int main(void)
 /*=============================================================*/
 /* calculation of u[i]                                         */
 /*=============================================================*/
-double a[MAXN][MAXN];
 void spline_cal_u(int n, double x[], double y[], double u[])
 {
    int i, j;
@@ -83,7 +87,12 @@ void spline_cal_u(int n, double x[], double y[], double u[])
    u[n-1]=6.0*((y[n]-y[n-1])/(x[n]-x[n-1])-
                (y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
 
-   gauss_jordan(n-1, a, u);
+   for (int i = 0; i <= n-1; ++i )
+   {
+    printf("u[%d]=%g\n", i, u[i]);
+}
+   mfio::Csv::Write("equation_correct.csv", a);
+   gauss_jordan(n-1, u);
 
    u[0]=0.0;
    u[n]=0.0;
@@ -127,7 +136,7 @@ double spline(int n, double x[], double y[], double u[], double xx)
 /*=============================================================*/
 /*    simple Gauss-Jordan method                               */
 /*=============================================================*/
-int gauss_jordan(int n, double a[][MAXN], double b[])
+int gauss_jordan(int n, double b[])
 {
 
   int ipv, i, j;
