@@ -23,270 +23,166 @@
  */
 
 #include "status.h"
-#include "Window.h"
-#include "Fir.h"
-#include "Resampler.h"
 
 namespace masp {
+namespace remez {
 
 namespace {
-    static const int g_KaiserAlphaOffset = 2;
-    static const float g_KaiserTransitionBand[] =
+    mcon::Vectord FindLocalMinima(const mcon::Vectord& v)
     {
-         3.0/2,
-         4.0/2,
-         5.2/2,
-         6.4/2,
-         7.6/2,
-         9.0/2,
-        10.2/2,
-        11.4/2,
-        12.8/2
-    };
-    static const int g_KaiserStopbandDecay[] =
-    {
-        29,
-        27,
-        45,
-        54,
-        63,
-        72,
-        81,
-        90,
-        99
-    };
-    double* _Cast(void* ptr)
-    {
-        return reinterpret_cast<double*>(ptr);
-    }
-}
+        const int N = v.GetLength();
+        mcon::Vectord _indices(N);
+        int count = 0;
 
-status_t Resampler::UpdateCoefficients(int windowType, double alpha)
-{
-    const double bandWidth = (m_StopBandFrequency - m_PassBandFrequency);
-    DEBUG_LOG("nFp=%g, nFs=%g\n", m_PassBandFrequency, m_StopBandFrequency);
-    int N = 0;
-    switch(windowType)
-    {
-    case HANNING:
+        for (int k = 1; k < N-1; ++k)
         {
-            N = static_cast<int>(6.2 / 2 / bandWidth + 0.5);
-            N += (N & 1 ? 0 : 1);
-            N *= m_L;
-            DEBUG_LOG("N=%d (Hanning)\n", N);
-            m_Coefficients.Resize(N);
-            masp::window::Hanning(m_Coefficients);
-        }
-        break;
-    case HAMMING:
-        {
-            N = static_cast<int>(6.6 / 2 / bandWidth + 0.5);
-            N += (N & 1 ? 0 : 1);
-            N *= m_L;
-            DEBUG_LOG("N=%d (Hamming)\n", N);
-            m_Coefficients.Resize(N);
-            masp::window::Hamming(m_Coefficients);
-        }
-        break;
-    case BLACKMAN:
-        {
-            N = static_cast<int>(11.0 / 2 / bandWidth + 0.5);
-            N += (N & 1 ? 0 : 1);
-            N *= m_L;
-            DEBUG_LOG("N=%d (Blackman)\n", N);
-            m_Coefficients.Resize(N);
-            masp::window::Blackman(m_Coefficients);
-        }
-        break;
-    case KAISER:
-        {
-            ASSERT( 2.0 <= alpha && alpha <= 10.0 );
-            const int index = static_cast<int>(alpha + 0.5) - masp::g_KaiserAlphaOffset;
-            N = static_cast<int>( masp::g_KaiserTransitionBand[index] / bandWidth + 0.5);
-            N += (N & 1 ? 0 : 1);
-            N *= m_L;
-            DEBUG_LOG("N=%d (Kaiser), alpha=%g\n", N, alpha);
-            m_Coefficients.Resize(N);
-            masp::window::Kaiser(m_Coefficients, alpha);
-        }
-        break;
-    default:
-        ASSERT ( 0 );
-        break;
-    }
-
-    ASSERT( N != 0 );
-    {
-        const double cutoff = (m_StopBandFrequency + m_PassBandFrequency) / 2.0 / (m_L > m_M ? m_L : m_M);
-        DEBUG_LOG("nFp=%g, nFs=%g\n", m_PassBandFrequency, m_StopBandFrequency);
-        DEBUG_LOG("nFc=%g\n", cutoff);
-        mcon::Vector<double> sinc(N);
-        masp::fir::GetCoefficientsLpfSinc(sinc, cutoff);
-        m_Coefficients *= sinc;
-    }
-
-    return NO_ERROR;
-}
-
-status_t Resampler::SetSamplingRates(int targetFs, int baseFs)
-{
-    if ( targetFs <= 0 || baseFs <= 0 )
-    {
-        return -ERROR_ILLEGAL;
-    }
-    m_TargetFs = targetFs;
-    m_BaseFs = baseFs;
-
-    {
-#if defined(DEBUG)
-        int LCM, GCD;
-#endif // #if defined(DEBUG)
-        int x = baseFs;
-        int y = targetFs;
-        int smaller = x > y ? y : x;
-
-#if defined(DEBUG)
-        LCM = 1;
-#endif // #if defined(DEBUG)
-        for (int i = 2; i < smaller/2; ++i)
-        {
-            if ( (x % i) == 0 && (y % i) == 0 )
+            if ( v[k-1] > v[k] && v[k] < v[k+1])
             {
-                x /= i;
-                y /= i;
-#if defined(DEBUG)
-                LCM *= i;
-#endif // #if defined(DEBUG)
-                i = 1; // reset
+                _indices[count] = k;
+                count++;
             }
         }
-        m_L = y;
-        m_M = x;
-#if defined(DEBUG)
-        GCD = x * y * LCM;
-#endif // #if defined(DEBUG)
-        DEBUG_LOG("L=%d, M=%d\n", m_L, m_M);
-        DEBUG_LOG("LCM=%d, GCD=%d\n", LCM, GCD);
+        mcon::Vectord indices(count);
+        indices.Copy(_indices);
+        return indices;
     }
-
-    return NO_ERROR;
-}
-
-status_t Resampler::SetFilterParams(double nFpass, double nFstop)
-{
-    if ( (nFpass <= 0.0 || 1.0 <= nFpass)
-        || (nFstop <= 0.0 || 1.0 <= nFstop)
-        || (nFstop < nFpass) )
+    mcon::Vectord FindLocalMaxima(const mcon::Vectord& v)
     {
-        return -ERROR_ILLEGAL;
-    }
-    m_PassBandFrequency = nFpass;
-    m_StopBandFrequency = nFstop;
+        const int N = v.GetLength();
+        mcon::Vectord _indices(N);
+        int count = 0;
 
-    return NO_ERROR;
-}
-
-status_t Resampler::Initialize(int targetFs, int baseFs, double nFpass, double nFstop)
-{
-    status_t status = SetSamplingRates(targetFs, baseFs);
-    if ( NO_ERROR != status )
-    {
-        return status;
-    }
-    return SetFilterParams(nFpass, nFstop);
-}
-
-status_t Resampler::MakeFilterByWindowType(int windowType, double _alpha)
-{
-    if ( windowType <= 0 && NUM_WINDOW_TYPE <= windowType )
-    {
-        return -ERROR_ILLEGAL;
-    }
-    double alpha = _alpha;
-
-    if ( KAISER == windowType )
-    {
-        if ( alpha < 2.0 )
+        for (int k = 1; k < N-1; ++k)
         {
-            alpha = 2.0;
+            if ( v[k-1] < v[k] && v[k] > v[k+1])
+            {
+                _indices[count] = k;
+                count++;
+            }
         }
-        else if ( alpha > 10.0 )
-        {
-            alpha = 10.0;
-        }
+        mcon::Vectord indices(count);
+        indices.Copy(_indices);
+        return indices;
     }
-    return UpdateCoefficients(windowType, alpha);
 }
 
-status_t Resampler::MakeFilterBySpec(double pbRipple, double sbDecay)
+int EstimateFilterOrder(double fp, double _dp, double fs, double _ds)
 {
-    UNUSED(pbRipple);
-    const int length = static_cast<int>(sizeof(masp::g_KaiserStopbandDecay)/sizeof(int));
-    int index;
-    for ( index = 0; index < length; ++index)
-    {
-        if ( masp::g_KaiserStopbandDecay[index] > sbDecay )
-        {
-            break;
-        }
-    }
-    if ( index == length )
-    {
-        return -ERROR_NOT_FOUND;
-    }
-    return UpdateCoefficients(KAISER, static_cast<double>(index + masp::g_KaiserAlphaOffset));
-}
-
-double Convolution(const double* pData, const double* pCoefs, int N, int step)
-{
-    double ans = 0.0;
-    for ( int i = 0; i < N; ++i )
-    {
-        ans += pData[N - 1 - i] * pCoefs[i * step];
-    }
-    return ans;
-}
-
-status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<double>& input) const
-{
-    if ( m_Coefficients.IsNull() )
+    if ( fp > fs ||
+         fp < 0  ||
+         fs < 0  ||
+         fp > 1  ||
+         fs > 1  )
     {
         return -ERROR_ILLEGAL;
     }
 
-    const int N = input.GetLength();
-    output.Resize( (N * m_L + m_M - 1) / m_M );
-    // L=2, M=1 の場合、純粋なアップサンプルなので、サンプル数は2 倍になる。
-    // 入力バッファのサンプルの進みは 1/2 (M / L)、係数は 2N (N * L) である。
-    // L=1, M=2 の場合、純粋なダウンサンプルなので、サンプル数は1/2 になる。
-    // 入力バッファのサンプルの進みは 2 (M / L)、係数は N (N * L) である。
-
-    const double* pInput = masp::_Cast(input);
-    const double* pCoefficients = masp::_Cast(m_Coefficients);
-    const int width = m_Coefficients.GetLength() / m_L;
-
-    int acc = 0;
-    for ( int i = 0; i < output.GetLength(); ++i )
+    double dp, ds;
+    if (_dp < _ds)
     {
-        acc += m_M;
-        int index = acc / m_L;
-        int amari = acc % m_L;
-        const int M = (width - 1 - i > 0) ? i + 1 : width;
-        DEBUG_LOG("i=%3d, M=%3d\n", i, M);
-        output[i] = masp::Convolution(pInput + index, pCoefficients + amari, M, m_L);
+        dp = _ds;
+        ds = _dp;
     }
-    return NO_ERROR;
+    else
+    {
+        dp = _dp;
+        ds = _ds;
+    }
+    const double B = (fs - fp) / 2.0;
+    const double D = (0.005309 * POW2(log10(dp)
+                 + 0.071141 * log10(dp) - 0.4761) * log10(ds)
+               - (0.00266 * POW2(log(dp) + 0.5941 * log10(dp) + 0.4278);
+    const double F = 0.51244 * (log10(dp) - log10(ds)) + 11.01217;
+    return static_cast<int>( (D - F * POW2(B)) / B + 1.5);
 }
 
-status_t Resampler::GetCoefficients(mcon::Vector<double>& coefficients) const
+void CalculateCoefficients(mcon::Vectord& v);
 {
-    if ( m_Coefficients.IsNull() )
+    const int N = 13;
+    const int Kp = 1;
+    const int Ks = 2;
+    const double wp = 0.4 * M_PI;
+    const double ws = 0.5 * M_PI;
+    const double wo = (ws + wp) / 2.0;
+    const int L = 1000;
+    mcon::Vectord w(L+1);
+    for ( int k = 0; k <= w.GetLength(); ++k ) { w[k] = k * M_PI / L; }
+    mcon::Vectord W(L+1);
+    W = 0;
+    for ( int k = 0; k <= W.GetLength(); ++k )
     {
-        return -ERROR_NULL;
+        if ( w[k] <= wp )
+        {
+            W[k] = Kp;
+        }
+        else if ( ws <= w[k] )
+        {
+            W[k] = Ks;
+        }
     }
-    coefficients = m_Coefficients;
+    mcon::Vectord D(L+1);
+    D = 0;
+    for ( int k = 0; k < D.GetLength(); ++k )
+    {
+        if ( w[k] <= wo )
+        {
+            D[k] = 1;
+        }
+    }
+    const int M = (N-1) / 2;
+    const int R = M + 2;
+    mcon::Vectord ki(R);
+    ki[0] =  51;
+    ki[1] = 101;
+    ki[2] = 341;
+    ki[3] = 361;
+    ki[4] = 531;
+    ki[5] = 671;
+    ki[6] = 701;
+    ki[7] = 851;
 
-    return NO_ERROR;
+    for ( int k = 0; k < R; ++k )
+    {
+        printf("w[%d]=%g\n", k, w[k]);
+    }
+
+    mcon::Vectord m(M+1);
+    for ( int k = 0; k < m.GetLength(); ++k )
+    {
+        m[k] = k;
+    }
+    const mcon::Matrixd matrix(R, R);
+
+    for ( int i = 0; i < matrix.GetRowLength(); ++i )
+    {
+        const int last = matrix.GetColumnLength();
+        const double omega = w[i];
+        matrix[i][0] = 1;
+        for ( int k = 1; k < last - 1; ++k )
+        {
+            matrix[i][k] = cos(omega * k);
+        }
+        matrix[i][last] = (i & 0x1 ? -1 : 1) / W[i];
+    }
+    const mcon::Matrix Dk(R, 1);
+    for ( int k = 0; k < Dk.GetRowLength(); ++k )
+    {
+        Dk[k][0] = D[ki[k]];
+    }
+    mcon::Matrixd x( (matrix.I() * Dk).T() );
+
+    printf("x=(%d, %d)\n", x.GetRowLength(), x.GetColumnLength());
+
+    mcon::Vectord h(N);
+
+    h[M] = x[0][0];
+    for (int k = 0; k < M; ++k)
+    {
+        h[M-k-1] = h[M+k+1] = x[0][M-k];
+    }
+    {
+        const int N = h.GetLength();
+    }
 }
 
-} // namespace masp {
+}} // masp::remez

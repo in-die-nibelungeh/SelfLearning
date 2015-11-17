@@ -29,60 +29,9 @@
 #include "mcon.h"
 
 namespace masp {
+namespace remez {
 
-class Remez
-{
-public:
+int EstimateFilterOrder(double fp, double dp, double fs, double ds);
+void CalculateCoefficients(mcon::Vectord& v);
 
-    static int EstimateOrder() const
-    {
-        const double wa, wp;
-        const double dp;
-        double B = fabs(wa - wp) / 2 / M_PI;
-        double D = (0.005309 * POW2(log(dp))
-                     + 0.071141 * log(dp) - 0.4761) * log(da);
-                   - (0.00266 * POW2(log(dp)) + 0.5941 * log(dp) + 0.4278);
-        double F = 0.51244 * (log(dp) - log(da)) + 11.012;
-        return static_cast<int>( (D - F * POW2(B)) / B + 1.5);
-    }
-    Remez(int targetFs, int baseFs, double nFpass, double nFstop)
-        : m_TargetFs(targetFs),
-        m_BaseFs(baseFs),
-        m_PassBandFrequency(nFpass),
-        m_StopBandFrequency(nFstop)
-        //m_PassBandRipple(0.01),
-        //m_StopBandDecay(40)
-    {
-        ASSERT(targetFs > 0);
-        ASSERT(baseFs > 0);
-        ASSERT(0.0 < nFpass && nFpass < 1.0);
-        ASSERT(0.0 < nFstop && nFstop < 1.0);
-        ASSERT(nFpass < nFstop);
-
-        Initialize(targetFs, baseFs, nFpass, nFstop);
-    }
-
-    ~Remez() {};
-    status_t Initialize(int targetFs, int baseFs, double nFpass, double nFstop);
-    status_t SetSamplingRates(int targetFs, int baseFs);
-    status_t SetFilterParams(double nFpass, double nFstop);
-
-    status_t GetCoefficients(mcon::Vector<double>& coefficients) const;
-
-    status_t MakeFilterByWindowType(int windowType, double alpha = 2.0);
-    status_t MakeFilterBySpec(double pbRipple, double sbDecay);
-
-    status_t Convert(mcon::Vector<double>& output, const mcon::Vector<double>& input) const;
-
-private:
-    status_t UpdateCoefficients(int windowType, double alpha);
-    int m_TargetFs;
-    int m_BaseFs;
-    int m_L;
-    int m_M;
-    double m_PassBandFrequency;
-    double m_StopBandFrequency;
-    mcon::Vector<double> m_Coefficients;
-};
-
-} // namespace masp {
+}} // masp::remez

@@ -1,5 +1,5 @@
 
-BIN=remez.exe
+BIN=remez
 LIBS=-lwin -lfir -lfio -lfft
 
 MODULE_HEADER=Remez.h
