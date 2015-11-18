@@ -83,7 +83,8 @@ public:
     }
     ~Vectord();
 
-    template <typename U> operator=(const Vector<U>& v)
+    template <typename U>
+    Vectord& operator=(const Vector<U>& v)
     {
         bool status = Resize(v.GetLength());
         UNUSED(status);
