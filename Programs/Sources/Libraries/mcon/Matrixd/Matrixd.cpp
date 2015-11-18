@@ -43,7 +43,7 @@ namespace {
 
 namespace mcon {
 
-// ‚±‚ñ‚È‚ñ‚µ‚½‚¢
+// ã“ã‚“ãªã‚“ã—ãŸã„
 // typedef Matrixd(1, n) Vectord(n);
 
 Matrixd& Matrixd::operator=(double v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }

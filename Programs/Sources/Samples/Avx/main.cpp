@@ -20,7 +20,7 @@ static float sdot(int simd, int n, const float *a, const float *b)
     int    ne = 0;
     float  sum = 0;
 
-    // 4‚Â‚¸‚ÂŒvZ‚·‚é (SSE)
+    // 4ã¤ãšã¤è¨ˆç®—ã™ã‚‹ (SSE)
     if (simd == 1)
     {
 #if defined(__GNUC__)
@@ -39,7 +39,7 @@ static float sdot(int simd, int n, const float *a, const float *b)
         _mm_store_ps(fsum, vsum);
         sum = fsum[0] + fsum[1] + fsum[2] + fsum[3];
     }
-    // 8 ‚Â‚¸‚ÂŒvZ‚·‚é (AVX)
+    // 8 ã¤ãšã¤è¨ˆç®—ã™ã‚‹ (AVX)
     else if (simd == 2)
     {
 #if defined(__GNUC__)
@@ -60,7 +60,7 @@ static float sdot(int simd, int n, const float *a, const float *b)
             + fsum[4] + fsum[5] + fsum[6] + fsum[7];
     }
 
-    // SIMD ‰‰Z‚Ìc‚èA‚ ‚é‚¢‚Í SIMD w’è‚ª‚È‚¢ê‡‚ÌŒvZ‚ğ‚·‚éB
+    // SIMD æ¼”ç®—ã®æ®‹ã‚Šã€ã‚ã‚‹ã„ã¯ SIMD æŒ‡å®šãŒãªã„å ´åˆã®è¨ˆç®—ã‚’ã™ã‚‹ã€‚
     for (i = ne; i < n; i++)
     {
         sum += a[i] * b[i];

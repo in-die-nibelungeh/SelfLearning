@@ -256,10 +256,10 @@ status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<dou
 
     const int N = input.GetLength();
     output.Resize( (N * m_L + m_M - 1) / m_M );
-    // L=2, M=1 ‚Ìê‡Aƒˆ‚ÈƒAƒbƒvƒTƒ“ƒvƒ‹‚È‚Ì‚ÅAƒTƒ“ƒvƒ‹”‚Í2 ”{‚É‚È‚éB
-    // “ü—Íƒoƒbƒtƒ@‚ÌƒTƒ“ƒvƒ‹‚Ìi‚Ý‚Í 1/2 (M / L)AŒW”‚Í 2N (N * L) ‚Å‚ ‚éB
-    // L=1, M=2 ‚Ìê‡Aƒˆ‚Èƒ_ƒEƒ“ƒTƒ“ƒvƒ‹‚È‚Ì‚ÅAƒTƒ“ƒvƒ‹”‚Í1/2 ‚É‚È‚éB
-    // “ü—Íƒoƒbƒtƒ@‚ÌƒTƒ“ƒvƒ‹‚Ìi‚Ý‚Í 2 (M / L)AŒW”‚Í N (N * L) ‚Å‚ ‚éB
+    // L=2, M=1 ã®å ´åˆã€ç´”ç²‹ãªã‚¢ãƒƒãƒ—ã‚µãƒ³ãƒ—ãƒ«ãªã®ã§ã€ã‚µãƒ³ãƒ—ãƒ«æ•°ã¯2 å€ã«ãªã‚‹ã€‚
+    // å…¥åŠ›ãƒãƒƒãƒ•ã‚¡ã®ã‚µãƒ³ãƒ—ãƒ«ã®é€²ã¿ã¯ 1/2 (M / L)ã€ä¿‚æ•°ã¯ 2N (N * L) ã§ã‚ã‚‹ã€‚
+    // L=1, M=2 ã®å ´åˆã€ç´”ç²‹ãªãƒ€ã‚¦ãƒ³ã‚µãƒ³ãƒ—ãƒ«ãªã®ã§ã€ã‚µãƒ³ãƒ—ãƒ«æ•°ã¯1/2 ã«ãªã‚‹ã€‚
+    // å…¥åŠ›ãƒãƒƒãƒ•ã‚¡ã®ã‚µãƒ³ãƒ—ãƒ«ã®é€²ã¿ã¯ 2 (M / L)ã€ä¿‚æ•°ã¯ N (N * L) ã§ã‚ã‚‹ã€‚
 
     const double* pInput = masp::_Cast(input);
     const double* pCoefficients = masp::_Cast(m_Coefficients);

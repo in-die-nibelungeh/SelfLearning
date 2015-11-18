@@ -90,7 +90,7 @@ static void test_src(void)
 
         const int baseLength = sweep.GetLength();
         const int targetLength = static_cast<int>(baseLength * ratio + 0.5);
-        // ƒJƒbƒgƒIƒtü”g”‚ÍLk‚É‡‚í‚¹‚é
+        // ã‚«ãƒƒãƒˆã‚ªãƒ•å‘¨æ³¢æ•°ã¯ä¼¸ç¸®ã«åˆã‚ã›ã‚‹
         const double cutoffRatio = 0.45 * ratio;
         const double passbandRatio = 0.1 * ratio;
 
@@ -151,13 +151,13 @@ void test_upsample(void)
 
         const int baseLength = sweep.GetLength();
         const int targetLength = static_cast<int>(baseLength * ratio + 0.5);
-        // ƒJƒbƒgƒIƒtü”g”‚ÍAƒx[ƒXü”g”‚Ål‚¦‚ê‚Î—Ç‚¢‚Ì‚¾‚ªA
-        // •âŠÔŒvZ‚ÅŒW”‚É ratio ‚İ‚ÅƒAƒNƒZƒX‚·‚éê‡ƒTƒ“ƒvƒŠƒ“ƒOü”g”‚ª
-        // •Ï‚í‚Á‚Ä‚µ‚Ü‚¤‚Ì‚ÅA—\‚ß ratio ‚ÅŠ„‚Á‚Ä‚¨‚­B
-        // —á‚¦‚ÎA48kHz ‚É‚ÄƒJƒbƒgƒIƒtü”g” 20kHz ‚ÅİŒv‚µ‚½ƒtƒBƒ‹ƒ^ŒW”‚É
-        // 2 ‚İ‚ÅƒAƒNƒZƒX‚·‚é‚ÆAƒJƒbƒgƒIƒt 40 kHz ‚ÌƒtƒBƒ‹ƒ^‚É‘Š“–‚·‚é«”\‚É‚È‚éB
+        // ã‚«ãƒƒãƒˆã‚ªãƒ•å‘¨æ³¢æ•°ã¯ã€ãƒ™ãƒ¼ã‚¹å‘¨æ³¢æ•°ã§è€ƒãˆã‚Œã°è‰¯ã„ã®ã ãŒã€
+        // è£œé–“è¨ˆç®—ã§ä¿‚æ•°ã« ratio åˆ»ã¿ã§ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹å ´åˆã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°å‘¨æ³¢æ•°ãŒ
+        // å¤‰ã‚ã£ã¦ã—ã¾ã†ã®ã§ã€äºˆã‚ ratio ã§å‰²ã£ã¦ãŠãã€‚
+        // ä¾‹ãˆã°ã€48kHz ã«ã¦ã‚«ãƒƒãƒˆã‚ªãƒ•å‘¨æ³¢æ•° 20kHz ã§è¨­è¨ˆã—ãŸãƒ•ã‚£ãƒ«ã‚¿ä¿‚æ•°ã«
+        // 2 åˆ»ã¿ã§ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹ã¨ã€ã‚«ãƒƒãƒˆã‚ªãƒ• 40 kHz ã®ãƒ•ã‚£ãƒ«ã‚¿ã«ç›¸å½“ã™ã‚‹æ€§èƒ½ã«ãªã‚‹ã€‚
         const double cutoffRatio = 0.45 / ratio;
-        // ƒpƒXƒoƒ“ƒh‚àƒx[ƒXü”g”‚Ål‚¦‚ê‚Î—Ç‚¢B
+        // ãƒ‘ã‚¹ãƒãƒ³ãƒ‰ã‚‚ãƒ™ãƒ¼ã‚¹å‘¨æ³¢æ•°ã§è€ƒãˆã‚Œã°è‰¯ã„ã€‚
         const double passbandRatio = 0.1 / ratio;
 
         const int M = masp::fir::GetNumOfTapps(passbandRatio) * ratio;

@@ -43,20 +43,20 @@ status_t Linear::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
     const int N = input.GetLength();
-    // ŠÔŠu‚Ì”‚Í‚»‚ê‚¼‚ê‚Ì’·‚³‚©‚ç 1 ‚¾‚¯ˆø‚¢‚½’l‚É‚È‚éB
-    // ‚±‚Ì’l‚ÅƒXƒP[ƒ‹‚·‚éB
+    // é–“éš”ã®æ•°ã¯ãã‚Œãã‚Œã®é•·ã•ã‹ã‚‰ 1 ã ã‘å¼•ã„ãŸå€¤ã«ãªã‚‹ã€‚
+    // ã“ã®å€¤ã§ã‚¹ã‚±ãƒ¼ãƒ«ã™ã‚‹ã€‚
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
     DEBUG_LOG("step=%g\n", step);
 
-    // —¼’[‚Ì’l‚Íƒ‹[ƒvŠO‚Å‘ã“ü‚µ‚Ä‚¨‚­B
-    // I’[‚Ì’l‚Íƒ‹[ƒvŠO‚Åˆ—‚µ‚æ‚¤‚Æ‚·‚é‚ÆA”ÍˆÍŠOƒAƒNƒZƒX‚ğ¶‚¶‚é‚Ì‚Å’ˆÓB
+    // ä¸¡ç«¯ã®å€¤ã¯ãƒ«ãƒ¼ãƒ—å¤–ã§ä»£å…¥ã—ã¦ãŠãã€‚
+    // çµ‚ç«¯ã®å€¤ã¯ãƒ«ãƒ¼ãƒ—å¤–ã§å‡¦ç†ã—ã‚ˆã†ã¨ã™ã‚‹ã¨ã€ç¯„å›²å¤–ã‚¢ã‚¯ã‚»ã‚¹ã‚’ç”Ÿã˜ã‚‹ã®ã§æ³¨æ„ã€‚
     output[0] = input[0];
     output[sampleCount - 1] = input[N - 1];
     for ( int k = 1; k < sampleCount - 1; ++k )
     {
-        const double position = k * step;             // Š·Z‚µ‚½ˆÊ’u (¬”)
-        const int index = static_cast<int>(position); // “ü—Í”z—ñƒCƒ“ƒfƒbƒNƒX (®”)
-        const double frac = position - index;         // ¬”•”
+        const double position = k * step;             // æ›ç®—ã—ãŸä½ç½® (å°æ•°)
+        const int index = static_cast<int>(position); // å…¥åŠ›é…åˆ—ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ (æ•´æ•°)
+        const double frac = position - index;         // å°æ•°éƒ¨
         DEBUG_LOG("k=%d, pos=%g, index=%d\n", k, position, index);
         output[k] = (input[index + 1] - input[index]) * frac + input[index];
     }

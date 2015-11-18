@@ -85,12 +85,12 @@ double gettime_sec()
 
 static void test_methods(void)
 {
-    clock_t ct1,ct2;     // clock() ŠÖ”‚ðŽg‚Á‚½ŽžŠÔŒv‘ª
-    double rut1,rut2;    // getrusage() ŠÖ”‚ðŽg‚Á‚½ŽžŠÔŒv‘ª
-    double todt1,todt2;  // gettimeofday() ŠÖ”‚ðŽg‚Á‚½ŽžŠÔŒv‘ª
+    clock_t ct1,ct2;     // clock() é–¢æ•°ã‚’ä½¿ã£ãŸæ™‚é–“è¨ˆæ¸¬
+    double rut1,rut2;    // getrusage() é–¢æ•°ã‚’ä½¿ã£ãŸæ™‚é–“è¨ˆæ¸¬
+    double todt1,todt2;  // gettimeofday() é–¢æ•°ã‚’ä½¿ã£ãŸæ™‚é–“è¨ˆæ¸¬
     double cgt1,cgt2;    // clock_gettime()
-    clock_t tmt1,tmt2;   // times() ŠÖ”‚ðŽg‚Á‚½ŽžŠÔŒv‘ª
-    uint64_t tsc1,tsc2;  // RDTSC (read-time stamp counter) ‚ðŽg‚Á‚½ƒNƒƒbƒNŒv‘ª
+    clock_t tmt1,tmt2;   // times() é–¢æ•°ã‚’ä½¿ã£ãŸæ™‚é–“è¨ˆæ¸¬
+    uint64_t tsc1,tsc2;  // RDTSC (read-time stamp counter) ã‚’ä½¿ã£ãŸã‚¯ãƒ­ãƒƒã‚¯è¨ˆæ¸¬
 
     printf("sizof(long unsigned int)=%ld\n", sizeof(long unsigned int));
     printf("sizof(uint64_t)=%ld\n", sizeof(uint64_t));
@@ -119,7 +119,7 @@ static void test_methods(void)
     cgt1 = gettime_sec();
     RDTSC(tsc1);
 
-    // ŽžŠÔ‚ðŒv‘ª‚·‚éˆ—
+    // æ™‚é–“ã‚’è¨ˆæ¸¬ã™ã‚‹å‡¦ç†
     const int iter = 1000000;
     int a = 1, b;
     for ( int i = 0; i < iter; ++i )
@@ -155,7 +155,7 @@ static void test_methods(void)
     cgt1 = gettime_sec();
     RDTSC(tsc1);
 
-    // ŽžŠÔ‚ðŒv‘ª‚·‚éˆ—
+    // æ™‚é–“ã‚’è¨ˆæ¸¬ã™ã‚‹å‡¦ç†
     for ( int i = 0; i < iter; ++i )
     {
         __asm__ volatile(
@@ -202,7 +202,7 @@ void test_stopwatch(void)
         for ( int k = 0; k < 6; ++k, limit *= 10)
         {
             sw.Tick();
-            // ŽžŠÔ‚ðŒv‘ª‚·‚éˆ—
+            // æ™‚é–“ã‚’è¨ˆæ¸¬ã™ã‚‹å‡¦ç†
             for ( int i = 0; i < limit; ++i )
             {
                 __asm__ volatile(

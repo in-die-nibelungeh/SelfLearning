@@ -109,7 +109,7 @@ int main(int argc, const char* argv[])
                     continue;
                 }
                 filename.append( std::string("-") + name);
-                filename.erase( filename.length()-4, 4 ); // Šg’£q‚ğíœ
+                filename.erase( filename.length()-4, 4 ); // æ‹¡å¼µå­ã‚’å‰Šé™¤
 
                 const int length = wavRoot.GetColumnLength();
                 const int row = wavRoot.GetRowLength() + wav.GetRowLength();
@@ -138,7 +138,7 @@ int main(int argc, const char* argv[])
                 format = wavFile.GetWaveFormat();
                 bits = wavFile.GetBitDepth();
                 filename.append(name);
-                filename.erase( filename.length()-4, 4 ); // Šg’£q‚ğíœ
+                filename.erase( filename.length()-4, 4 ); // æ‹¡å¼µå­ã‚’å‰Šé™¤
             }
         }
         // Write

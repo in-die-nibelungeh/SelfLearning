@@ -57,31 +57,31 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
-    // ‘S—v‘f‚ğ‰Šú‰»
+    // å…¨è¦ç´ ã‚’åˆæœŸåŒ–
     equation = 0;
 
-    // r=0 (ŠJn“_‚Ì•û’ö®)
+    // r=0 (é–‹å§‹ç‚¹ã®æ–¹ç¨‹å¼)
     {
         const int r = 0;
         equation[r][r    ] = 4;
         equation[r][r + 1] = 1;
     }
 
-    // r=N-3 (I’[‚Ì•û’ö®)
+    // r=N-3 (çµ‚ç«¯ã®æ–¹ç¨‹å¼)
     {
         const int r = N - 3;
         equation[r][r - 1] = 1;
         equation[r][r    ] = 4;
     }
 
-    // r=1:N-4 (’[“_ˆÈŠO‚Ì•û’ö®‚ğİ’è)
+    // r=1:N-4 (ç«¯ç‚¹ä»¥å¤–ã®æ–¹ç¨‹å¼ã‚’è¨­å®š)
     for ( int r = 1; r < equation.GetRowLength() - 1; ++r )
     {
         equation[r][r - 1] = 1; // h[r];
         equation[r][r    ] = 4; // (h[r] + h[r+1]) * 2;
         equation[r][r + 1] = 1; // h[r+1];
     }
-    // v ‚ğ‘ã“ü
+    // v ã‚’ä»£å…¥
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r][N - 2] = 6 * (input[r+2] - 2 * input[r+1] + input[r]);
@@ -89,14 +89,14 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     //--------------------------------
     // Gauss-Jordan
     //--------------------------------
-    // Šes‚ğ³‹K‰»
+    // å„è¡Œã‚’æ­£è¦åŒ–
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
     }
     for ( int r = 0; r < equation.GetRowLength(); ++r )
     {
-        // ’–Ú‚µ‚Ä‚¢‚é—ñ‚Ì’†‚ÅAÅ‘å’l‚ğ‚Â—ñ‚ğ’T‚·B
+        // æ³¨ç›®ã—ã¦ã„ã‚‹åˆ—ã®ä¸­ã§ã€æœ€å¤§å€¤ã‚’æŒã¤åˆ—ã‚’æ¢ã™ã€‚
         int index = r;
         double maximum = fabs(equation[r][r]);
         for ( int k = index + 1; k < equation.GetRowLength() - 1; ++k )
@@ -109,23 +109,23 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         }
         if ( IsNearlyEqualZero(maximum) )
         {
-            // ‚±‚±‚É“’B‚·‚é‚±‚Æ‚Í‚È‚¢‚Í‚¸B
+            // ã“ã“ã«åˆ°é”ã™ã‚‹ã“ã¨ã¯ãªã„ã¯ãšã€‚
             DEBUG_LOG(" ~ 0 at r=%d\n", r);
-            output.Resize(0); // NULL ‚ğ•Ô‚·B
+            output.Resize(0); // NULL ã‚’è¿”ã™ã€‚
             return -ERROR_ILLEGAL;
         }
-        // •K—v‚È‚ç“ü‚ê‘Ö‚¦‚é
+        // å¿…è¦ãªã‚‰å…¥ã‚Œæ›¿ãˆã‚‹
         if ( r != index )
         {
             mcon::Vector<double> tmp(equation[r]);
             equation[r] = equation[index];
             equation[index] = tmp;
         }
-        // ã‚Å“ü‚ê‘Ö‚¦‚½‚Ì‚Å ˆÈ~‚Å‚Í index ‚Í•s—vAr ‚ğg—p‚·‚éB
-        // ’–Ú‚µ‚Ä‚¢‚és‚ÌA’–Ú‚µ‚Ä‚¢‚é—ñ‚Ì’l‚ğ 1.0 ‚É‚·‚é
+        // ä¸Šã§å…¥ã‚Œæ›¿ãˆãŸã®ã§ ä»¥é™ã§ã¯ index ã¯ä¸è¦ã€r ã‚’ä½¿ç”¨ã™ã‚‹ã€‚
+        // æ³¨ç›®ã—ã¦ã„ã‚‹è¡Œã®ã€æ³¨ç›®ã—ã¦ã„ã‚‹åˆ—ã®å€¤ã‚’ 1.0 ã«ã™ã‚‹
         equation[r] /= maximum;
 
-        // ‘¼‚Ìs‚©‚çˆø‚­B
+        // ä»–ã®è¡Œã‹ã‚‰å¼•ãã€‚
         for ( int m = 0; m < equation.GetRowLength(); ++m )
         {
             if ( m == r )
@@ -146,16 +146,16 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     {
         u[k+1] = equation[k][N - 2];
     }
-    // u ‚ğæ‚èo‚µ‚½‚Ì‚Å‚à‚¤•s—vAƒƒ‚ƒŠ‚ğ‰ğ•ú‚µ‚Ä‚¨‚­
+    // u ã‚’å–ã‚Šå‡ºã—ãŸã®ã§ã‚‚ã†ä¸è¦ã€ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã—ã¦ãŠã
     equation.Resize(0, 0);
 
-    // ŒW”ŒvZ
+    // ä¿‚æ•°è¨ˆç®—
     mcon::Matrix<double> coefficients;
-    if ( false == coefficients.Resize(4, N-1) ) // 4 ‚Í a, b, c, d
+    if ( false == coefficients.Resize(4, N-1) ) // 4 ã¯ a, b, c, d
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
-    // •âŠÔŒvZ
+    // è£œé–“è¨ˆç®—
     mcon::Vector<double>& a = coefficients[0];
     mcon::Vector<double>& b = coefficients[1];
     mcon::Vector<double>& c = coefficients[2];
@@ -167,15 +167,15 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         c[k] = (input[k+1] - input[k]) - (2 * u[k] + u[k+1]) / 6;
         d[k] = input[k];
     }
-    // —¼’[‚Ì’l‚Íƒ‹[ƒvŠO‚Å‘ã“ü‚µ‚Ä‚¨‚­B
+    // ä¸¡ç«¯ã®å€¤ã¯ãƒ«ãƒ¼ãƒ—å¤–ã§ä»£å…¥ã—ã¦ãŠãã€‚
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
     output[0] = input[0];
     output[sampleCount - 1] = input[N - 1];
     for ( int k = 1; k < sampleCount - 1; ++k )
     {
-        const double position = k * step;             // Š·Z‚µ‚½ˆÊ’u (¬”)
-        const int index = static_cast<int>(position); // “ü—Í”z—ñƒCƒ“ƒfƒbƒNƒX (®”)
-        const double frac = position - index;         // ¬”•”
+        const double position = k * step;             // æ›ç®—ã—ãŸä½ç½® (å°æ•°)
+        const int index = static_cast<int>(position); // å…¥åŠ›é…åˆ—ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ (æ•´æ•°)
+        const double frac = position - index;         // å°æ•°éƒ¨
         DEBUG_LOG("k=%d, frac=%g, index=%d, (a, b, c, d)=(%g, %g, %g, %g)\n", k, frac, index, a[index], b[index], c[index], d[index]);
         const double frac2 = frac * frac;
         const double frac3 = frac * frac2;

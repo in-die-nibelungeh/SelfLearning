@@ -188,7 +188,7 @@ void test_Vectord(void)
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
             mcon::Vectord v(n);
-            // è∏èá
+            // ÊòáÈ†Ü
             for ( int k = 0; k < n; ++k )
             {
                 v[k] = k - n/2;
@@ -198,7 +198,7 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMaximum());
-            // ç~èá
+            // ÈôçÈ†Ü
             ans = - __DBL_MAX__;
             for ( int k = 0; k < n; ++k )
             {
@@ -221,7 +221,7 @@ void test_Vectord(void)
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
             mcon::Vectord v(n);
-            // è∏èá
+            // ÊòáÈ†Ü
             for ( int k = 0; k < n; ++k )
             {
                 v[k] = k - n/2;
@@ -231,7 +231,7 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMinimum());
-            // ç~èá
+            // ÈôçÈ†Ü
             ans = __DBL_MAX__;
             for ( int k = 0; k < n; ++k )
             {
@@ -253,7 +253,7 @@ void test_Vectord(void)
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
             mcon::Vectord v(n);
-            // è∏èá
+            // ÊòáÈ†Ü
             for ( int k = 0; k < n; ++k )
             {
                 v[k] = (k + 1) * (k & 1 ? -1 : 1);
@@ -263,12 +263,12 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMaximumAbsolute());
-            // è∏èá (ïÑçÜÇ™ãt)
-            // åãâ ÇÕïœÇÌÇÁÇ»Ç¢
+            // ÊòáÈ†Ü (Á¨¶Âè∑„ÅåÈÄÜ)
+            // ÁµêÊûú„ÅØÂ§â„Çè„Çâ„Å™„ÅÑ
             v *= -1;
             CHECK_VALUE(ans, v.GetMaximumAbsolute());
 
-            // ç~èá
+            // ÈôçÈ†Ü
             for ( int k = 0; k < n; ++k )
             {
                 v[k] = n - k;
@@ -278,8 +278,8 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMaximumAbsolute());
-            // ç~èá (ïÑçÜÇ™ãt)
-            // åãâ ÇÕïœÇÌÇÁÇ»Ç¢
+            // ÈôçÈ†Ü (Á¨¶Âè∑„ÅåÈÄÜ)
+            // ÁµêÊûú„ÅØÂ§â„Çè„Çâ„Å™„ÅÑ
             v *= -1;
             CHECK_VALUE(ans, v.GetMaximumAbsolute());
         }
@@ -293,7 +293,7 @@ void test_Vectord(void)
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
             mcon::Vectord v(n);
-            // è∏èá
+            // ÊòáÈ†Ü
             for ( int k = 0; k < n; ++k )
             {
                 v[k] = (k + 1) * (k & 1 ? -1 : 1);
@@ -303,12 +303,12 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMinimumAbsolute());
-            // è∏èá (ïÑçÜÇ™ãt)
-            // åãâ ÇÕïœÇÌÇÁÇ»Ç¢
+            // ÊòáÈ†Ü (Á¨¶Âè∑„ÅåÈÄÜ)
+            // ÁµêÊûú„ÅØÂ§â„Çè„Çâ„Å™„ÅÑ
             v *= -1;
             CHECK_VALUE(ans, v.GetMinimumAbsolute());
 
-            // ç~èá
+            // ÈôçÈ†Ü
             ans = __DBL_MAX__;
             for ( int k = 0; k < n; ++k )
             {
@@ -319,8 +319,8 @@ void test_Vectord(void)
                 }
             }
             CHECK_VALUE(ans, v.GetMinimumAbsolute());
-            // ç~èá (ïÑçÜÇ™ãt)
-            // åãâ ÇÕïœÇÌÇÁÇ»Ç¢
+            // ÈôçÈ†Ü (Á¨¶Âè∑„ÅåÈÄÜ)
+            // ÁµêÊûú„ÅØÂ§â„Çè„Çâ„Å™„ÅÑ
             v *= -1;
             CHECK_VALUE(ans, v.GetMinimumAbsolute());
         }

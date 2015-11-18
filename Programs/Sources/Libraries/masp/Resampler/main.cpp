@@ -54,9 +54,9 @@ static void test_resampler(void)
         mfio::Wave w(targetFs, wave.GetNumChannels(), wave.GetBitDepth());
         w.Write(fbody + std::string("_resampled2.wav"), output);
     }
-    // ƒTƒ“ƒvƒ‹‚Ì”‚ğ•ÏX‚·‚é
-    // ==> À¿“I‚Éü”g”•ÏŠ·H
-    // ==> ˆá‚¤‹C‚ª‚·‚é...
+    // ã‚µãƒ³ãƒ—ãƒ«ã®æ•°ã‚’å¤‰æ›´ã™ã‚‹
+    // ==> å®Ÿè³ªçš„ã«å‘¨æ³¢æ•°å¤‰æ›ï¼Ÿ
+    // ==> é•ã†æ°—ãŒã™ã‚‹...
     {
         const int N = 100;
         const double ratio = 1.5;
