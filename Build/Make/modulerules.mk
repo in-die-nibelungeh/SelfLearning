@@ -82,7 +82,7 @@ all: build
 
 run: $(MODULE_BIN_PATH)
 	@if [ -n "$(MODULE_BIN_PATH)" ] ; then \
-		echo Running $(MODULE_BIN_PATH) ... ; $(MODULE_BIN_PATH) \
+		echo Running $(MODULE_BIN_PATH) ... ; $(MODULE_BIN_PATH) ; \
 	else \
 		echo Nothing to be done for \`$(@)\': BIN is not defined. ; \
 	fi
