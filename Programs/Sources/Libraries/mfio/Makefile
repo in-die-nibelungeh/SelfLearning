@@ -12,6 +12,7 @@ MODULE_SRC=	\
 
 INC=$(MODULE_HEADER)
 
+WARNINGS += -Werror
 CPPFLAGS += -O3
 
 include $(SELF_LEARNING_ROOT)/Build/Make/modulerules.mk

@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "debug.h"
@@ -21,14 +22,8 @@ namespace {
         } name;
         uint32_t size;
     };
+
 }
-
-/*
-#if 8 != sizeof(WaveChunk)
-#error Unexpected value: sizeof(WaveChunk)
-#endif
-*/
-
 
 Wave::Wave()
   : m_Duration(0.0)
@@ -62,18 +57,45 @@ status_t Wave::Check(void)
     return NO_ERROR;
 }
 
+#define FileRead(p, u, c, fd)                  \
+    {                                          \
+        size_t readBlock = fread(p, u, c, fd); \
+        if ( readBlock != c )                  \
+        {                                      \
+            return -ERROR_FILE_READ;           \
+        }                                      \
+    }
+
+#define FileSeek(fd, o, b)                     \
+    {                                          \
+        int rtn = fseek(fd, o, b);             \
+        if ( rtn != NO_ERROR )                 \
+        {                                      \
+            return -ERROR_FILE_SEEK;           \
+        }                                      \
+    }
+
+#define FileWrite(fd, type, v)                         \
+    {                                                  \
+        type tmp = v;                                  \
+        size_t wb = fwrite(&tmp, sizeof(type), 1, fd); \
+        if ( wb != 1 )                                 \
+        {                                              \
+            return -ERROR_FILE_WRITE;                  \
+        }                                              \
+    }
+
 status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
 {
-    status_t ret = NO_ERROR;
     int32_t length = 0;
-
+    
     while(1)
     {
         WaveChunk chunk = {0, 0};
-        int rb = fread(&chunk, sizeof(chunk), 1, fd);
-        DEBUG_LOG("rb=%d, pos=%ld, size=%d, eof=%d\n", rb, ftell(fd), chunk.size, feof(fd));
+        int readBlock = fread(&chunk, sizeof(chunk), 1, fd);
+        DEBUG_LOG("rb=%d, pos=%ld, size=%d, eof=%d\n", readBlock, ftell(fd), chunk.size, feof(fd));
 
-        if (feof(fd) || rb == 0)
+        if ( feof(fd) || readBlock == 0 )
         {
             break;
         }
@@ -82,11 +104,11 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
             case CID_RIFF:
             {
                 int32_t name;
-                fread(&name, sizeof(name), 1, fd);
+                FileRead(&name, sizeof(name), 1, fd);
                 if (name != C4TOI('W', 'A', 'V', 'E'))
                 {
                     ERROR_LOG("Unknown: %08x\n", name);
-                    //ret = ERROR_UNKNOWN;
+                    return -ERROR_UNSUPPORTED;
                 }
                 break;
             }
@@ -96,48 +118,51 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
                 m_MetaData.numChannels = 0;
                 m_MetaData.bitDepth = 0;
 
-                fread(&m_MetaData.format      , sizeof(int16_t), 1, fd);
-                fread(&m_MetaData.numChannels , sizeof(int16_t), 1, fd);
-                fread(&m_MetaData.samplingRate, sizeof(int32_t), 1, fd);
-                fseek(fd, sizeof(int32_t)+sizeof(int16_t), SEEK_CUR);
-                fread(&m_MetaData.bitDepth    , sizeof(int16_t), 1, fd);
-                fseek(fd, chunk.size-16, SEEK_CUR);
+                FileRead(&m_MetaData.format      , sizeof(int16_t), 1, fd);
+                FileRead(&m_MetaData.numChannels , sizeof(int16_t), 1, fd);
+                FileRead(&m_MetaData.samplingRate, sizeof(int32_t), 1, fd);
+                FileSeek(fd, sizeof(int32_t)+sizeof(int16_t), SEEK_CUR);
+                FileRead(&m_MetaData.bitDepth    , sizeof(int16_t), 1, fd);
+                FileSeek(fd, chunk.size-16, SEEK_CUR);
                 break;
             }
             case CID_DATA:
             {
                 pos = ftell(fd);
                 size = chunk.size;
-                fseek(fd, size, SEEK_CUR);
+                FileSeek(fd, size, SEEK_CUR);
                 break;
             }
             case CID_FACT:
             {
-                fread(&length, sizeof(int32_t), 1, fd);
-                fseek(fd, chunk.size-sizeof(int32_t), SEEK_CUR);
+                FileRead(&length, sizeof(int32_t), 1, fd);
+                FileSeek(fd, chunk.size-sizeof(int32_t), SEEK_CUR);
                 if (chunk.size > 4)
                 {
                     ERROR_LOG("Unexpected size of fact: size=%d\n", chunk.size);
-                    ret = -ERROR_UNKNOWN;
                 }
                 break;
             }
             default:
             {
                 char * c = chunk.name.c;
-                LOG("Unexpeced chunk: %c%c%c%c\n", c[0], c[1], c[2], c[3]);
-                fseek(fd, chunk.size, SEEK_CUR);
+                ERROR_LOG("Unsupported chunk: %c%c%c%c\n", c[0], c[1], c[2], c[3]);
+                FileSeek(fd, chunk.size, SEEK_CUR);
                 // ret = ERROR_UNKNOWN;
                 break;
             }
         }
+    }
+    if ( m_MetaData.format == LPCM || m_MetaData.format == IEEE_FLOAT )
+    {
+        length = size / (m_MetaData.bitDepth / 8) / m_MetaData.numChannels;
     }
     if (length != 0)
     {
         m_Duration = (double)length / GetSamplingRate();
     }
 
-    return ret;
+    return NO_ERROR;
 }
 
 status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
@@ -150,9 +175,7 @@ status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
 
     size_t dataSize;
     int dataPosition;
-    status_t status;
-
-    status = ReadMetaData(fd, dataPosition, dataSize);
+    status_t status = ReadMetaData(fd, dataPosition, dataSize);
     if (NO_ERROR != status)
     {
         fclose(fd);
@@ -166,7 +189,7 @@ status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
         goto END;
     }
 
-    fseek(fd, dataPosition, SEEK_SET);
+    FileSeek(fd, dataPosition, SEEK_SET);
 
     status = -ERROR_ILLEGAL;
     switch(GetWaveFormat())
@@ -192,6 +215,9 @@ status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
         }
         break;
     default:
+        {
+            status = -ERROR_UNSUPPORTED;
+        }
         break;
     }
 END:
@@ -234,7 +260,10 @@ status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
     }
     const int ch = GetNumChannels();
     const int length = tmp.GetLength() / ch;
-    buffer.Resize(ch, length);
+    if ( false == buffer.Resize(ch, length) )
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
     for (int i = 0; i < length; ++i)
     {
         for (int c = 0; c < ch; ++c)
@@ -267,12 +296,6 @@ const struct Wave::MetaData& Wave::GetMetaData(void) const
 {
     return m_MetaData;
 }
-
-#define FileWrite(fd, type, v)             \
-    {                                      \
-        type tmp = v;                      \
-        fwrite(&tmp, sizeof(type), 1, fd); \
-    }
 
 status_t Wave::WriteMetaData(FILE*& fd, size_t size) const
 {
@@ -333,13 +356,16 @@ status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
         return -ERROR_ILLEGAL_PERMISSION;
     }
 
-    const int length = buffer.GetLength();
-    const int bytes = GetBitDepth() / 8;
+    const size_t length = buffer.GetLength();
+    const size_t bytes = GetBitDepth() / 8;
     const size_t size = bytes * length;
 
-    WriteMetaData(fd, size);
-
-    status_t status = NO_ERROR;
+    status_t status = WriteMetaData(fd, size);
+    if (NO_ERROR != status)
+    {
+        fclose(fd);
+        return status;
+    }
 
     switch(GetWaveFormat())
     {
@@ -350,18 +376,24 @@ status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
             case sizeof(int16_t):
                 {
                     mcon::Vector<int16_t> tmp(buffer);
-                    fwrite(tmp, bytes, length, fd);
+                    if ( length > fwrite(tmp, bytes, length, fd) )
+                    {
+                        return -ERROR_FILE_WRITE;
+                    }
                 }
                 break;
             case sizeof(int32_t):
                 {
                     mcon::Vector<int32_t> tmp(buffer);
-                    fwrite(tmp, bytes, length, fd);
+                    if ( length > fwrite(tmp, bytes, length, fd) )
+                    {
+                        return -ERROR_FILE_WRITE;
+                    }
                 }
                 break;
             default:
                 {
-                    status = -ERROR_ILLEGAL;
+                    status = -ERROR_UNSUPPORTED;
                 }
                 break;
             }
@@ -374,12 +406,15 @@ status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
             case sizeof(float):
                 {
                     mcon::Vector<float> tmp(buffer);
-                    fwrite(tmp, bytes, length, fd);
+                    if ( length > fwrite(tmp, bytes, length, fd) )
+                    {
+                        return -ERROR_FILE_WRITE;
+                    }
                 }
                 break;
             default:
                 {
-                    status = -ERROR_ILLEGAL;
+                    status = -ERROR_UNSUPPORTED;
                 }
                 break;
             }
@@ -422,8 +457,6 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
 
     for (int i = 0; i < length; ++i)
     {
-        if (i < 20)
-            LOG("%d,%f\n", i, buffer[0][i]);
         for (int c = 0; c < ch; ++c)
         {
             tmp[ch*i+c] = buffer[c][i];

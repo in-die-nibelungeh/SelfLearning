@@ -3,7 +3,7 @@ BIN=mfio_wave
 INC=Wave.h
 MODULE_SRC=Wave.cpp
 
-LIBS=-ltbx
+LIBS=-lmtbx
 
 CPPFLAGS += -O3
 
