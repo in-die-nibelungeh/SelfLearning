@@ -12,7 +12,7 @@ LIBS=-lso
 
 CPPFLAGS += -O3 -L./
 
-include $(MY_AUDIO_ROOT)/Build/Make/modulerules.mk
+include $(SELF_LEARNING_ROOT)/Build/Make/modulerules.mk
 
 $(SO):	$(_SRC:.cpp=.o)
 	$(CC) -shared -o $(SO) $<

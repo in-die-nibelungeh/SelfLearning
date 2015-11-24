@@ -1,2 +1,2 @@
 #!/bin/sh
-export MY_AUDIO_ROOT=`pwd`
+export SELF_LEARNING_ROOT=`pwd`
