@@ -3,6 +3,7 @@
 #include "types.h"
 #include "debug.h"
 #include "Vector.h"
+#include "Matrixd.h"
 
 namespace mcon {
 
@@ -41,6 +42,7 @@ public:
     Matrix(const Matrix<Type>& m);
     template <typename U>
     Matrix(const Matrix<U>& m);
+    Matrix(const Matrixd& m);
 
     ~Matrix();
 
@@ -57,6 +59,7 @@ public:
     }
 
     Matrix<Type>& operator=(const Matrix<Type>& m);
+    Matrix<Type>& operator=(const Matrixd& m);
     Matrix<Type>& operator=(Type v) { MCON_ITERATION( i, GetRowLength(), (*this)[i] = v); return *this; }
 
     const Matrix<Type> operator+(Type v) const { Matrix<Type> mat(*this); MCON_ITERATION( i, GetRowLength(), mat[i] += v); return mat; }
@@ -224,6 +227,24 @@ Matrix<Type>::~Matrix()
 }
 
 template <class Type>
+Matrix<Type>::Matrix(const Matrixd& m)
+    : m_RowLength(m.GetRowLength()),
+    m_ColumnLength(m.GetColumnLength()),
+    m_Array(NULL)
+{
+    AllocateRow();
+    for (int i = 0; i < m_RowLength; ++i)
+    {
+        m_Array[i] = new Vector<Type>(m[i]);
+        ASSERT(m_Array[i] != NULL);
+    }
+    for ( int r = 0; r < GetRowLength(); ++r )
+    {
+        (*this)[r] = m[r];
+    }
+}
+
+template <class Type>
 bool Matrix<Type>::Resize(int rowLength, int columnLength)
 {
     if (rowLength < 0 || columnLength < 0)
@@ -281,6 +302,17 @@ bool Matrix<Type>::Resize(int rowLength, int columnLength)
 
 template <class Type>
 Matrix<Type>& Matrix<Type>::operator=(const Matrix<Type>& m)
+{
+    Resize(m.GetRowLength(), m.GetColumnLength());
+    for (int i = 0; i < m_RowLength; ++i)
+    {
+        *m_Array[i] = m[i];
+    }
+    return *this;
+}
+
+template <class Type>
+Matrix<Type>& Matrix<Type>::operator=(const Matrixd& m)
 {
     Resize(m.GetRowLength(), m.GetColumnLength());
     for (int i = 0; i < m_RowLength; ++i)
