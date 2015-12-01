@@ -302,10 +302,16 @@ Matrixd Matrixd::Inverse(void) const
         }
     }
 #else
-    // Calculate by Wipe-out
-    static const double threshold = 1.0e-10; // TBD
+    //--------------------------------
+    // Gauss-Jordan
+    //--------------------------------
+    const double threshold = 1.0e-10; // TBD
 
-    Matrixd m(rowCount, colCount*2);
+    Matrixd m(rowCount, colCount * 2);
+    if ( m.IsNull() )
+    {
+        return m;
+    }
     for (int row = 0; row < rowCount; ++row)
     {
         for (int col = 0; col < colCount; ++col)
@@ -315,7 +321,7 @@ Matrixd Matrixd::Inverse(void) const
     }
     for (int row = 0; row < rowCount; ++row)
     {
-        for (int col = colCount; col < colCount*2; ++col)
+        for (int col = colCount; col < colCount * 2; ++col)
         {
             if (row == (col - colCount))
             {
@@ -327,35 +333,51 @@ Matrixd Matrixd::Inverse(void) const
             }
         }
     }
-    for (int iter = 0; iter < rowCount; ++iter)
+
+    // 各行を正規化
+    for ( int r = 0; r < m.GetRowLength(); ++r )
     {
-        // Find a row which m[row][i] is zero.
-        bool isFound = false;
-        for (int i = iter; i < rowCount; ++i)
+        m[r] /= m[r].GetMaximumAbsolute();
+    }
+    for ( int r = 0; r < m.GetRowLength(); ++r )
+    {
+        // 注目している列の中で、最大値を持つ列を探す。
+        int index = r;
+        double maximum = fabs(m[r][r]);
+        for ( int k = index + 1; k < m.GetRowLength() - 1; ++k )
         {
-            if (fabs(m[i][iter]) > threshold)
+            if ( fabs(m[k][r]) > maximum )
             {
-                Vectord vec(m[i]);
-                m[i] = m[iter];
-                vec /= vec[iter];
-                m[iter] = vec;
-                isFound = true;
-                break;
+                index = k;
+                maximum = fabs(m[k][r]);
             }
         }
-        // Give-up...
-        if (false == isFound)
+        if ( maximum < threshold )
         {
-            return *this;
+            // ここに到達することはないはず。
+            DEBUG_LOG(" ~ 0 at r=%d\n", r);
+            m.Resize(0, 0); // NULL を返す。
+            return m;
         }
-        for (int i = 0; i < rowCount; ++i)
+        // 必要なら入れ替える
+        if ( r != index )
         {
-            if (i != iter)
+            mcon::Vectord tmp(m[r]);
+            m[r] = m[index];
+            m[index] = tmp;
+        }
+        // 上で入れ替えたので 以降では index は不要、r を使用する。
+        // 注目している行の、注目している列の値を 1.0 にする
+        m[r] /= maximum;
+
+        // 他の行から引く。
+        for ( int k = 0; k < m.GetRowLength(); ++k )
+        {
+            if ( k == r )
             {
-                Vectord vec(m[iter]);
-                vec *= m[i][iter];
-                m[i] -= vec;
+                continue;
             }
+            m[k] -= (m[r] * m[k][r]);
         }
     }
     for (int row = 0; row < rowCount; ++row)
