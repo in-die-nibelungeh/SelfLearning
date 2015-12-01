@@ -5,11 +5,18 @@
 #include "mcon.h"
 #include "mfio.h"
 
+/*
+ * This sample is derived from spline_A.c, which can be got from
+ * http://www.akita-nct.ac.jp/yamamoto/lecture/2004/5E/interpolation/SplineProgram/spline_A.c.
+ * Really appreciate Mr. Yamamoto for disclosing this source file.
+ */
+
 void spline_cal_u(int n, double x[], double y[], double u[]);
 double spline(int n, double x[], double y[], double u[],
           double xx);
-void mk_graph(int n, double x[], double x1, double x2,
-          double y[], double y1, double y2);
+void mk_graph(int n, const mcon::Vector<double> x, double x1, double x2,
+          const mcon::Vector<double> y, double y1, double y2);
+
 int gauss_jordan(int n, double b[]);
 
 #define VALUE(k) (((k) - 10) * ((k) - 40) * ((k) - 80) * 1.0e-4)
@@ -54,7 +61,9 @@ int main(void)
     }
 
     mfio::Csv::Write("spline.csv", mat);
-    // mk_graph(nplot, px, xmin, xmax, py, -0.5, 1.5);
+    const double xmin = 0;
+    const double xmax = nplot;
+    mk_graph(nplot - 1, px, xmin, xmax, py, -5.0, 15.0);
 
     return 0;
 }
@@ -166,51 +175,55 @@ int gauss_jordan(int n, double b[])
 /*==========================================================*/
 /*   make a graph                                           */
 /*==========================================================*/
-void mk_graph(int n, double x[], double x1, double x2,
-          double y[], double y1, double y2){
-  int i;
-  const char* data_file = "gpdata.txt";
-  FILE *out;
-  FILE *gp;
+void mk_graph(int n,
+    const mcon::Vector<double> x, double x1, double x2,
+    const mcon::Vector<double> y, double y1, double y2)
+{
+    int i;
+    const char* data_file = "spline.csv";
+    FILE *out;
+    FILE *gp;
 
-  /*  == make a data file ========= */
+    /*  == make a data file ========= */
 
-  out = fopen(data_file, "w");
+    out = fopen(data_file, "w");
 
-  for(i=0; i<=n; i++){
-    fprintf(out, "%e\t%e\n", x[i], y[i]);
-  }
+    for(i=0; i<=n; i++)
+    {
+        fprintf(out, "%e\t%e\n", x[i], y[i]);
+    }
+    fclose(out);
 
-  fclose(out);
+    /* == flowing lines make a graph by using gnuplot == */
 
-  /* == flowing lines make a graph by using gnuplot == */
+    gp = popen("/c/DevTools/gnuplot64/bin/gnuplot -persist","w");
 
-  gp = popen("gnuplot -persist","w");
+    fprintf(gp, "reset\n");
+    fprintf(gp, "set terminal postscript eps color\n");
+    fprintf(gp, "set output \"graph.eps\"\n");
+    fprintf(gp, "set grid\n");
 
-  fprintf(gp, "reset\n");
-  fprintf(gp, "set terminal postscript eps color\n");
-  fprintf(gp, "set output \"graph.eps\"\n");
-  fprintf(gp, "set grid\n");
+    /* -------  set x axis ---------*/
 
-  /* -------  set x axis ---------*/
+    fprintf(gp, "set xlabel \"%s\"\n", "x");
+    fprintf(gp, "set nologscale x\n");
+    fprintf(gp, "set xrange[%e:%e]\n", x1, x2);
 
-  fprintf(gp, "set xlabel \"%s\"\n", "x");
-  fprintf(gp, "set nologscale x\n");
-  fprintf(gp, "set xrange[%e:%e]\n", x1, x2);
+    /* -------  set y axis ---------*/
 
-  /* -------  set y axis ---------*/
+    fprintf(gp, "set ylabel \"%s\"\n", "y");
+    fprintf(gp, "set nologscale y\n");
+    fprintf(gp, "set yrange[%e:%e]\n", y1, y2);
 
-  fprintf(gp, "set ylabel \"%s\"\n", "y");
-  fprintf(gp, "set nologscale y\n");
-  fprintf(gp, "set yrange[%e:%e]\n", y1, y2);
+    /* -------  plat graphs ---------*/
 
-  /* -------  plat graphs ---------*/
+    fprintf(gp, "plot \"%s\" using 1:2 with line\n", data_file);
 
-  fprintf(gp, "plot \"%s\" using 1:2 with line\n", data_file);
+    // Commented out because running this on msys2 (no x11 in it).
+    //fprintf(gp, "set terminal x11\n");
 
-  fprintf(gp, "set terminal x11\n");
-  fprintf(gp, "replot\n");
+    fprintf(gp, "replot\n");
 
-  pclose(gp);
+    pclose(gp);
 }
 
