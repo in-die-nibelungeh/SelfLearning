@@ -133,6 +133,7 @@ public:
     }
 
     Vector<Type>& operator=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] = v); return *this; };
+    Vector<Type>& operator=(const VectordBase& v) { MCON_ITERATION(i, m_Length, (*this)[i] = v[i]); return *this; };
 
     const Vector<Type> operator+(Type v) const { Vector<Type> vec(*this);  vec += v; return vec; }
     const Vector<Type> operator-(Type v) const { Vector<Type> vec(*this);  vec -= v; return vec; }
