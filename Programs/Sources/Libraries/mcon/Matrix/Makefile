@@ -1,6 +1,6 @@
 BIN=mcon_matrix.exe
 
-MODULE_HEADER=Matrix.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/mcon/Matrix.h
 MODULE_SRC=
 
 INC=$(MODULE_HEADER)

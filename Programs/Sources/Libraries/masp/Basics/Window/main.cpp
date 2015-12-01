@@ -1,17 +1,11 @@
 #include <stdio.h>
+#include <stdint.h>
 
-#include "Window.h"
-#include "FileIo.h"
-#include "Fft.h"
-#include "Fir.h"
+#include "masp.h"
+#include "mfio.h"
 
 static void test_window(void)
 {
-    int SamplingRate = 8000;
-    int PassBand = 500;
-    int StopBand = 1500;
-    int TransferBandWidth = StopBand - PassBand;
-    int cutOff = PassBand + TransferBandWidth/2;
     double coef[256];
     size_t N = 24;
 
@@ -26,7 +20,7 @@ static void test_window(void)
     masp::window::Kaiser(k, 3.0);
     masp::window::Flattop(f);
     printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Rectangular\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
         printf("%d,%f,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i], s[i]);
     }
@@ -50,7 +44,7 @@ static void test_window(void)
     masp::window::Flattop(f);
     printf("\n");
     printf(",Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Rectangular\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
         printf("%d,%f,%f,%f,%f,%f,%f,%f,%f\n", i, han[i], ham[i], b[i], bh[i], n[i], k[i], f[i], s[i]);
     }
@@ -65,7 +59,7 @@ static void test_tapps(void)
     //mfio::Csv csv("rectangular.csv");
     mfio::Csv csv("sinc.csv");
 
-    for ( int i = 0; i < sizeof(Ms)/sizeof(int); ++i )
+    for (uint i = 0; i < sizeof(Ms)/sizeof(int); ++i )
     {
         const double fe = 0.25;
         const int N = Ms[i] + 1;
@@ -85,8 +79,8 @@ static void test_tapps(void)
             response.Unshift(0);
         }
 
-        Fft::Ft(complex, response);
-        Fft::ConvertToPolarCoords(gp, complex);
+        masp::ft::Ft(complex, response);
+        masp::ft::ConvertToPolarCoords(gp, complex);
         gp[0] /= gp[0].GetMaximumAbsolute();
         {
             const int n = response.GetLength();

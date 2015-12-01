@@ -28,8 +28,7 @@
 #include <sys/types.h>
 
 #include "debug.h"
-#include "Vectord.h"
-#include "Matrixd.h"
+#include "mcon.h"
 
 namespace {
 

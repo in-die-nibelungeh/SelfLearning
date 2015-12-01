@@ -2,8 +2,7 @@
 #include <math.h>
 #include <typeinfo>
 
-#include "Vector.h"
-#include "Matrix.h"
+#include "mcon.h"
 
 template <class T>
 void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)

@@ -3,7 +3,7 @@ MODULE_NAME := mtbx
 LIB=libmtbx.a
 
 MODULE_HEADER= \
-	$(MY_AUDIO_ROOT)/Programs/Include/mtbx/WaveGen.h \
+	$(SELF_LEARNING_INCDIR)/mtbx/WaveGen.h \
 
 MODULE_SRC=	\
 	WaveGen/WaveGen.cpp \

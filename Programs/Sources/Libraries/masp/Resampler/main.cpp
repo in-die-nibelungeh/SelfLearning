@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "mcon.h"
 #include "mfio.h"
-#include "Resampler.h"
+#include "masp/Resampler.h"
 
 static void test_resampler(void)
 {

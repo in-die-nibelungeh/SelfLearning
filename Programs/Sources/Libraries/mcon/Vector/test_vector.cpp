@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include "debug.h"
+#include "mcon.h"
 
 double initializer(int i, size_t n)
 {

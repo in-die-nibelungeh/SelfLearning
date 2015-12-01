@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "Ft.h"
+#include "masp/Ft.h"
 #include "mfio.h"
 #include "mcon.h"
 #include "mutl.h"

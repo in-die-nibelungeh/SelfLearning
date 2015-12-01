@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-#include "Stopwatch.h"
-#include "Clockwatch.h"
+#include "mutl.h"
 
 double g_Value = 0.0;
 

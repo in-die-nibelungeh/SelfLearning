@@ -1,12 +1,12 @@
-BIN=masp_ft.exe
+BIN=masp_ft
 
-MODULE_HEADER=Ft.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Ft.h
 MODULE_SRC=Ft.cpp
 
 INC=$(MODULE_HEADER)
 SRC=test_Ft.cpp benchmark_Ft.cpp
 
-LIBS=-ltbx -lutl -lfio
+LIBS=-lmtbx -lmutl -lmfio
 
 CPPFLAGS += -O3
 

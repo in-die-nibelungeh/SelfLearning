@@ -2,12 +2,7 @@
 MODULE_NAME := mcon
 LIB=libmcon.a
 
-MODULE_HEADER= \
-	Vector/Vector.h \
-	Matrix/Matrix.h \
-	Vectord/Vectord.h \
-	Vectord/VectordBase.h \
-	Matrixd/Matrixd.h \
+MODULE_HEADER=$(addprefix $(SELF_LEARNING_INCDIR)/mcon, Vector.h Matrix.h Vectord.h VectordBase.h Matrixd.h)
 
 MODULE_SRC=	\
 	Vectord/VectordBase.cpp \

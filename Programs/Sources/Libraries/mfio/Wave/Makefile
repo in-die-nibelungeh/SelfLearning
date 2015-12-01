@@ -1,6 +1,6 @@
 BIN=mfio_wave
 
-INC=Wave.h
+INC=$(addprefix $(SELF_LEARNING_INCDIR)/mfio/, Wave.h)
 MODULE_SRC=Wave.cpp
 
 LIBS=-lmtbx

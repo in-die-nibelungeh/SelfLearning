@@ -1,9 +1,8 @@
 
-BIN=win.exe
-LIB=libwin.a
-LIBS=-lwg -lfio -lfft -lfir
+BIN=masp_win
+LIBS=-lmtbx -lmfio -lmasp
 
-MODULE_HEADER=Window.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Window.h
 MODULE_SRC=Window.cpp
 
 INC=$(MODULE_HEADER)

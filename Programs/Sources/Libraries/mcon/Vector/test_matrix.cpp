@@ -1,5 +1,6 @@
+#include "mcon.h"
 
-static void test_matrix_api(void)
+void test_matrix_api(void)
 {
     int length = 6;
     mcon::Vector<double> dvec(length);

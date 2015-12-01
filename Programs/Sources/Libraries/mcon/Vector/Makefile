@@ -1,14 +1,12 @@
 BIN=mcon_vector
 
-MODULE_HEADER=Vector.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/mcon/Vector.h
 MODULE_SRC=
 
-INC=$(MODULE_HEADER) test_vector.cpp benchmark_vector.cpp
-SRC=
+INC=$(MODULE_HEADER)
+SRC=test_vector.cpp test_matrix.cpp benchmark_vector.cpp
 
-INCDIRS = . ../Matrix ../Vectord
-
-LIBS=-ltbx -lutl
+LIBS=-lmtbx -lmutl
 
 CPPFLAGS += -O3
 

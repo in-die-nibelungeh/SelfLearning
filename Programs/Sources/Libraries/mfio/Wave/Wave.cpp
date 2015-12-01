@@ -7,7 +7,7 @@
 #include "debug.h"
 #include "status.h"
 #include "types.h"
-#include "Wave.h"
+#include "mfio.h"
 
 namespace mfio {
 
@@ -88,7 +88,7 @@ status_t Wave::Check(void)
 status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
 {
     int32_t length = 0;
-    
+
     while(1)
     {
         WaveChunk chunk = {0, 0};

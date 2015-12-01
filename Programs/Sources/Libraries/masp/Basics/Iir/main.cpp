@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <math.h>
-#include <sys/types.h>
+#include <stdint.h>
 #include <string>
 
-#include "Buffer.h"
-#include "FileIo.h"
-#include "Iir.h"
-#include "Window.h"
-#include "WaveGen.h"
+#include "mcon.h"
+#include "mfio.h"
+#include "mtbx.h"
+#include "masp.h"
 
 static const double g_Pi(M_PI);
 
@@ -20,15 +19,15 @@ static void generate_sample(int baseFreqs[])
     int minFreq = 48000;
     int duration = 10;
     const double amp = 2048.0 * 2;
-    Container::Vector<int16_t> sineMixed(fs * duration);
+    mcon::Vector<int16_t> sineMixed(fs * duration);
     printf("Generating mixed sine waveform\n");
     for (int i = 0; baseFreqs[i] != 0; ++i)
     {
         int baseFreq = baseFreqs[i];
         for (freq = baseFreq; ; freq *= 2)
         {
-            Container::Vector<double> sineSingle(fs * duration);
-            WaveGen wg(fs, freq, WaveGen::WT_SINE);
+            mcon::Vector<double> sineSingle(fs * duration);
+            mtbx::WaveGen wg(fs, freq, mtbx::WaveGen::WT_SINE);
             wg.GenerateWaveform(sineSingle, amp);
             sineMixed += sineSingle;
             if (maxFreq < freq) { maxFreq = freq; }
@@ -42,7 +41,7 @@ static void generate_sample(int baseFreqs[])
     }
     sprintf(name, "sine_%d-%d.wav", minFreq, maxFreq);
     printf("Write the mixed sine waveform to %s\n", name);
-    FileIo wave;
+    mfio::Wave wave;
     wave.SetMetaData(fs, 1, 16);
     if (0 != wave.Write(name, sineMixed))
     {
@@ -53,10 +52,10 @@ static void generate_sample(int baseFreqs[])
 static void test_filtering(void)
 {
     std::string name("sine_131-21120");
-    Container::Vector<int16_t> sweep(1);
-    FileIo wave;
-    wave.Read((name + std::string(".wav")).c_str(), sweep);
-    struct FileIo::MetaData metaData = wave.GetMetaData();
+    mcon::Vector<double> sweep;
+    mfio::Wave wave;
+    wave.Read(name + std::string(".wav"), sweep);
+    struct mfio::Wave::MetaData metaData = wave.GetMetaData();
     double Qf = 1 / sqrt(2);
     int fs = metaData.samplingRate;
     double fc = 2000;
@@ -65,10 +64,10 @@ static void test_filtering(void)
     masp::iir::Biquad bpf(Qf, fc, masp::iir::Biquad::BPF, fs);
     masp::iir::Biquad bef(Qf, fc, masp::iir::Biquad::BEF, fs);
 
-    Container::Vector<int16_t> sweep_filtered_lpf(sweep.GetNumOfData());
-    Container::Vector<int16_t> sweep_filtered_hpf(sweep.GetNumOfData());
-    Container::Vector<int16_t> sweep_filtered_bpf(sweep.GetNumOfData());
-    Container::Vector<int16_t> sweep_filtered_bef(sweep.GetNumOfData());
+    mcon::Vector<int16_t> sweep_filtered_lpf(sweep.GetLength());
+    mcon::Vector<int16_t> sweep_filtered_hpf(sweep.GetLength());
+    mcon::Vector<int16_t> sweep_filtered_bpf(sweep.GetLength());
+    mcon::Vector<int16_t> sweep_filtered_bef(sweep.GetLength());
 
     printf("fc=%f\n", masp::iir::Biquad::ConvertD2A(fc, fs));
 
@@ -85,7 +84,7 @@ static void test_filtering(void)
     printf("BEF: b0=%f,b1=%f,b2=%f,a1=%f,a2=%f\n",
         coef.b[0], coef.b[1], coef.b[2], coef.a[0], coef.a[1]);
 
-    for (int i = 0; i < sweep.GetNumOfData(); ++i)
+    for (int i = 0; i < sweep.GetLength(); ++i)
     {
         double audioIn = static_cast<double>(sweep[i]);
         double v = lpf.ApplyFilter(audioIn); sweep_filtered_lpf[i] = static_cast<int16_t>(v);
@@ -130,7 +129,7 @@ int main(void)
     if(0)
     {
         int freqs[] = { Melody::C, Melody::E, Melody::GA, 0 };
-        for (int i = 0; i < sizeof(freqs)/sizeof(freqs[0]) - 1; ++i)
+        for (uint i = 0; i < sizeof(freqs)/sizeof(freqs[0]) - 1; ++i)
         {
             int freq = static_cast<int>(Melody::GetRate(freqs[i]) + 0.5);
             printf("%i\n", freq);

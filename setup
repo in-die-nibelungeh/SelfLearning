@@ -1,2 +1,4 @@
 #!/bin/sh
 export SELF_LEARNING_ROOT=`pwd`
+export SELF_LEARNING_INCDIR=${SELF_LEARNING_ROOT}/Programs/Include
+export SELF_LEARNING_LIBDIR=${SELF_LEARNING_ROOT}/Programs/Library

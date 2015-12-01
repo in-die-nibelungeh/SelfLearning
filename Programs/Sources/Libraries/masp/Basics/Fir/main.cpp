@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <string>
+#include <stdint.h>
 
-#include "Fft.h"
-#include "Fir.h"
-#include "Window.h"
-#include "FileIo.h"
-#include "Vector.h"
+#include "masp.h"
+#include "mcon.h"
+#include "mfio.h"
 
 static const double g_Pi(M_PI);
 
@@ -17,7 +16,6 @@ static void test_sinc(void)
     int UpperBand = 2000;
     int TransferBandWidth = StopBand - PassBand;
     int cutOff = PassBand + TransferBandWidth/2;
-    double delta = (double)cutOff/SamplingRate * 2 * g_Pi;
     double fe = (double)cutOff/SamplingRate;
     double fe2 = (double)UpperBand/SamplingRate;
     double scoef[256];
@@ -34,15 +32,15 @@ static void test_sinc(void)
 
     slpf *= han;
     printf("N,i,sinc,sinc_n,lanczos\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
-        printf("%d,%d,%f,%f,%f\n", N, i, scoef[i], slpf[i], lcoef[i]);
+        printf("%ld,%d,%f,%f,%f\n", N, i, scoef[i], slpf[i], lcoef[i]);
     }
     printf("\n");
     printf("N,i,slpf,shpf,sbpf,sbef\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
-        printf("%d,%d,%f,%f,%f,%f\n", N, i, slpf[i], shpf[i], sbpf[i], sbef[i]);
+        printf("%ld,%d,%f,%f,%f,%f\n", N, i, slpf[i], shpf[i], sbpf[i], sbef[i]);
     }
     N = 25;
     han.Resize(N);
@@ -60,15 +58,15 @@ static void test_sinc(void)
     slpf *= han;
     printf("\n");
     printf("N,i,sinc,sinc_n,lanczos\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
-        printf("%d,%d,%f,%f,%f\n", N, i, scoef[i], slpf[i], lcoef[i]);
+        printf("%ld,%d,%f,%f,%f\n", N, i, scoef[i], slpf[i], lcoef[i]);
     }
     printf("\n");
     printf("N,i,slpf,shpf,sbpf,sbef\n");
-    for (int i = 0; i < N; ++i)
+    for (uint i = 0; i < N; ++i)
     {
-        printf("%d,%d,%f,%f,%f,%f\n", N, i, slpf[i], shpf[i], sbpf[i], sbef[i]);
+        printf("%ld,%d,%f,%f,%f,%f\n", N, i, slpf[i], shpf[i], sbpf[i], sbef[i]);
     }
     return ;
 }
@@ -109,8 +107,8 @@ static void test_src(void)
         {
             mcon::Matrix<double> complex(2, M);
             mcon::Matrix<double> polar(2, M);
-            Fft::Ft(complex, w);
-            Fft::ConvertToPolarCoords(polar, complex);
+            masp::ft::Ft(complex, w);
+            masp::ft::ConvertToPolarCoords(polar, complex);
             mcon::Matrix<double> matrix(3, M);
             matrix[0] = w;
             matrix[1] = polar[0];
@@ -175,8 +173,8 @@ void test_upsample(void)
         {
             mcon::Matrix<double> complex(2, M);
             mcon::Matrix<double> polar(2, M);
-            Fft::Ft(complex, w);
-            Fft::ConvertToPolarCoords(polar, complex);
+            masp::ft::Ft(complex, w);
+            masp::ft::ConvertToPolarCoords(polar, complex);
             mcon::Matrix<double> matrix(3, M);
             matrix[0] = w;
             matrix[1] = polar[0];
@@ -200,7 +198,7 @@ void test_upsample(void)
     }
 }
 
-static void test_minimumXXX(void)
+void test_minimumXXX(void)
 {
     int X = 8000;//32728;
     int Y = 32000;//32000
@@ -231,36 +229,8 @@ static void test_minimumXXX(void)
 
 int main(void)
 {
-    test_minimumXXX();
-    return 0;
-    // Primary
-    if (0)
-    {
-        const int value = 738414;
-        int tmp = value;
-
-        while ( tmp != 1 )
-        {
-            printf("searching for %d ...\n", tmp);
-            int n;
-            for (n = 2; n < tmp/n; ++n)
-            {
-                if ( (tmp % n) == 0 )
-                {
-                    printf("%d is \n", n);
-                    tmp /= n;
-                    break;
-                }
-            }
-            if (n == tmp/2)
-            {
-                tmp /= n;
-            }
-        }
-        return 0;
-    }
-    //test_sinc();
-    //test_src();
+    test_sinc();
+    test_src();
     test_upsample();
     return 0;
 }

@@ -2,8 +2,7 @@
 #include <math.h>
 #include <typeinfo>
 
-#include "Vector.h"
-#include "Matrix.h"
+#include "mcon.h"
 
 template <class T>
 void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
@@ -26,9 +25,8 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
     }
 }
 
-#include "test_vector.cpp"
-#include "test_matrix.cpp"
-//#include "benchmark_vector.cpp"
+extern void test_vector_api();
+extern void test_matrix_api();
 
 static void test_matrix_determinant(void)
 {

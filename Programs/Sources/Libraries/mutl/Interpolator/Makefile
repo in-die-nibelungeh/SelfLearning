@@ -2,7 +2,8 @@
 BIN=mutl_interp
 
 LIBS=-lmfio
-INC=Spline.h Linear.h
+
+INC=$(addprefix, $(SELF_LEARNING_INCDIR)/mutl, Spline.h Linear.h)
 MODULE_SRC=Spline.cpp Linear.cpp
 
 CPPFLAGS += -O3

@@ -1,9 +1,8 @@
 
-BIN=iir.exe
-LIB=libiir.a
-LIBS=-lwin -lfio -lwg
+BIN=masp_iir
+LIBS=-lmasp -lmfio -lmtbx
 
-MODULE_HEADER=Iir.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Iir.h
 MODULE_SRC=Iir.cpp
 
 INC=$(MODULE_HEADER)

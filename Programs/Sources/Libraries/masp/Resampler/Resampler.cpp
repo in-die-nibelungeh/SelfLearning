@@ -23,9 +23,7 @@
  */
 
 #include "status.h"
-#include "masp/Window.h"
-#include "masp/Fir.h"
-#include "Resampler.h"
+#include "masp.h"
 
 namespace masp {
 

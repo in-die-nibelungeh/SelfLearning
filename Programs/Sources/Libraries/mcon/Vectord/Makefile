@@ -1,13 +1,11 @@
 BIN=mcon_vectord
 
-MODULE_HEADER=VectordBase.h Vectord.h
+MODULE_HEADER=$(addprefix, $(SELF_LEARNING_INCDIR)/mcon/, VectordBase.h Vectord.h)
 MODULE_SRC=VectordBase.cpp Vectord.cpp
 
-INC=$(MODULE_HEADER) tune.cpp
-SRC=test_VectordBase.cpp test_Vectord.cpp benchmark_Vectord.cpp
-INCDIRS += . ../Vector
+SRC=test_VectordBase.cpp test_Vectord.cpp benchmark_Vectord.cpp tune.cpp
 
-LIBS=-lutl
+LIBS=-lmutl
 
 CPPFLAGS += \
 	-O3 \

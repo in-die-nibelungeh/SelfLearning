@@ -3,10 +3,10 @@ MODULE_NAME := mutl
 LIB=libmutl.a
 
 MODULE_HEADER= \
-	Benchmark/Stopwatch.h \
-	Benchmark/Clockwatch.h \
-	Interpolator/Linear.h \
-	Interpolator/Spline.h \
+	$(SELF_LEARNING_INCDIR)/mutl/Stopwatch.h \
+	$(SELF_LEARNING_INCDIR)/mutl/Clockwatch.h \
+	$(SELF_LEARNING_INCDIR)/mutl/Linear.h \
+	$(SELF_LEARNING_INCDIR)/mutl/Spline.h \
 
 MODULE_SRC=	\
 	Benchmark/Stopwatch.cpp \

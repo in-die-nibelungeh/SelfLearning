@@ -1,6 +1,6 @@
 BIN=mfio_csv
 
-INC=Csv.h
+INC=$(addprefix $(SELF_LEARNING_INCDIR)/mfio/, Csv.h)
 MODULE_SRC=Csv.cpp
 
 CPPFLAGS += -O3

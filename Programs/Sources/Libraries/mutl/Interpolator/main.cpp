@@ -2,8 +2,7 @@
 
 #include "mcon.h"
 #include "mfio.h"
-#include "Linear.h"
-#include "Spline.h"
+#include "mutl.h"
 
 #define VALUE(k) (((k) - 10) * ((k) - 40) * ((k) - 80) * 1.0e-4)
 #define POW2(v) ((v)*(v))

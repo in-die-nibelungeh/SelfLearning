@@ -1,7 +1,7 @@
 
 BIN=mtbx_wavgen.exe
 
-MODULE_HEADER=$(MY_AUDIO_ROOT)/Programs/Include/mtbx/WaveGen.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/mtbx/WaveGen.h
 MODULE_SRC=WaveGen.cpp
 
 INC=$(MODULE_HEADER)

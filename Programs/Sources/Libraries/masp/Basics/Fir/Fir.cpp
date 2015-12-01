@@ -4,7 +4,7 @@
 
 #include "status.h"
 #include "debug.h"
-#include "Fir.h"
+#include "masp/Fir.h"
 
 namespace masp {
 namespace fir {

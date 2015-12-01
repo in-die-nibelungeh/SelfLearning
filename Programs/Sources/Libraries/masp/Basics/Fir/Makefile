@@ -1,9 +1,8 @@
 
-BIN=fir.exe
-LIB=libfir.a
-LIBS=-lwin -lfio -lfft
+BIN=masp_fir
+LIBS=-lmasp -lmfio
 
-MODULE_HEADER=Fir.h
+MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Fir.h
 MODULE_SRC=Fir.cpp
 
 INC=$(MODULE_HEADER)

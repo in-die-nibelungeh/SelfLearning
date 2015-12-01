@@ -1,7 +1,7 @@
 
 BIN=mutl_benchmark.exe
 
-INC=Stopwatch.h Clockwatch.h
+INC=$(addprefix, $(SELF_LEARNING_INCDIR)/mutl, Stopwatch.h Clockwatch.h)
 MODULE_SRC=Stopwatch.cpp Clockwatch.cpp
 
 CPPFLAGS += -O3

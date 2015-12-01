@@ -27,7 +27,7 @@
 #include "status.h"
 #include "types.h"
 #include "debug.h"
-#include "Linear.h"
+#include "mutl.h"
 
 namespace mutl {
 namespace interp {

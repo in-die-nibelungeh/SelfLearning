@@ -3,8 +3,7 @@ MODULE_NAME := mfio
 LIB=libmfio.a
 
 MODULE_HEADER= \
-	Csv/Csv.h \
-	Wave/Wave.h \
+	$(addprefix $(SELF_LEARNING_INCDIR)/mfio/, Csv.h Wave.h)
 
 MODULE_SRC=	\
 	Csv/Csv.cpp \

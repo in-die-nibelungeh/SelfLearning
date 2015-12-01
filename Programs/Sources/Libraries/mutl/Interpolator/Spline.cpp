@@ -28,8 +28,7 @@
 #include "types.h"
 #include "debug.h"
 #include "mcon.h"
-
-#include "Spline.h"
+#include "mutl.h"
 
 namespace {
     static const double threshold = 1.0e-10;

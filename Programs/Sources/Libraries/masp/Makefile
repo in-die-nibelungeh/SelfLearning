@@ -3,11 +3,7 @@ MODULE_NAME := masp
 LIB=libmasp.a
 
 MODULE_HEADER= \
-	Basics/Fir/Fir.h \
-	Basics/Ft/Ft.h \
-	Basics/Iir/Iir.h \
-	Basics/Window/Window.h \
-	Resampler/Resampler.h \
+	$(addprefix $(SELF_LEARNING_INCDIR)/masp/,Fir.h Iir.h Ft.h Window.h Resampler.h)
 
 MODULE_SRC=	\
 	Basics/Fir/Fir.cpp \
@@ -15,13 +11,6 @@ MODULE_SRC=	\
 	Basics/Ft/Ft.cpp \
 	Basics/Window/Window.cpp \
 	Resampler/Resampler.cpp \
-
-INCDIRS = \
-	Basics/Ft \
-	Basics/Fir \
-	Basics/Iir \
-	Basics/Window \
-	Resampler \
 
 INC=$(MODULE_HEADER)
 

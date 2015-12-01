@@ -3,7 +3,7 @@
 #include <sys/types.h>
 
 #include "debug.h"
-#include "Iir.h"
+#include "masp/Iir.h"
 
 #define POW2(x) ((x)*(x))
 
