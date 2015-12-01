@@ -36,8 +36,6 @@ LIBS += -lstdc++ -lm
 PROJECT_INCDIR := $(SELF_LEARNING_ROOT)/Programs/Include
 PROJECT_LIBDIR := $(SELF_LEARNING_ROOT)/Programs/Library
 
-MODULE_HEADER_INSTALL_DIR := $(PROJECT_INCDIR)/$(MODULE_NAME)
-
 INCDIRS += $(PROJECT_INCDIR)
 LIBDIRS += $(PROJECT_LIBDIR)
 
@@ -102,18 +100,14 @@ $(MODULE_LIB_PATH): $(MODULE_OBJ)
 		echo LIB is not define. ; \
 	fi
 
-install: $(MODULE_LIB_PATH) $(MODULE_HEADER)
+install: $(MODULE_LIB_PATH)
 	@if [ -n "$(LIB)" ] ; then \
 		echo cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 		$(call Mkdir,$(PROJECT_LIBDIR)) ; \
 		cp $(MODULE_LIB_PATH) $(PROJECT_LIBDIR)/ ; \
 	fi
-	@if [ -n "$(MODULE_HEADER)" ] ; then \
-		$(call Mkdir,$(MODULE_HEADER_INSTALL_DIR)) ; \
-		cp $(MODULE_HEADER) $(MODULE_HEADER_INSTALL_DIR)/ ; \
-	fi
-	@if [ -z "$(LIB)" -a -z "$(MODULE_HEADER)" ] ; then \
-		echo Nothing to be done for \`$(@)\': Neither LIB nor MODULE_HEADER is defined. ; \
+	@if [ -z "$(LIB)" ] ; then \
+		echo Nothing to be done for \`$(@)\': LIB is not defined. ; \
 	fi
 
 clean: 

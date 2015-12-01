@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "WaveGen.h"
+#include "mtbx.h"
 #include "debug.h"
 
 #define DEFAULT_BASE_FREQUENCY 440.0f

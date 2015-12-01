@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "WaveGen.h"
+#include "mtbx.h"
 
 #define NUM_SAMPLES 120
 #define NUM_TYPES 4
