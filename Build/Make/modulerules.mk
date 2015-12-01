@@ -6,8 +6,8 @@ OBJECT_DIR ?= .
 
 TOOLCHAIN_PREFIX ?= 
 
-ifndef MY_AUDIO_ROOT
-$(error Define MY_AUDIO_ROOT)
+ifndef SELF_LEARNING_ROOT
+$(error Define SELF_LEARNING_ROOT)
 endif
 
 ifdef LIB
@@ -33,8 +33,8 @@ LD := $(TOOLCHAIN_PREFIX)ld
 
 LIBS += -lstdc++ -lm
 
-PROJECT_INCDIR := $(MY_AUDIO_ROOT)/Programs/Include
-PROJECT_LIBDIR := $(MY_AUDIO_ROOT)/Programs/Library
+PROJECT_INCDIR := $(SELF_LEARNING_ROOT)/Programs/Include
+PROJECT_LIBDIR := $(SELF_LEARNING_ROOT)/Programs/Library
 
 MODULE_HEADER_INSTALL_DIR := $(PROJECT_INCDIR)/$(MODULE_NAME)
 

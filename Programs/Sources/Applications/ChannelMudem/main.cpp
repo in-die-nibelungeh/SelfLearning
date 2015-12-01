@@ -74,9 +74,9 @@ int main(int argc, const char* argv[])
     {
         mcon::Matrix<double> wavRoot;
         std::string filename("");
-        int fs;
-        mfio::Wave::WaveFormat format;
-        int bits;
+        int fs = 0;
+        mfio::Wave::WaveFormat format = mfio::Wave::LPCM;
+        int bits = 0;
         const int offset = 2; // argv[0] is program and argv[1] is command.
         for (int k = 0; k < argc - offset; ++k )
         {
@@ -109,7 +109,7 @@ int main(int argc, const char* argv[])
                     continue;
                 }
                 filename.append( std::string("-") + name);
-                filename.erase( filename.length()-4, 4 ); // æ‹¡å¼µå­ã‚’å‰Šé™¤
+                filename.erase( filename.length()-4, 4 ); // Šg’£Žq‚ðíœ
 
                 const int length = wavRoot.GetColumnLength();
                 const int row = wavRoot.GetRowLength() + wav.GetRowLength();
@@ -138,7 +138,7 @@ int main(int argc, const char* argv[])
                 format = wavFile.GetWaveFormat();
                 bits = wavFile.GetBitDepth();
                 filename.append(name);
-                filename.erase( filename.length()-4, 4 ); // æ‹¡å¼µå­ã‚’å‰Šé™¤
+                filename.erase( filename.length()-4, 4 ); // Šg’£Žq‚ðíœ
             }
         }
         // Write
