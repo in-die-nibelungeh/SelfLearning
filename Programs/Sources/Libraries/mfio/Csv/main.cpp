@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -48,6 +72,26 @@ static void test_csv(void)
         csv.Write(matrix);
         csv.Close();
     }
+    LOG("[Csv::Read]\n");
+    {
+        const std::string fname("matrix.csv");
+        mcon::Matrix<double> m1;
+        mfio::Csv::Read(fname, m1);
+        int ec = 0;
+        CHECK_VALUE(m1.GetRowLength()   , matrix.GetRowLength() + 1);
+        CHECK_VALUE(m1.GetColumnLength(), matrix.GetColumnLength() * 2);
+        for ( int c = 0; c < m1.GetColumnLength(); ++c )
+        {
+            const int _c = c % matrix.GetColumnLength();
+            ec += m1[0][c] != _c ? 1 : 0;
+            for ( int r = 0; r < m1.GetRowLength() - 1; ++r )
+            {
+                ec += m1[r+1][c] != matrix[r][_c] ? 1 : 0;
+            }
+        }
+        CHECK_VALUE(ec, 0);
+    }
+    
 }
 
 int main(void)
