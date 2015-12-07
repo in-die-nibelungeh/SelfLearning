@@ -280,18 +280,17 @@ Matrixd Matrixd::Inverse(void) const
     {
         return *this;
     }
-
-    double det = Determinant();
-    if ( 0 == det )
-    {
-        return *this;
-    }
     // Calculate Inversed-Matrixd by Cofactors.
     int rowCount = GetRowLength();
     int colCount = GetColumnLength();
     Matrixd inversed(rowCount, colCount);
 
 #if 0
+    double det = Determinant();
+    if ( 0 == det )
+    {
+        return *this;
+    }
     for (int row = 0; row < rowCount; ++row)
     {
         for (int col = 0; col < colCount; ++col)
