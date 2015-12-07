@@ -230,7 +230,14 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             }
             {
                 mfio::Wave wave(fs, 1, 32, mfio::Wave::IEEE_FLOAT);
-                wave.Write(fbody + ewav, resp);
+                if ( NO_ERROR == wave.Write(fbody + ewav, resp) )
+                {
+                    LOG("Failed in writing %s\n", (fbody+ewav).c_str());
+                }
+                else
+                {
+                    LOG("Output: %s\n", (fbody+ewav).c_str());
+                }
             }
 
             // Rls logs
@@ -309,7 +316,7 @@ int main(int argc, char* argv[])
         usage();
         return 0;
     }
-	// Display messages real-time
+    // Display messages real-time
     setvbuf(stdout, NULL, _IONBF, 0);
 
     LOG("Input: %s\n", input.c_str());
