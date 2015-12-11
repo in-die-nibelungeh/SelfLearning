@@ -310,7 +310,7 @@ status_t Ft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSerie
         imag[i] = 0.0;
         for (int j = 0; j < N; ++j)
         {
-            int k = (i * j) % N;
+            int k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
             real[i] += (timeSeries[j] * cosTable[k]);
             imag[i] -= (timeSeries[j] * sinTable[k]);
         }
@@ -364,7 +364,7 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
         timeSeries[i] = 0.0;
         for (int j = 0; j < N; ++j)
         {
-            int k = (i * j) % N;
+            int k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
             timeSeries[i] += (real[j] * cosTable[k] - imag[j] * sinTable[k]);
         }
     }
