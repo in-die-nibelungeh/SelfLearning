@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <string>
 
 #include <stdlib.h>
@@ -11,10 +35,11 @@
 #include "mcon.h"
 #include "mfio.h"
 #include "masp.h"
+#include "mutl.h"
 
 #define POW2(x) ((x)*(x))
 
-status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps);
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& = "");
 status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile);
 
 status_t Normalize(mcon::Vector<double>& vec)
@@ -57,12 +82,12 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     return NO_ERROR;
 }
 
-status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps)
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& outfile)
 {
     mcon::Vector<double> input;
     mcon::Vector<double> reference;
     mcon::Vector<double> resp;
-    std::string fbody;
+    std::string fbody = outfile;
     int fs;
 
     // Input
@@ -188,6 +213,8 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             }
         }
         resp = h.Transpose()[0];
+
+        if ( outfile.empty() )
         {
             char _fbody[128];
             sprintf(_fbody, "Af_%dtapps_", tapps);
@@ -287,35 +314,53 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
 
 static void usage(void)
 {
-    printf("Usage: %s [OPTIONS] INPUT REFERENCE [TAPPS]\n", "rls");
+    printf("Usage: %s [OPTIONS] INPUT REFERENCE\n", "rls");
     printf("\n");
     printf("INPUT and REFERENCE must be .wav files.\n");
-    printf("TAPPS must be an interger value larger than 0.\n");
+    printf("  -h: show help.\n");
+    printf("  -o: spefity the output filename.\n");
+    printf("  -m: spefity the tapps, which should be a positive number.\n");
 }
 
-int main(int argc, char* argv[])
+// Description
+typedef struct mutl::ArgumentDescription Desc;
+
+const Desc descs[] =
 {
-    std::string reference;
-    std::string input;
-    int tapps = 256;
-    if ( argc < 3 )
+    {"h" , 0},
+    {"o" , 1},
+    {"m" , 1}
+};
+
+int main(int argc, const char* argv[])
+{
+    mutl::ArgumentParser parser;
+    if( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(Desc))
+        || parser.IsEnabled("h")
+        || parser.GetArgumentCount() < 2 )
     {
         usage();
         return 0;
     }
-    input = std::string(argv[1]);
-    reference = std::string(argv[2]);
+    const std::string input = parser.GetArgument(0);
+    const std::string reference = parser.GetArgument(1);
+    int tapps = 256;
 
-    if ( argc > 3 )
+    if (parser.IsEnabled("m"))
     {
-        tapps = atoi(argv[3]);
+        tapps = atoi( parser.GetOption("m").c_str() );
     }
-
     if ( tapps < 1 )
     {
         usage();
         return 0;
     }
+    std::string outfile;
+    if (parser.IsEnabled("o"))
+    {
+        outfile = parser.GetOption("o");
+    }
+
     // Display messages real-time
     setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -324,7 +369,7 @@ int main(int argc, char* argv[])
     LOG("Tapps: %d\n", tapps);
     LOG("\n");
     //ConvoluteTwoWaveforms(input.c_str(), reference.c_str());
-    RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps);
+    RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps, outfile);
 
     return 0;
 }

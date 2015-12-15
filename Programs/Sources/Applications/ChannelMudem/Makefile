@@ -1,12 +1,8 @@
 BIN=mudem
 
-MODULE_HEADER=
-MODULE_SRC=
+LIBS=-lmfio
 
-INC=$(MODULE_HEADER)
-
-LIBS=-lmfio -lmcon
-
-CPPFLAGS += -O3
+CPPFLAGS += -O3 \
+	-DPROGRAM_NAME="\"$(BIN)\"" \
 
 include $(SELF_LEARNING_ROOT)/Build/Make/modulerules.mk

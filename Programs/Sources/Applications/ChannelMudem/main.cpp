@@ -1,8 +1,29 @@
-#include <string>
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-#include <stdlib.h>
+#include <string>
 #include <stdio.h>
-#include <math.h>
 
 #include "status.h"
 #include "types.h"
@@ -10,77 +31,66 @@
 
 #include "mcon.h"
 #include "mfio.h"
+#include "mutl.h"
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile);
-
-status_t Convolution(mcon::Matrix<double>& audioOut, const mcon::Matrix<double>& audioIn, const mcon::Matrix<double>& impluse)
-{
-    const int M = impluse.GetColumnLength();
-    if (audioIn.GetColumnLength() < M )
-    {
-        return -ERROR_ILLEGAL;
-    }
-
-    audioOut.Resize(audioIn.GetRowLength(), audioIn.GetColumnLength());
-    for (int ch = 0; ch < audioIn.GetRowLength(); ++ch)
-    {
-        int ich = ch;
-        if ( 1 == impluse.GetRowLength() )
-        {
-            ich = 0;
-        }
-        for (int i = 0; i < audioIn.GetColumnLength(); ++i)
-        {
-            audioOut[ch][i] = 0.0;
-            for (int k = 0; k < ( (M - 1 > i) ? i+1 : M); ++k)
-            {
-                audioOut[ch][i] += audioIn[ch][i - k] * impluse[ich][k];
-            }
-        }
-    }
-    return NO_ERROR;
-}
+#if !defined(PROGRAM_NAME)
+#error PROGRAM_NAME is not defined.
+#endif
 
 static void usage(void)
 {
-    printf("Usage: %s COMMAND WAVEFILES ...\n", "mudem");
+    printf("Usage: %s [OPTIONS] [COMMAND] WAVEFILES ...\n", PROGRAM_NAME);
     printf("\n");
-    printf("COMMAND should be -s, -c, or -h.\n");
+    printf("COMMAND should be -s or -c.\n");
     printf("  -h: show help.\n");
     printf("  -s: split multi-channel .wav to some .wav files.\n");
     printf("  -c: combine some .wav files into one .wav.\n");
+    printf("  -o: spefity the output filename.\n");
 }
+
+// Description
+typedef struct mutl::ArgumentDescription Desc;
+
+const Desc descs[] =
+{
+    {"h" , 0},
+    {"o" , 1},
+    {"s" , 0},
+    {"c" , 0}
+};
 
 int main(int argc, const char* argv[])
 {
     // -s(plit)
     // -c(ombine)
-
-    if ( argc < 2 )
+    mutl::ArgumentParser parser;
+    if ( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(Desc)) )
     {
         usage();
         return 0;
     }
-    const std::string command(argv[1]);
 
-    if ( command == std::string("-h") )
+    if ( parser.IsEnabled("h")
+         || (parser.IsEnabled("c") && parser.IsEnabled("s")))
     {
         usage();
+        return 0;
     }
-    else if ( command == std::string("-s") )
+
+    if ( parser.IsEnabled("s") )
     {
     }
-    else if ( command == std::string("-c") )
+    else if ( parser.IsEnabled("c") )
     {
         mcon::Matrix<double> wavRoot;
         std::string filename("");
         int fs = 0;
         mfio::Wave::WaveFormat format = mfio::Wave::LPCM;
         int bits = 0;
-        const int offset = 2; // argv[0] is program and argv[1] is command.
-        for (int k = 0; k < argc - offset; ++k )
+        const int inputCount = parser.GetArgumentCount();
+        for (int k = 0; k < inputCount; ++k )
         {
-            std::string name(argv[k+2]);
+            std::string name = parser.GetArgument(k);
             mfio::Wave wavFile;
             mcon::Matrix<double> wav;
             status_t status = wavFile.Read(name, wav);
@@ -144,13 +154,19 @@ int main(int argc, const char* argv[])
         // Write
         {
             const std::string ewav(".wav");
+            filename += ewav;
+            if (parser.IsEnabled("o"))
+            {
+                filename = parser.GetOption("o");
+            }
+
             LOG("fs=%d\n", fs);
             LOG("bits=%d\n", bits);
             LOG("format=%d\n", format);
             LOG("ch=%d\n", wavRoot.GetRowLength());
             LOG("fn=%s\n", filename.c_str());
             mfio::Wave wav(fs, wavRoot.GetRowLength(), bits, format);
-            status_t status = wav.Write( filename + ewav, wavRoot );
+            status_t status = wav.Write( filename, wavRoot );
             if (status != NO_ERROR)
             {
                 ERROR_LOG("An error occured during writing %s: error=%d\n", filename.c_str(), status);
@@ -160,113 +176,3 @@ int main(int argc, const char* argv[])
     return 0;
 }
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
-{
-    mcon::Matrix<double> input;
-    mcon::Matrix<double> system;
-    std::string fbody;
-    int fs;
-
-    // Input
-    {
-        mfio::Wave wave;
-        LOG("Loading input ... ");
-        status_t status = wave.Read(inputFile, input);
-
-        if (NO_ERROR != status)
-        {
-            printf("An error occured during reading %s: error=%d\n", inputFile, status);
-            return -ERROR_CANNOT_OPEN_FILE;
-        }
-        LOG("Done\n");
-
-        fs = wave.GetSamplingRate();
-    }
-
-    LOG("[Input]\n");
-    LOG("    SamplingRate: %d\n", fs);
-    LOG("    Length      : %d\n", input.GetColumnLength());
-    LOG("    Channels    : %d\n", input.GetRowLength());
-    LOG("\n");
-
-    // System
-    {
-        mfio::Wave wave;
-        LOG("Loading audio system ... ");
-        status_t status = wave.Read(systemFile, system);
-
-        if (NO_ERROR != status)
-        {
-            printf("An error occured during reading %s: error=%d\n", systemFile, status);
-            return -ERROR_CANNOT_OPEN_FILE;
-        }
-        LOG("Done\n");
-        if (fs != wave.GetSamplingRate())
-        {
-            ERROR_LOG("Not matched the sampling rates: %d (input) <=> %d (system)\n", fs, wave.GetSamplingRate());
-            return -ERROR_ILLEGAL;
-        }
-    }
-    if (system.GetRowLength() != 1
-        && system.GetRowLength() != input.GetRowLength())
-    {
-        ERROR_LOG("Illegal channel counts: %d (system)\n", system.GetRowLength());
-        ERROR_LOG("The number of system's should be 1 or the same as input's (%d) \n", input.GetRowLength());
-        return -ERROR_ILLEGAL;
-    }
-
-    LOG("[System]\n");
-    LOG("    Length      : %d\n", system.GetColumnLength());
-    LOG("    Channels    : %d\n", system.GetRowLength());
-    LOG("\n");
-
-    if ( input.GetColumnLength() < system.GetColumnLength() )
-    {
-        LOG("\Error: input (%d) is shorter than system (%d).\n", input.GetColumnLength(), system.GetColumnLength());
-        LOG("Exiting ... \n");
-        return 0;
-    }
-
-    {
-        LOG("\n");
-        status_t status;
-        LOG("Convluting ... ");
-        mcon::Matrix<double> output;
-        status = Convolution(output, input, system);
-        LOG("Done\n");
-        if (NO_ERROR != status)
-        {
-            ERROR_LOG("An error occured in Convolution: error=%d\n", status);
-            return status;
-        }
-        LOG("Levelaring ... \n");
-        double max = output[0].GetMaximumAbsolute();
-        for ( int ch = 1; ch < output.GetRowLength(); ++ch )
-        {
-            const double _max = output[ch].GetMaximumAbsolute();
-            if ( max < _max )
-            {
-                max = _max;
-            }
-        }
-        output *= (32767.0/max);
-        LOG("Done\n");
-        {
-            fbody  = std::string(inputFile);
-            fbody.erase( fbody.length()-4, 4);
-            fbody += std::string("_");
-            fbody += std::string(systemFile);
-            fbody.erase( fbody.length()-4, 4);
-        }
-        LOG("\n");
-        {
-            std::string fname = fbody + std::string(".wav");
-            LOG("Saving as %s ... ", fname.c_str());
-            mfio::Wave wave(fs, 1, 16);
-            wave.Write(fname, output);
-            LOG("Done\n");
-        }
-    }
-    LOG("Finished.\n");
-    return NO_ERROR;
-}
