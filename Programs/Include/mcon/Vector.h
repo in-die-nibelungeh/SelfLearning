@@ -133,7 +133,7 @@ public:
     }
 
     Vector<Type>& operator=(Type v) { MCON_ITERATION(i, m_Length, (*this)[i] = v); return *this; };
-    Vector<Type>& operator=(const VectordBase& v) { MCON_ITERATION(i, m_Length, (*this)[i] = v[i]); return *this; };
+    Vector<Type>& operator=(const VectordBase& v);
 
     const Vector<Type> operator+(Type v) const { Vector<Type> vec(*this);  vec += v; return vec; }
     const Vector<Type> operator-(Type v) const { Vector<Type> vec(*this);  vec -= v; return vec; }
@@ -349,6 +349,15 @@ const Vector<Type>& Vector<Type>::Copy(const Vector<Type>& v)
 
 template <typename Type>
 Vector<Type>& Vector<Type>::operator=(const Vector<Type>& v)
+{
+    // m_Length is updated in Resize().
+    Resize(v.GetLength());
+    MCON_ITERATION(i, v.GetLength(), (*this)[i] = v[i]);
+    return *this;
+}
+
+template <typename Type>
+Vector<Type>& Vector<Type>::operator=(const VectordBase& v)
 {
     // m_Length is updated in Resize().
     Resize(v.GetLength());

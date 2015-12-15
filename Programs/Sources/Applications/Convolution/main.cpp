@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <string>
 
 #include <stdlib.h>
@@ -10,8 +34,9 @@
 
 #include "mcon.h"
 #include "mfio.h"
+#include "mutl.h"
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile);
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& out = "");
 
 status_t Convolution(mcon::Matrix<double>& audioOut, const mcon::Matrix<double>& audioIn, const mcon::Matrix<double>& impluse)
 {
@@ -46,32 +71,53 @@ static void usage(void)
     printf("Usage: %s [OPTIONS] INPUT IMPLUSE\n", "convolution");
     printf("\n");
     printf("INPUT and IMPLUSE must be .wav files.\n");
+    printf("  -h: show help.\n");
+    printf("  -o: spefity the output filename.\n");
 }
 
-int main(int argc, char* argv[])
+// Description
+typedef struct mutl::ArgumentDescription Desc;
+
+const Desc descs[] =
 {
-    std::string reference;
-    std::string input;
-    if ( argc < 3 )
+    {"h" , 0},
+    {"o" , 1}
+};
+
+int main(int argc, const char* argv[])
+{
+    mutl::ArgumentParser parser;
+    if ( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(Desc)) )
     {
         usage();
         return 0;
     }
-    input = std::string(argv[1]);
-    reference = std::string(argv[2]);
 
+    if ( parser.IsEnabled("h") || parser.GetArgumentCount() < 2 )
+    {
+        usage();
+        return 0;
+    }
+    const std::string input = parser.GetArgument(0);
+    const std::string reference = parser.GetArgument(1);
+    std::string outfile;
+
+    if ( parser.IsEnabled("o") )
+    {
+        outfile = parser.GetOption("o");
+    }
     // Display messages real-time
     setvbuf(stdout, NULL, _IONBF, 0);
 
     LOG("Input: %s\n", input.c_str());
     LOG("Impluse: %s\n", reference.c_str());
     LOG("\n");
-    ConvoluteTwoWaveforms(input.c_str(), reference.c_str());
+    ConvoluteTwoWaveforms(input.c_str(), reference.c_str(), outfile);
 
     return 0;
 }
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& outfile)
 {
     mcon::Matrix<double> input;
     mcon::Matrix<double> system;
@@ -173,6 +219,10 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile)
         {
             const int ch = output.GetRowLength();
             std::string fname = fbody + std::string(".wav");
+            if ( !outfile.empty() )
+            {
+                fname = outfile;
+            }
             LOG("Saving as %s ... ", fname.c_str());
             mfio::Wave wave(fs, ch, 16);
             wave.Write(fname, output);
