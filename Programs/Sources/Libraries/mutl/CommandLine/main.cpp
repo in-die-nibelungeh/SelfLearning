@@ -30,8 +30,7 @@ struct mutl::ArgumentDescription descs[] =
     {"v" , 0},
     {"a" , 2},
     {"be", 0},
-    {"bf", 1},
-    {NULL, 7}
+    {"bf", 1}
 };
 
 void ShowEnabled(mutl::ArgumentParser& parser, const char* option)
@@ -43,12 +42,16 @@ int main(int argc, const char* argv[])
 {
     mutl::ArgumentParser parser;
 
+    // Display messages real-time
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     LOG("ArgmentCount=%d\n", argc);
-    if (false == parser.Initialize(argc, argv, descs) )
+    if ( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(struct mutl::ArgumentDescription)) )
     {
         LOG("Faied in initializing ... \n");
         return 0;
     }
+    LOG("HOGE\n");
 
     // テストパターン:
     //    -o sine a -p -v b -a c d e -be tan -bf 3 4 5 6 7
