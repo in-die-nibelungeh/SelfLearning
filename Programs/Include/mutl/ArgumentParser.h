@@ -54,8 +54,13 @@ public:
     ~ArgumentParser()
     {}
 
-    bool Initialize(int argc, const char* argv[], const struct ArgumentDescription descs[])
+    bool Initialize(int argc, const char* argv[], const struct ArgumentDescription descs[], size_t descsCount)
     {
+        // 再度コールする場合は Finalize を読んでから
+        if ( IsInitialized() )
+        {
+            return true;
+        }
         bool isValid = true;  // desc に従うオプション入力かどうか
         int descIndex = Unselected;
         uint arguments = 0;
@@ -79,7 +84,7 @@ public:
                 // descIndex は Unselected であることが保証されている。
                 bool isFound = false;
                 // desc から探す
-                for (int m = 0; NULL != descs[m].option; ++m)
+                for (uint m = 0; m < descsCount; ++m)
                 {
                     // 一致するなら
                     if (!strcmp(descs[m].option, arg + 1)) // + 1 は先頭の '-' をスキップ
@@ -106,6 +111,8 @@ public:
                             descIndex = m;
                         }
                         ++m_OptionCount;
+
+                        break;
                     }
                 }
                 // 害がないので無視する (TBD)
@@ -140,19 +147,6 @@ public:
             }
         }
 
-        // プログラム入力の確認
-        do
-        {
-            uint inputIndex;
-            for (inputIndex = 0; NULL != descs[inputIndex].option; ++inputIndex);
-            if ( m_InputCount < descs[inputIndex].count )
-            {
-                DEBUG_LOG("Invalid input count: %d <==> %d\n", m_InputCount, descs[inputIndex].count);
-                isValid = false;
-            }
-
-        } while (0);
-
         if (descIndex != Unselected)
         {
             DEBUG_LOG("Still indicating an index (%d) ... (Illegal) \n", descIndex);
@@ -174,6 +168,16 @@ public:
         m_IsInitialized = isValid;
 
         return m_IsInitialized;
+    }
+
+    void Finalize()
+    {
+        m_IsInitialized = false;
+        m_Options.erase();
+        m_Inputs.erase();
+        m_OptionCount = 0;
+        m_InputCount = 0;
+
     }
 
     inline bool IsEnabled(const char* _option) const
