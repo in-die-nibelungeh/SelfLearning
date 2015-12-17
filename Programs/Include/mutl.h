@@ -29,3 +29,4 @@
 #include "mutl/Linear.h"
 #include "mutl/Spline.h"
 #include "mutl/ArgumentParser.h"
+#include "mutl/NodePath.h"
