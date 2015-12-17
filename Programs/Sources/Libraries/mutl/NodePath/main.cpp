@@ -49,6 +49,17 @@ int main(int argc, const char* argv[])
     }
 
     {
+        const std::string path("readme.txt");
+        const mutl::NodePath filer(path);
+
+        CHECK_VALUE(filer.GetFullpath().compare(path), 0);
+        CHECK_VALUE(filer.GetDirname().compare("."), 0);
+        CHECK_VALUE(filer.GetBasename().compare("readme"), 0);
+        CHECK_VALUE(filer.GetFilename().compare("readme.txt"), 0);
+        CHECK_VALUE(filer.GetExtension().compare("txt"), 0);
+    }
+
+    {
         const std::string path("/c/drive/usb/main.cpp");
         const mutl::NodePath filer(path);
 
