@@ -250,7 +250,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
 
                 std::string fname = fbody + ecsv;
                 mfio::Csv csv(fname);
-                csv.Write(",freq,Gain[dB],Phase[rad],\n");
+                csv.Write(",Frequency,Amplitude,Argument,Impluse\n");
                 csv.Write(saved);
                 csv.Close();
                 LOG("Output: %s\n", fname.c_str());
@@ -259,11 +259,11 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
                 mfio::Wave wave(fs, 1, 32, mfio::Wave::IEEE_FLOAT);
                 if ( NO_ERROR == wave.Write(fbody + ewav, resp) )
                 {
-                    LOG("Failed in writing %s\n", (fbody+ewav).c_str());
+                    LOG("Output: %s\n", (fbody+ewav).c_str());
                 }
                 else
                 {
-                    LOG("Output: %s\n", (fbody+ewav).c_str());
+                    LOG("Failed in writing %s\n", (fbody+ewav).c_str());
                 }
             }
 
