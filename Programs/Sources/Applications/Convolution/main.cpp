@@ -36,7 +36,7 @@
 #include "mfio.h"
 #include "mutl.h"
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& out = "");
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& outdir, const std::string& out = "");
 
 status_t Convolution(mcon::Matrix<double>& audioOut, const mcon::Matrix<double>& audioIn, const mcon::Matrix<double>& impluse)
 {
@@ -72,7 +72,8 @@ static void usage(void)
     printf("\n");
     printf("INPUT and IMPLUSE must be .wav files.\n");
     printf("  -h: show help.\n");
-    printf("  -o: spefity the output filename.\n");
+    printf("  -o: spefity an output filename.\n");
+    printf("  -d: spefity an output directory, which should already exist.\n");
 }
 
 // Description
@@ -81,6 +82,7 @@ typedef struct mutl::ArgumentDescription Desc;
 const Desc descs[] =
 {
     {"h" , 0},
+    {"d" , 1},
     {"o" , 1}
 };
 
@@ -102,6 +104,13 @@ int main(int argc, const char* argv[])
     const std::string reference = parser.GetArgument(1);
     std::string outfile;
 
+    std::string outdir("./");
+    if ( parser.IsEnabled("d") )
+    {
+        outdir = parser.GetOption("d");
+        outdir += std::string("/");
+    }
+
     if ( parser.IsEnabled("o") )
     {
         outfile = parser.GetOption("o");
@@ -112,12 +121,13 @@ int main(int argc, const char* argv[])
     LOG("Input: %s\n", input.c_str());
     LOG("Impluse: %s\n", reference.c_str());
     LOG("\n");
-    ConvoluteTwoWaveforms(input.c_str(), reference.c_str(), outfile);
+    ConvoluteTwoWaveforms(input.c_str(), reference.c_str(), outdir, outfile);
+
 
     return 0;
 }
 
-status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& outfile)
+status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, const std::string& outdir, const std::string& outfile)
 {
     mcon::Matrix<double> input;
     mcon::Matrix<double> system;
@@ -209,11 +219,11 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
         output *= (32767.0/max);
         LOG("Done\n");
         {
-            fbody  = std::string(inputFile);
-            fbody.erase( fbody.length()-4, 4);
+            mutl::NodePath _input(inputFile);
+            mutl::NodePath _system(systemFile);
+            fbody  = _input.GetBasename();
             fbody += std::string("_");
-            fbody += std::string(systemFile);
-            fbody.erase( fbody.length()-4, 4);
+            fbody += _system.GetBasename();
         }
         LOG("\n");
         {
@@ -223,9 +233,11 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
             {
                 fname = outfile;
             }
-            LOG("Saving as %s ... ", fname.c_str());
+            const std::string outpath = outdir + fname;
+
+            LOG("Saving as %s ... ", outpath.c_str());
             mfio::Wave wave(fs, ch, 16);
-            wave.Write(fname, output);
+            wave.Write(outpath, output);
             LOG("Done\n");
         }
     }

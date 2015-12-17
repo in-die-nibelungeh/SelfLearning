@@ -37,13 +37,15 @@
 #include "masp.h"
 #include "mutl.h"
 
-status_t Analyze(const char* inputFile, const std::string& = "");
+status_t Analyze(const char* inputFile, const std::string& = "", const std::string& outdir = "");
 
 static void usage(void)
 {
     printf("Usage: %s INPUT \n", "wanalyzer");
     printf("\n");
     printf("INPUT must be .wav files.\n");
+    printf("  -o: spefity an output filename.\n");
+    printf("  -d: spefity an output directory, which should already exist.\n");
 }
 
 // Description
@@ -52,6 +54,7 @@ typedef struct mutl::ArgumentDescription Desc;
 const Desc descs[] =
 {
     {"h" , 0},
+    {"d" , 1},
     {"o" , 1}
 };
 
@@ -75,21 +78,32 @@ int main(int argc, const char* argv[])
         outfile = parser.GetOption("o");
         LOG("Output: %s\n", outfile.c_str());
     }
-    Analyze(input.c_str(), outfile);
+    std::string outdir("./");
+    if ( parser.IsEnabled("d") )
+    {
+        outdir = parser.GetOption("d");
+        outdir += std::string("/");
+    }
+
+    Analyze(input.c_str(), outfile, outdir);
 
     return 0;
 }
 
-status_t Analyze(const char* inputFile, const std::string& outfile)
+status_t Analyze(const char* inputFile, const std::string& outfile, const std::string& outdir)
 {
     mcon::Vector<double> input;
     mfio::Wave wave;
-    std::string fbody = std::string(inputFile);
-    fbody.erase( fbody.length()-4, 4);
+    mutl::NodePath inputPath(inputFile);
+    std::string outbase = outdir;
 
-    if ( !outfile.empty() )
     {
-        fbody = outfile;
+        std::string fbody = inputPath.GetBasename();
+        if ( !outfile.empty() )
+        {
+            fbody = outfile;
+        }
+        outbase += fbody;
     }
 
     // Input
@@ -132,7 +146,7 @@ status_t Analyze(const char* inputFile, const std::string& outfile)
         }
         const std::string ecsv("_energy.csv");
 
-        mfio::Csv csv(fbody + ecsv);
+        mfio::Csv csv(outbase + ecsv);
         csv.Write(",Enegy,Energy ratio\n");
         csv.Write(energyRatio);
         csv.Close();
@@ -161,7 +175,7 @@ status_t Analyze(const char* inputFile, const std::string& outfile)
 
             const std::string ecsv("_spectrum.csv");
 
-            mfio::Csv csv(fbody + ecsv);
+            mfio::Csv csv(outbase + ecsv);
             csv.Write("Id,Frequency,Amplitude,Argument,Impulse\n");
             csv.Write(matrix);
             csv.Close();

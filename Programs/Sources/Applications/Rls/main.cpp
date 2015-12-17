@@ -39,7 +39,7 @@
 
 #define POW2(x) ((x)*(x))
 
-status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& = "");
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& = "", const std::string& = "");
 status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile);
 
 status_t Normalize(mcon::Vector<double>& vec)
@@ -82,7 +82,7 @@ status_t Convolution(mcon::Vector<double>& audioOut, const mcon::Vector<double>&
     return NO_ERROR;
 }
 
-status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& outfile)
+status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, int tapps, const std::string& outfile, const std::string& outdir)
 {
     mcon::Vector<double> input;
     mcon::Vector<double> reference;
@@ -217,14 +217,16 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
         if ( outfile.empty() )
         {
             char _fbody[128];
+            mutl::NodePath _inputPath(inputFile);
+            mutl::NodePath _referencePath(referenceFile);
+
             sprintf(_fbody, "Af_%dtapps_", tapps);
             fbody = std::string(_fbody);
-            fbody += std::string(inputFile);
-            fbody.erase( fbody.length()-4, 4);
+            fbody += _inputPath.GetBasename();
             fbody += std::string("_");
-            fbody += std::string(referenceFile);
-            fbody.erase( fbody.length()-4, 4);
+            fbody += _referencePath.GetBasename();
         }
+        const std::string outbase = outdir + fbody;
         LOG("\n");
         {
             const int length = resp.GetLength();
@@ -248,7 +250,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
                 saved[2] = gp[1];
                 saved[3] = resp;
 
-                std::string fname = fbody + ecsv;
+                std::string fname = outbase + ecsv;
                 mfio::Csv csv(fname);
                 csv.Write(",Frequency,Amplitude,Argument,Impluse\n");
                 csv.Write(saved);
@@ -257,13 +259,13 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             }
             {
                 mfio::Wave wave(fs, 1, 32, mfio::Wave::IEEE_FLOAT);
-                if ( NO_ERROR == wave.Write(fbody + ewav, resp) )
+                if ( NO_ERROR == wave.Write(outbase + ewav, resp) )
                 {
-                    LOG("Output: %s\n", (fbody+ewav).c_str());
+                    LOG("Output: %s\n", (outbase + ewav).c_str());
                 }
                 else
                 {
-                    LOG("Failed in writing %s\n", (fbody+ewav).c_str());
+                    LOG("Failed in writing %s\n", (outbase + ewav).c_str());
                 }
             }
 
@@ -276,7 +278,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
                 logs[3] = K;
                 logs[4] = U;
                 logs[5] = E;
-                std::string fname = fbody + std::string("_logs") + ecsv;
+                std::string fname = outbase + std::string("_logs") + ecsv;
                 mfio::Csv csv(fname);
                 csv.Write("i,e,eta,J,|k|,|u|,Esum\n");
                 csv.Write(logs);
@@ -293,7 +295,7 @@ status_t RlsFromTwoWaveforms(const char* inputFile, const char* referenceFile, i
             LOG("Done\n");
             origin *= 32767.0/origin.GetMaximumAbsolute();
             const std::string ewav(".wav");
-            std::string fname = fbody + std::string("_iconv") + ewav;
+            std::string fname = outbase + std::string("_iconv") + ewav;
             LOG("Saving as %s\n", fname.c_str());
             mfio::Wave wave;
             wave.SetNumChannels(1);
@@ -320,6 +322,7 @@ static void usage(void)
     printf("  -h: show help.\n");
     printf("  -o: spefity the output filename.\n");
     printf("  -m: spefity the tapps, which should be a positive number.\n");
+    printf("  -d: spefity an output directory, which should already exist.\n");
 }
 
 // Description
@@ -329,6 +332,7 @@ const Desc descs[] =
 {
     {"h" , 0},
     {"o" , 1},
+    {"d" , 1},
     {"m" , 1}
 };
 
@@ -360,6 +364,12 @@ int main(int argc, const char* argv[])
     {
         outfile = parser.GetOption("o");
     }
+    std::string outdir("./");
+    if ( parser.IsEnabled("d") )
+    {
+        outdir = parser.GetOption("d");
+        outdir += std::string("/");
+    }
 
     // Display messages real-time
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -369,7 +379,7 @@ int main(int argc, const char* argv[])
     LOG("Tapps: %d\n", tapps);
     LOG("\n");
     //ConvoluteTwoWaveforms(input.c_str(), reference.c_str());
-    RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps, outfile);
+    RlsFromTwoWaveforms(input.c_str(), reference.c_str(), tapps, outfile, outdir);
 
     return 0;
 }
