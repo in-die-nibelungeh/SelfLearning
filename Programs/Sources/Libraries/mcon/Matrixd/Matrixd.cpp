@@ -376,7 +376,9 @@ Matrixd Matrixd::Inverse(void) const
             {
                 continue;
             }
-            m[k] -= (m[r] * m[k][r]);
+        	Vectord tmp(m[r]);
+        	tmp *= m[k][r];
+            m[k] -= tmp;
         }
     }
     for (int row = 0; row < rowCount; ++row)
