@@ -266,10 +266,68 @@ private:
     class Option
     {
     public:
-        explicit Option(const std::string& arguments);
+        explicit Option(const std::string& arguments)
+            : m_Option()
+            , m_Arguments()
+            , m_ArgumentCount(0)
+            , m_IsInitialized(false)
+        {
+            // 最初の ':' までがオプション文字列
+            size_t e = arguments.find_first_of(":");
+            // ASSERT で良いかな。。。
+            if (e == std::string::npos)
+            {
+                return ;
+            }
+            // 格納しておくが、使途不明
+            m_Option = arguments.substr(0, e);
+
+            // 次の ':' までが引数の個数
+            size_t s = e + 1;
+            e = arguments.find_first_of(":", s);
+            // ASSERT で良いやろか。。。
+            if (e == std::string::npos)
+            {
+                return ;
+            }
+            m_ArgumentCount = atoi( arguments.substr(s, e - s).c_str() );
+
+            // 引数があればまとめて保持しておく。
+            if (0 < m_ArgumentCount)
+            {
+                m_Arguments = arguments.substr(e + 1);
+            }
+            m_IsInitialized = true;
+        }
         ~Option() {}
 
-        std::string operator[](uint index) const;
+        std::string operator[](uint index) const
+        {
+            ASSERT( IsInitialized() );
+
+            std::string argument("");
+            // 最初の引数は先頭から最初の ',' までを、
+            // 最初と最後以外の引数なら ',' の間を、
+            // 最後の引数は最後の ',' から終端までを、
+            // (引数が一つなら最初から最後までを)
+            // それぞれ切り出して返却する。
+            if ( index < m_ArgumentCount )
+            {
+                size_t s = 0;
+                size_t e = m_Arguments.find_first_of(",");
+                for (uint k = 0; k < index; ++k)
+                {
+                    s = e + 1;
+                    e = m_Arguments.find_first_of(",", s);
+                }
+                if (e == std::string::npos)
+                {
+                    e = m_Arguments.length();
+                }
+                argument = m_Arguments.substr(s, e - s);
+            }
+            return argument;
+        }
 
         inline bool IsInitialized() const
         {
@@ -289,69 +347,6 @@ private:
     bool m_IsInitialized;
     static const int Unselected = -1;
 };
-
-ArgumentParser::Option::Option(const std::string& arguments)
-    : m_Option()
-    , m_Arguments()
-    , m_ArgumentCount(0)
-    , m_IsInitialized(false)
-{
-    // 最初の ':' までがオプション文字列
-    size_t e = arguments.find_first_of(":");
-    // ASSERT で良いかな。。。
-    if (e == std::string::npos)
-    {
-        return ;
-    }
-    // 格納しておくが、使途不明
-    m_Option = arguments.substr(0, e);
-
-    // 次の ':' までが引数の個数
-    size_t s = e + 1;
-    e = arguments.find_first_of(":", s);
-    // ASSERT で良いやろか。。。
-    if (e == std::string::npos)
-    {
-        return ;
-    }
-    m_ArgumentCount = atoi( arguments.substr(s, e - s).c_str() );
-
-    // 引数があればまとめて保持しておく。
-    if (0 < m_ArgumentCount)
-    {
-        m_Arguments = arguments.substr(e + 1);
-    }
-    m_IsInitialized = true;
-}
-
-std::string ArgumentParser::Option::operator[](uint index) const
-{
-    ASSERT( IsInitialized() );
-
-    std::string argument("");
-    // 最初の引数は先頭から最初の ',' までを、
-    // 最初と最後以外の引数なら ',' の間を、
-    // 最後の引数は最後の ',' から終端までを、
-    // (引数が一つなら最初から最後までを)
-    // それぞれ切り出して返却する。
-    if ( index < m_ArgumentCount )
-    {
-        size_t s = 0;
-        size_t e = m_Arguments.find_first_of(",");
-        for (uint k = 0; k < index; ++k)
-        {
-            s = e + 1;
-            e = m_Arguments.find_first_of(",", s);
-        }
-        if (e == std::string::npos)
-        {
-            e = m_Arguments.length();
-        }
-        argument = m_Arguments.substr(s, e - s);
-    }
-    return argument;
-}
-
 
 } // namespace mutl {
 
