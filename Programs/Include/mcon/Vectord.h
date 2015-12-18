@@ -105,7 +105,19 @@ public:
     }
 
     Vectord operator()(int offset, int length) const;
-    bool Resize(int length);
+
+    const Vectord operator+(double v) const;
+    const Vectord operator-(double v) const;
+    const Vectord operator*(double v) const;
+    const Vectord operator/(double v) const;
+
+    const Vectord operator+(const VectordBase& v) const;
+    const Vectord operator-(const VectordBase& v) const;
+    const Vectord operator*(const VectordBase& v) const;
+    const Vectord operator/(const VectordBase& v) const;
+
+
+	bool Resize(int length);
 
     // Inline functions.
     inline bool IsNull(void) const

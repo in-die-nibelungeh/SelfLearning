@@ -87,6 +87,16 @@ bool Vectord::Allocate(void)
     return true;
 }
 
+const Vectord Vectord::operator+(double v) const { Vectord vec(*this);  vec += v; return vec; }
+const Vectord Vectord::operator-(double v) const { Vectord vec(*this);  vec -= v; return vec; }
+const Vectord Vectord::operator*(double v) const { Vectord vec(*this);  vec *= v; return vec; }
+const Vectord Vectord::operator/(double v) const { Vectord vec(*this);  vec /= v; return vec; }
+
+const Vectord Vectord::operator+(const VectordBase& v) const { Vectord vec(*this);  vec += v; return vec; }
+const Vectord Vectord::operator-(const VectordBase& v) const { Vectord vec(*this);  vec -= v; return vec; }
+const Vectord Vectord::operator*(const VectordBase& v) const { Vectord vec(*this);  vec *= v; return vec; }
+const Vectord Vectord::operator/(const VectordBase& v) const { Vectord vec(*this);  vec /= v; return vec; }
+
 bool Vectord::Resize(int length)
 {
     if (length < 0)
