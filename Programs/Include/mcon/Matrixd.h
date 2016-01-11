@@ -100,7 +100,7 @@ public:
         ASSERT(true == status);
         for (int i = 0; i < GetRowLength(); ++i)
         {
-            *m_ObjectBase[i] = m[i];
+            m_ObjectBase[i] = m[i];
         }
     }
 

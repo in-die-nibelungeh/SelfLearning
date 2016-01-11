@@ -266,10 +266,10 @@ private:
     class Option
     {
     public:
-        explicit Option(const std::string& arguments);
-        ~Option() {}
+        inline explicit Option(const std::string& arguments);
+        inline ~Option() {}
 
-        std::string operator[](uint index) const;
+        inline std::string operator[](uint index) const;
 
         inline bool IsInitialized() const
         {
