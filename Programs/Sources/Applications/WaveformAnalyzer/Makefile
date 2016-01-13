@@ -3,7 +3,7 @@ BIN=wanalyzer
 MODULE_HEADER=
 MODULE_SRC=
 
-INC=$(MODULE_HEADER)
+INC=$(MODULE_HEADER) Common.h
 
 LIBS=-lmasp -lmfio
 
