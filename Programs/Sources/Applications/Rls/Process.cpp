@@ -78,6 +78,68 @@ status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const m
     return NO_ERROR;
 }
 
+status_t Rls(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vectord& d)
+{
+    LOG("\n");
+    LOG("Initializing variables ... ");
+    const int N = u.GetLength();
+    const int M = h.GetLength();
+
+    double c = 0.001; // an appropriately small number
+    mcon::Matrixd P = mcon::Matrixd::E(M);
+    mcon::Matrixd hm(M, 1);
+    mcon::Vectord uv(M);
+
+    mcon::Matrix<double> logs(6, N);
+    mcon::Vector<double>& e   = logs[0];
+    mcon::Vector<double>& eta = logs[1];
+    mcon::Vector<double>& J   = logs[2];
+    mcon::Vector<double>& K   = logs[3];
+    mcon::Vector<double>& U   = logs[4];
+    mcon::Vector<double>& E   = logs[5];
+
+    hm = 0;
+    P /= c;
+    uv = 0;
+
+    for (int i = 0; i < N; ++i)
+    {
+        uv.Unshift(u[i]);
+        U[i] = uv.GetNorm(); // logs
+        const mcon::Matrixd um(uv, true); // Transposed
+        mcon::Matrixd k(P.Multiply(um)); // numerator
+        const mcon::Matrixd& denominator = um.Transpose().Multiply(P).Multiply(um);
+        ASSERT(denominator.GetRowLength() == 1 && denominator.GetColumnLength() == 1);
+        const double denom = denominator[0][0] + 1;
+        k /= denom;
+        K[i] = k.Transpose()[0].GetNorm(); // logs
+        const mcon::Matrixd& m = um.Transpose().Multiply(hm);
+        ASSERT(m.GetRowLength() == 1 && m.GetColumnLength() == 1);
+        eta[i] = d[i] - m[0][0]; // logs
+        hm += k * eta[i];
+
+        e[i] = d[i] - (um.Transpose().Multiply(hm))[0][0]; // logs
+        if ( i > 0 )
+        {
+            J[i] = J[i-1] + e[i] * eta[i]; // logs
+            E[i] = E[i-1] + d[i] * d[i]; // logs
+        }
+        else
+        {
+            J[i] = e[i] * eta[i]; // logs
+            E[i] = d[i] * d[i]; // logs
+        }
+        P -= k.Multiply(um.Transpose()).Multiply(P);
+        if ( (i % 10) == 0 )
+        {
+            LOG("%4.1f [%%]: %d/%d\r", i*100.0/N, i, N);
+        }
+    }
+    h = hm.Transpose()[0];
+
+    return NO_ERROR;
+}
+
 #if 0
 status_t RlsFromTwoWaveforms(mcon::Vector<double>& resp, const mcon::Vectord& input, const mcon::Vectord& d, int tapps, mcon::Matrix<double>* pMatrix)
 {
@@ -238,7 +300,7 @@ status_t RlsFromTwoWaveforms(mcon::Vector<double>& resp, const mcon::Vectord& in
 }
 #endif
 
-status_t Estimater(mcon::Matrixd& estimated, const mcon::Matrixd& input, const mcon::Vectord& reference, int tapps)
+status_t Estimater(mcon::Matrixd& estimated, const mcon::Matrixd& input, const mcon::Vectord& reference, int tapps, bool useRls = false)
 {
     const int M = tapps;
     const int N = input.GetColumnLength() > reference.GetLength() ? reference.GetLength() : input.GetColumnLength();
@@ -253,7 +315,7 @@ status_t Estimater(mcon::Matrixd& estimated, const mcon::Matrixd& input, const m
         const mcon::Vectord _u = input[r];
         const mcon::Vectord u = _u(0, N);
         mcon::Vector<double> h(M);
-        status = NormalEquation(h, u, d);
+        status = useRls ? Rls(h, u, d) : NormalEquation(h, u, d);
         if (NO_ERROR != status)
         {
             break;
@@ -269,5 +331,7 @@ status_t Process(ProgramParameter* param)
         param->inversedSignal,
         param->inputSignal,
         param->referenceSignal,
-        param->tapps);
+        param->tapps,
+        false
+    );
 }

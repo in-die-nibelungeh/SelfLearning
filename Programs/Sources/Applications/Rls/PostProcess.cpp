@@ -30,9 +30,9 @@
 #include "Common.h"
 
 namespace {
-    status_t Verify(mcon::Vector<double>& origin, const mcon::Vectord& _input, const mcon::Vectord& _estimated, int samplingRate)
+    status_t Verify(mcon::Vector<double>& origin, const mcon::Vectord& _input, const mcon::Vectord& _estimated)
     {
-        status_t status;
+        status_t status = NO_ERROR;
         const mcon::Vector<double> input(_input);
         const mcon::Vector<double> estimated(_estimated);
         const int N = input.GetLength();
@@ -113,8 +113,7 @@ status_t PostProcess(ProgramParameter* param)
             status = Verify(
                 saved[c],
                 input,
-                inversed,
-                param->samplingRate);
+                inversed);
             if ( NO_ERROR != status )
             {
                 ERROR_LOG("Failed in Verify(): error=%d\n", status);
