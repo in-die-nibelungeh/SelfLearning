@@ -72,22 +72,26 @@ status_t PostProcess(ProgramParameter* param)
 
         for (uint r = 0; r < ch; ++r)
         {
-            const mcon::Vector<double>& signal(param->inversedSignal[r]);
-            double e = 0;
-            for (uint k = 0; k < N; ++k)
             {
-                e += fabs(signal[k]);
+                const mcon::Vector<double>& signal(param->inversedSignal[r]);
+                double e = 0;
+                for (uint k = 0; k < N; ++k)
+                {
+                    e += fabs(signal[k]);
+                }
+                // 16 bit 最大値を超えないようにレベルを合わせる。
+                param->inversedSignal[r] *= param->upperValue / e;
             }
-            // 16 bit 最大値を超えないようにレベルを合わせる。
-            param->inversedSignal[r] *= param->upperValue / e;
-
-            // レベルを計算、保存
-            mcon::Matrix<double> complex(2, N);
-            mcon::Matrix<double> polar(2, N);
-            masp::ft::Ft(complex, signal);
-            masp::ft::ConvertToPolarCoords(polar, complex);
-            levels[r] = sqrt(polar[0].GetDotProduct(polar[0]));
-            LOG("    Ch-%d Level: %f\n", r, levels[r]);
+            {
+                const mcon::Vector<double>& signal(param->inversedSignal[r]);
+                // レベルを計算、保存
+                mcon::Matrix<double> complex(2, N);
+                mcon::Matrix<double> polar(2, N);
+                masp::ft::Ft(complex, signal);
+                masp::ft::ConvertToPolarCoords(polar, complex);
+                levels[r] = sqrt(polar[0].GetDotProduct(polar[0]));
+                LOG("    Ch-%d Level: %f\n", r, levels[r]);
+            }
         }
 
         const double minLevel = levels.GetMinimum();
