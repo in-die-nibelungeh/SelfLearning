@@ -37,8 +37,14 @@ static void usage(void)
     LOG("  -o: spefity an output filename.\n");
     LOG("  -d: spefity an output directory, which should already exist.\n");
     LOG("  -w: spefity a window length of fft, which must be factrial of 2.\n");
-    LOG("  -l: spefity a sample length used in analyzing.n");
+    LOG("  -wt: spefity a window type, which accepts only \"rec\", \"han\", \"ham\", \"blk\", or \"hrs\".\n");
+    LOG("  -l: spefity a sample length used in analyzing.\n");
     LOG("  -ft: spefity to use only ft.\n");
+    LOG("  -amp: spefity to output in amplitude.\n");
+    LOG("  -10log: spefity to output in 10 * log.\n");
+    LOG("  -20log: spefity to output in 20 * log.\n");
+    LOG("  -deg: spefity to output in degree.\n");
+    LOG("  -rad: spefity to output in radian.\n");
 }
 
 // Description
@@ -48,7 +54,13 @@ const Desc descs[] =
 {
     {"h" , 0},
     {"ft" , 0},
+    {"rad" , 0},
+    {"deg" , 0},
+    {"amp" , 0},
+    {"10log" , 0},
+    {"20log" , 0},
     {"w" , 1},
+    {"wt" , 1},
     {"l" , 1},
     {"d" , 1},
     {"o" , 1}
@@ -88,10 +100,17 @@ int main(int argc, const char* argv[])
         usage();
         return 0;
     }
+
+    // Display messages real-time
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     ProgramParameter param;
     param.sampleCount = 0;
     param.windowLength = 0;
+    param.windowType = WindowType_Rectangular;
     param.isUsedOnlyFt = false;
+    param.gainFormat = GainFormat_Amplitude;
+    param.argFormat = ArgFormat_Radian;
     param.inputFilepath = parser.GetArgument(0);
 
     const mutl::NodePath inputPath(param.inputFilepath);
@@ -122,17 +141,69 @@ int main(int argc, const char* argv[])
         }
         param.windowLength = width;
     }
+    if ( parser.IsEnabled("wt") )
+    {
+        const std::string windowType = parser.GetOption("wt");
+        if (windowType == std::string("rec"))
+        {
+            param.windowType = WindowType_Rectangular;
+        }
+        else if (windowType == std::string("han"))
+        {
+            param.windowType = WindowType_Hanning;
+        }
+        else if (windowType == std::string("ham"))
+        {
+            param.windowType = WindowType_Hamming;
+        }
+        else if (windowType == std::string("blk"))
+        {
+            param.windowType = WindowType_Blackman;
+        }
+        else if (windowType == std::string("hrs"))
+        {
+            param.windowType = WindowType_BlackmanHarris;
+        }
+        else
+        {
+            ERROR_LOG("The value specified with -wt must be \"rec\", \"han\", \"ham\", \"blk\", or \"hrs\": %s\n", windowType.c_str());
+            return 0;
+        }
+    }
     if ( parser.IsEnabled("l") )
     {
         param.sampleCount = atoi( parser.GetOption("l").c_str() );
+    }
+    if ( parser.IsEnabled("10log") )
+    {
+        param.gainFormat = GainFormat_10Log;
+    }
+    else if ( parser.IsEnabled("20log") )
+    {
+        param.gainFormat = GainFormat_20Log;
+    }
+    else if ( parser.IsEnabled("amp") )
+    {
+        param.gainFormat = GainFormat_Amplitude;
+    }
+    if ( parser.IsEnabled("rad") )
+    {
+        param.argFormat = ArgFormat_Radian;
+    }
+    else if ( parser.IsEnabled("deg") )
+    {
+        param.argFormat = ArgFormat_Degree;
     }
 
     LOG("[Input]\n");
     LOG("    InputFile   : %s\n", param.inputFilepath.c_str());
     LOG("    OutputFile  : %s\n", param.outputBase.c_str());
     LOG("    Window      : %d\n", param.windowLength);
+    LOG("    WindowType  : %d\n", param.windowType);
     LOG("    Sample      : %d\n", param.sampleCount);
     LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
+    LOG("    Gain        : %d\n", param.gainFormat);
+    LOG("    Argument    : %d\n", param.argFormat);
 
     PRINT_RETURN_IF_FAILED( Setup(&param) );
     LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
@@ -141,7 +212,7 @@ int main(int argc, const char* argv[])
 
     PRINT_RETURN_IF_FAILED( PreProcess(&param) );
     LOG("[PreProcessed]\n");
-    LOG("    SingalLength: %d\n", param.signal.GetColumnLength());
+    LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
     LOG("    Window      : %d\n", param.windowLength);
     LOG("    Count       : %d (%d)\n", param.signal.GetColumnLength() / param.windowLength, param.signal.GetColumnLength() % param.windowLength);
     LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
