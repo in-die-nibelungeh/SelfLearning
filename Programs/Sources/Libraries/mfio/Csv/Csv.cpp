@@ -27,7 +27,23 @@
 namespace mfio {
 
 namespace {
-    char readBuffer[Csv::g_ReadBufferSize];
+
+char readBuffer[Csv::g_ReadBufferSize];
+
+int DeleteCrLf(char* string)
+{
+    int count = 0;
+    for (int k = 0; string[k] != '\0'; ++k)
+    {
+        if (string[k] == '\r' || string[k] == '\n')
+        {
+            ++count;
+            string[k] = '\0';
+        }
+    }
+    return count;
+}
+
 }
 
 status_t Csv::Write(const char* fname, const double data[], int length)
@@ -166,7 +182,7 @@ status_t Csv::Read(const char* fname, mcon::Matrix<double>& matrix)
 int CountRow(char* line)
 {
     int row = 0;
-    const char sep[] = {Csv::g_Delimiter};
+    const char sep[] = {Csv::g_Delimiter, '\0'};
     char* s = line;
     s = strtok(s, sep);
     for ( ; s != NULL ; ++row)
@@ -180,7 +196,7 @@ inline bool IsAcceptableChar(char c)
 {
     return isdigit(c) || c == '-' || c == '+' || c == '.';
 }
-    
+
 void CountRowColumn(FILE* handle, int& row, int& column)
 {
     row = 0 ;
@@ -202,7 +218,7 @@ void CountRowColumn(FILE* handle, int& row, int& column)
 
 int ReadTokensAsDouble(mcon::Matrix<double>& matrix, char* line, int column, int rowMaximum)
 {
-    const char sep[] = {Csv::g_Delimiter};
+    const char sep[] = {Csv::g_Delimiter, '\0'};
     char* s = line;
     s = strtok(s, sep);
     for ( int r = 0 ; NULL != s && r < rowMaximum; ++r )
@@ -235,6 +251,7 @@ status_t Csv::Read(mcon::Matrix<double>& matrix) const
     {
         if ( IsAcceptableChar(readBuffer[0]) )
         {
+            DeleteCrLf(readBuffer);
             ReadTokensAsDouble(matrix, readBuffer, column, rowMaximum);
             ++column;
         }
