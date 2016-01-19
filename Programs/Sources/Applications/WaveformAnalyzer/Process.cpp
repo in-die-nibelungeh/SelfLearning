@@ -72,14 +72,36 @@ status_t CaculateSpectrum(const ProgramParameter* param)
 {
     const mcon::Matrix<double>& input = param->signal;
     const size_t ch = input.GetRowLength();
-    const size_t width = param->windowLength;
-    mcon::Matrix<double> matrix(2 * ch + 1, width);
+    const size_t N = param->windowLength;
+    mcon::Matrix<double> matrix(2 * ch + 1, N);
+    mcon::Vector<double> window(N);
 
-    for (uint i = 0; i < width; ++i)
+    switch(param->windowType)
     {
-        matrix[0][i] = 1.0 * i / width * param->samplingRate;
+        case WindowType_Rectangular:
+            masp::window::Rectangular(window);
+            break;
+        case WindowType_Hamming:
+            masp::window::Hamming(window);
+            break;
+        case WindowType_Blackman:
+            masp::window::Blackman(window);
+            break;
+        case WindowType_BlackmanHarris:
+            masp::window::BlackmanHarris(window);
+            break;
+        case WindowType_Hanning:
+        default:
+            masp::window::Hanning(window);
+            break;
     }
 
+    for (uint i = 0; i < N; ++i)
+    {
+        matrix[0][i] = 1.0 * i / N * param->samplingRate;
+    }
+    const double windowEnergy = sqrt(window.Dot(window) / window.GetLength()) ;
+    DEBUG_LOG("WindowEnergy=%g\n", windowEnergy);
     for (uint c = 0; c < ch; ++c)
     {
         const int count = input.GetColumnLength() / param->windowLength;
@@ -87,14 +109,38 @@ status_t CaculateSpectrum(const ProgramParameter* param)
         ASSERT( rest == 0 );
         UNUSED(rest);
 
-        mcon::Matrix<double> sum(2, width);
+        mcon::Matrix<double> sum(2, N);
         sum = 0;
-        for (int k = 0; k < count; ++k)
+        // 幅の半分ずつ解析する。
+        for (int k = 0; k < 2 * count + 1; ++k)
         {
+            mcon::Vector<double> part(N);
             mcon::Matrix<double> polar;
             mcon::Matrix<double> complex;
+            // 先頭と末尾は特別に処理する
+            if (k == 0 || k == 2 * count)
+            {
+                const double* src = input[c];
+                const int copySize = sizeof(double) * N / 2;
+                double* dst = part;
+                part = 0;
+                if (k == 0)
+                {
+                    std::memcpy(dst + N / 2, src, copySize);
+                }
+                else
+                {
+                    std::memcpy(dst, src + (2 * count - 1) * N / 2, copySize);
+                }
+            }
+            else
+            {
+                // k == 0 は入らないので、負のインデックスにはならない。
+                const int head = N * (k - 1) / 2;
+                part = static_cast<mcon::Vectord>(input[c])(head, N);
+            }
+            part *= window;
 
-            mcon::Vector<double> part = input[c](width * k, width);
             if (true == param->isUsedOnlyFt)
             {
                 masp::ft::Ft(complex, part);
@@ -106,6 +152,24 @@ status_t CaculateSpectrum(const ProgramParameter* param)
             masp::ft::ConvertToPolarCoords(polar, complex);
             sum[0] += polar[0];
             sum[1] += polar[1];
+        }
+        // 振幅に対してのみ、窓関数のエネルギに応じた補正をする。
+        sum[0] /= windowEnergy;
+        if (param->gainFormat == GainFormat_10Log
+            || param->gainFormat == GainFormat_20Log)
+        {
+            const double gain = param->gainFormat == GainFormat_10Log ? 10.0 : 20.0;
+            for (uint i = 0; i < N; ++i)
+            {
+                sum[0][i] = gain * log10(sum[0][i]);
+            }
+        }
+        if (param->argFormat == ArgFormat_Degree)
+        {
+            for (uint i = 0; i < N; ++i)
+            {
+                sum[1][i] = sum[1][i] / M_PI * 180.0;
+            }
         }
         matrix[c * 2 + 1] = sum[0];
         matrix[c * 2 + 2] = sum[1];

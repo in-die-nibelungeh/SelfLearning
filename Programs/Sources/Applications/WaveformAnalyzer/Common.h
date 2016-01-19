@@ -30,6 +30,28 @@
 
 #include "mcon.h"
 
+enum GainFormat
+{
+    GainFormat_Amplitude,
+    GainFormat_10Log,
+    GainFormat_20Log,
+};
+
+enum ArgFormat
+{
+    ArgFormat_Radian,
+    ArgFormat_Degree,
+};
+
+enum WindowType
+{
+    WindowType_Rectangular,
+    WindowType_Hanning,
+    WindowType_Hamming,
+    WindowType_Blackman,
+    WindowType_BlackmanHarris,
+};
+
 typedef struct _ProgramParameter
 {
     std::string inputFilepath;
@@ -40,9 +62,14 @@ typedef struct _ProgramParameter
     uint samplingRate;
 
     uint windowLength;
+    WindowType windowType;
+
     uint sampleCount;
 
     bool isUsedOnlyFt;
+
+    enum GainFormat gainFormat;
+    enum ArgFormat argFormat;
 
 } ProgramParameter;
 
