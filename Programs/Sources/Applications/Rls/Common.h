@@ -44,11 +44,16 @@ typedef struct _ProgramParameter
     int tapps;
     float upperValue;
 
+    bool optimize;
+    int  referenceOffset;
+
 } ProgramParameter;
 
-
 status_t Startup    (ProgramParameter* param);
-status_t PreProcess (const ProgramParameter* param);
+status_t PreProcess (ProgramParameter* param);
 status_t Process    (ProgramParameter* param);
 status_t PostProcess(ProgramParameter* param);
 status_t Cleanup    (const ProgramParameter* param);
+
+status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vectord& d, double* pError);
+

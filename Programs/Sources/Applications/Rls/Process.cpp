@@ -29,20 +29,15 @@
 
 #include "Common.h"
 
-status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vectord& d)
+void NormalEquationPre(mcon::Matrixd& Inversed, mcon::Matrixd& Ut, const mcon::Vectord& u, const mcon::Matrixd& W)
 {
-    const int N = d.GetLength();
-    const int M = h.GetLength();
+    const int N = Ut.GetColumnLength();
+    const int M = Ut.GetRowLength();
 
-    if ( h.IsNull() || M > N )
-    {
-        return -ERROR_ILLEGAL;
-    }
-
-    //   h   = (  Ut  *   W   *   U  )^(-1) *   Ut  *   W   *   d
-    // [Mx1] = ([MxN] * [NxN] * [NxM])      * [MxN] * [NxN] * [Nx1]
-    mcon::Matrixd Ut(M, N);
-    mcon::Matrixd Inv;
+    ASSERT( !Ut.IsNull() );
+    ASSERT( N != 0 );
+    ASSERT( M != 0 );
+    UNUSED( W );
 
     Ut = 0;
 
@@ -55,26 +50,53 @@ status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const m
             Ut[m][m + n] = u[n];
         }
     }
-#if 0
+    if (W.IsNull())
     {
-        mcon::Matrix<double> _Ut(Ut);
-        mfio::Csv::Write("Ut_ne.csv", _Ut);
+        Inversed = Ut.Multiply( Ut.T() ).I();
     }
-#endif
+    else
     {
-        const mcon::Matrixd U = Ut.T();
-        Inv = Ut.Multiply(U).I();
+        Inversed = Ut.Multiply( W ).Multiply( Ut.T() ).I();
     }
+}
+
+void NormalEquationPost(
+    mcon::Vector<double>& h,
+    const mcon::Matrixd& Inversed,
+    const mcon::Matrixd& Ut,
+    const mcon::Vectord& d,
+    const mcon::Matrixd& W,
+    double* pError)
+{
     const mcon::Matrixd dm(d, true); // d = (1, n) ==> dm = (n, 1);
-    h = Inv.Multiply(Ut).Multiply(dm).T()[0];
-#if 0
+    const mcon::Matrixd hm = W.IsNull() ? Inversed.Multiply(Ut).Multiply(dm)
+        : Inversed.Multiply(Ut).Multiply(W).Multiply(dm);
+    h = hm.T()[0];
+    if (NULL != pError)
     {
-        mcon::Vector<double> _h(h);
-        mfio::Csv::Write("h_ne.csv", _h);
-        mfio::Wave wav(48000, 1, 32, mfio::Wave::IEEE_FLOAT);
-        wav.Write("h_ne.wav", _h);
+        const mcon::Matrixd diff = dm - Ut.T().Multiply(hm);
+        *pError = (diff * diff).T()[0].GetSum();
     }
-#endif
+}
+
+status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vectord& d, double* pError)
+{
+    const int N = d.GetLength();
+    const int M = h.GetLength();
+    if ( h.IsNull() || M > N )
+    {
+        return -ERROR_ILLEGAL;
+    }
+    //   h   = (  Ut  *   W   *   U  )^(-1) *   Ut  *   W   *   d
+    // [Mx1] = ([MxN] * [NxN] * [NxM])      * [MxN] * [NxN] * [Nx1]
+    mcon::Matrixd Ut(M, N);
+    mcon::Matrixd Inv;
+    mcon::Matrixd W;
+
+    NormalEquationPre(Inv, Ut, u, W);
+
+    NormalEquationPost(h, Inv, Ut, d, W, pError);
+
     return NO_ERROR;
 }
 
@@ -300,22 +322,33 @@ status_t RlsFromTwoWaveforms(mcon::Vector<double>& resp, const mcon::Vectord& in
 }
 #endif
 
-status_t Estimater(mcon::Matrixd& estimated, const mcon::Matrixd& input, const mcon::Vectord& reference, int tapps, bool useRls = false)
+status_t Estimater(
+    mcon::Matrixd& estimated,
+    const mcon::Matrixd& input,
+    const mcon::Vectord& reference,
+    const int tapps,
+    const int referenceOffset
+    )
 {
     const int M = tapps;
-    const int N = input.GetColumnLength() > reference.GetLength() ? reference.GetLength() : input.GetColumnLength();
+    const int N = std::min(input.GetColumnLength(), reference.GetLength() - referenceOffset + 1);
+    // Can't continue processing...
+    if (M > N)
+    {
+        return -ERROR_ILLEGAL;
+    }
     if (false == estimated.Resize(input.GetRowLength() , M))
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
     status_t status = NO_ERROR;
-    const mcon::Vectord d = reference(0, N);
+    const mcon::Vectord d = reference(referenceOffset, N);
     for (int r = 0; r < input.GetRowLength(); ++r)
     {
         const mcon::Vectord _u = input[r];
         const mcon::Vectord u = _u(0, N);
         mcon::Vector<double> h(M);
-        status = useRls ? Rls(h, u, d) : NormalEquation(h, u, d);
+        NormalEquation(h, u, d, NULL);
         if (NO_ERROR != status)
         {
             break;
@@ -327,11 +360,15 @@ status_t Estimater(mcon::Matrixd& estimated, const mcon::Matrixd& input, const m
 
 status_t Process(ProgramParameter* param)
 {
+    int referenceOffset =
+        param->optimize == true && param->referenceOffset != -1 ?
+        param->referenceOffset : 0;
+
     return Estimater(
         param->inversedSignal,
         param->inputSignal,
         param->referenceSignal,
         param->tapps,
-        false
+        referenceOffset
     );
 }

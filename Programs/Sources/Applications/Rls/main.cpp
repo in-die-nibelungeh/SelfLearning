@@ -38,7 +38,8 @@ namespace {
         {"o" , 1},
         {"d" , 1},
         {"c" , 1},
-        {"m" , 1}
+        {"m" , 1},
+        {"opt" ,0}
     };
     ProgramParameter param = ProgramParameter();
 
@@ -52,6 +53,7 @@ namespace {
         LOG("  -d: spefity an output directory, which should already exist.\n");
         LOG("  -m: spefity the tapps, which should be a positive number.\n");
         LOG("  -c: spefity the absolute value clamped at leveling state (default=%f).\n", param.upperValue);
+        LOG("  -opt: spefity to optimize so as to minimize error.\n");
     }
 }
 
@@ -68,6 +70,9 @@ int main(int argc, const char* argv[])
         usage(param);
         return 0;
     }
+    param.optimize = false;
+    param.referenceOffset = -1;
+
     param.inputFilepath = parser.GetArgument(0);
     param.referenceFilepath = parser.GetArgument(1);
 
@@ -91,6 +96,10 @@ int main(int argc, const char* argv[])
     {
         ERROR_LOG("The specified value with -c (%f) must be positive.\n", param.upperValue);
         return 0;
+    }
+    if (parser.IsEnabled("opt"))
+    {
+        param.optimize = true;
     }
 
     std::string outputPrefix;
