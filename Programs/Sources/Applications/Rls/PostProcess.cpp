@@ -36,6 +36,7 @@ namespace {
         const mcon::Vector<double> input(_input);
         const mcon::Vector<double> estimated(_estimated);
         const int N = input.GetLength();
+        UNUSED(N);
 
         ASSERT( N > 0 );
         ASSERT( estimated.GetLength() > 0 );

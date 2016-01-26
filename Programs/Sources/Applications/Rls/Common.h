@@ -40,15 +40,50 @@ typedef struct _ProgramParameter
     std::string referenceFilepath;
     std::string outputBase;
 
-    int samplingRate;
-    int tapps;
+    uint tapps;
+    uint inputLength;
     float upperValue;
+
+    bool optimize;
+    bool outputLog;
+
+// Private
+    uint samplingRate;
+    int referenceOffset;
 
 } ProgramParameter;
 
-
-status_t Startup    (ProgramParameter* param);
-status_t PreProcess (const ProgramParameter* param);
+status_t Setup      (ProgramParameter* param);
+status_t PreProcess (ProgramParameter* param);
 status_t Process    (ProgramParameter* param);
 status_t PostProcess(ProgramParameter* param);
 status_t Cleanup    (const ProgramParameter* param);
+
+status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vectord& d, double* pError);
+
+class ShowMessage
+{
+public:
+    ShowMessage(const char* func, uint indent = 1)
+        : m_Indent(indent)
+        , m_IndentString()
+    {
+        LOG("%s ...\n", func);
+        for (uint k = 0; k < m_Indent * 4; ++k)
+        {
+            m_IndentString.append(" ");
+        }
+    }
+    ~ShowMessage()
+    {
+        LOG("Done\n\n");
+    }
+    void Log(const char* msg)
+    {
+        LOG("%s%s", m_IndentString.c_str(), msg);
+    }
+private:
+    uint m_Indent;
+    std::string m_IndentString;
+};
+

@@ -4,7 +4,7 @@ MODULE_HEADER=
 MODULE_SRC=
 
 INC=$(MODULE_HEADER) Common.h
-SRC=Startup.cpp Cleanup.cpp PreProcess.cpp Process.cpp PostProcess.cpp
+SRC=Setup.cpp Cleanup.cpp PreProcess.cpp Process.cpp PostProcess.cpp
 
 LIBS=-lmfio -lmasp -lmcon
 
