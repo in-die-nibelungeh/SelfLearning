@@ -27,7 +27,7 @@
 #include "Common.h"
 
 namespace {
-    status_t LoadSignalFromWav(const std::string& filepath, mcon::Matrixd& signal, int* pSamplingRate = NULL)
+    status_t LoadSignalFromWav(const std::string& filepath, mcon::Matrixd& signal, uint* pSamplingRate = NULL)
     {
         mfio::Wave wave;
         mcon::Matrix<double> matrix;
@@ -49,12 +49,13 @@ namespace {
     }
 }
 
-status_t Startup(ProgramParameter* param)
+status_t Setup(ProgramParameter* param)
 {
     // Input
+    ShowMessage msg(__func__);
     do
     {
-        int fs;
+        uint fs;
         const std::string& inputPath = param->inputFilepath;
         LOG("Loading signal from wav (%s) ... \n", inputPath.c_str());
         const status_t status = LoadSignalFromWav(std::string(inputPath), param->inputSignal, &fs);
@@ -63,12 +64,25 @@ status_t Startup(ProgramParameter* param)
             ERROR_LOG("An error occured during loading %s: error=%d\n", inputPath.c_str(), status);
             return status;
         }
+        if (param->inputLength > 0 && static_cast<uint>(param->inputSignal.GetColumnLength()) > param->inputLength)
+        {
+            const uint length = param->inputLength;
+            const int ch = param->inputSignal.GetRowLength();
+            const mcon::Matrixd _input(param->inputSignal);
+            param->inputSignal.Resize(ch, length);
+            for (int r = 0; r < ch; ++r)
+            {
+                const mcon::Vector<double> _in(_input[r]);
+                const mcon::Vector<double> in = _in(0, length);
+                param->inputSignal[r] = in;
+            }
+        }
         for (int r = 0; r < param->inputSignal.GetRowLength(); ++r)
         {
             const mcon::Vectord& d = param->inputSignal[r];
             LOG("    Energy-%d: %f\n", r, sqrt(d.Dot(d)));
         }
-        LOG("    Done\n");
+        msg.Log("Done\n");
         param->samplingRate = fs;
 
     } while (false);
@@ -97,10 +111,10 @@ status_t Startup(ProgramParameter* param)
     // Reference
     if ( !param->referenceFilepath.empty() )
     {
-        int fs;
+        uint fs;
         const std::string& referencePath = param->referenceFilepath;
         mcon::Matrixd referenceSignal;
-        LOG("Loading signal from wav (%s) ... \n", referencePath.c_str());
+        LOG("    Loading signal from wav (%s) ... \n", referencePath.c_str());
         const status_t status = LoadSignalFromWav(std::string(referencePath), referenceSignal, &fs);
         if (NO_ERROR != status)
         {
@@ -120,7 +134,7 @@ status_t Startup(ProgramParameter* param)
             LOG("Only 1st channel is used for estimation.\n");
         }
         param->referenceSignal = referenceSignal[0];
-        LOG("    Done\n");
+        msg.Log("    Done\n");
     }
     else // ƒCƒ“ƒpƒ‹ƒX‰ž“š
     {

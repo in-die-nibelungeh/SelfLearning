@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#include "mfio.h"
+
 #include "Common.h"
 
 // These are in Process.cpp
@@ -128,14 +130,15 @@ void GetEnergySpotIndex(int* pStart, int* pEnd, const mcon::VectordBase& signal,
     *pEnd   = FindBaseFromFront(signal, energy, threshold);
 }
 
-typedef struct _tag
+typedef struct _tagRange
 {
     int start;
     int end;
-} StartEnd;
+    uint width;
+} Range;
 
 
-StartEnd GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double threshold)
+Range GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double threshold)
 {
     const int N = input.GetColumnLength();
     int startIndex = N - 1;
@@ -149,25 +152,27 @@ StartEnd GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double thre
         startIndex = std::min(startIndex, startSpot);
         endIndex = std::max(endIndex, endSpot);
     }
-    StartEnd startEnd =
+    const Range range =
     {
         startIndex,
-        endIndex
+        endIndex,
+        static_cast<uint>(endIndex - startIndex + 1)
     };
-    return startEnd;
+    return range;
 }
 
-StartEnd GetEnergySpotIndexOfReference(const mcon::Vectord& reference, const double threshold)
+Range GetEnergySpotIndexOfReference(const mcon::Vectord& reference, const double threshold)
 {
     int startIndex = 0;
     int endIndex = 0;
     GetEnergySpotIndex(&startIndex, &endIndex, reference, threshold);
-    StartEnd startEnd =
+    const Range range =
     {
         startIndex,
-        endIndex
+        endIndex,
+        static_cast<uint>(endIndex - startIndex + 1)
     };
-    return startEnd;
+    return range;
 }
 
 int FindLocalMinimum(const mcon::Vectord& v)
@@ -181,7 +186,7 @@ int FindLocalMinimum(const mcon::Vectord& v)
         {
             continue;
         }
-        LOG("%d,%g\n", k, log10(v[k]));
+        DEBUG_LOG("%d,%g\n", k, log10(v[k]));
         if (0 == k || k == v.GetLength() - 1)
         {
             continue;
@@ -199,6 +204,16 @@ int FindLocalMinimum(const mcon::Vectord& v)
     return index;
 }
 
+int GetIterationCount(const uint M, const int split)
+{
+    int count = 0;
+    for (int _range = M, step; 1 != step; _range = 3 * step, ++count)
+    {
+        step = ClampLower<int>(0, (_range + split - 1) / split);
+    }
+    return count;
+}
+
 // 動機
 //   - 入力信号と参照信号の位置関係で (ずらし具合で) 誤差が異なる。
 //
@@ -209,24 +224,26 @@ int Optimizer(
     int* pReferenceOffset,
     const mcon::Matrixd& input,
     const mcon::Vectord& reference,
-    int tapps
+    const int tapps,
+    const bool outputLog,
+    const std::string& outputBase
 )
 {
-    const mcon::Matrixd W;
-    const int split = 16; // 分割数
+    const mcon::Matrixd W; // 重み行列 (使わない)
+    const int split = 16;  // 探索範囲の分割数
 
     // 入力信号のエネルギが高い領域 (開始点と終了点) を取得する。
-    // 使ってないな...
-    const StartEnd seInput = GetEnergySpotIndexOfInput(input, 0.999);
-    DEBUG_LOG("Search: Start=%d, End=%d\n", seInput.start, seInput.end);
-    UNUSED(seInput);
+    // 入力信号長を短くしても結果が (大きく) 変わらないなら使いたい。
+    const Range erInput = GetEnergySpotIndexOfInput(input, 0.999);
+    DEBUG_LOG("Input    : %d-%d (width=%d)\n", erInput.start, erInput.end, erInput.width);
+    UNUSED(erInput);
 
     // TBD:
     //   諸々のチェックを実施する必要がある (主に長さに関するチェック)。
     // 指定タップ数と同じ or 1/2 (計算量削減)
     //   1. 減らすと精度が落ち、数10サンプルずれた誤認識をした。
     //   2. もし減らすなら 1/2、数サンプル程度のずれだった。
-    const int M = seInput.end - seInput.start + 1; // or tapps or tapps / 2;
+    const uint M = erInput.width; // or tapps or tapps / 2;
     // タップ数の2倍か信号長か、短い方
     //const int N = std::min(M * 2, input.GetColumnLength());
     // 1. N == M にするとうまくいかない...
@@ -235,19 +252,21 @@ int Optimizer(
     // とりあえず、タップ数の1.5 倍にしておく
     const int N = std::min(static_cast<int>(M * 1.5), input.GetColumnLength());
 
-    const StartEnd seReference = GetEnergySpotIndexOfReference(reference, 0.99);
-    const int widthReference = seReference.end - seReference.start + 1;
-    UNUSED(widthReference);
-    DEBUG_LOG("Reference: %d=%d (width=%d)\n", seReference.start, seReference.end, widthReference);
-    int offset = ClampLower<int>(0, seReference.end - M + 1); // 捜索開始インデックス
+    const Range erReference = GetEnergySpotIndexOfReference(reference, 0.99);
+    LOG("    Reference: %d-%d (width=%d)\n", erReference.start, erReference.end, erReference.width);
+    int offset = ClampLower<int>(0, erReference.end - M + 1); // 捜索開始インデックス
     int range = M; // 捜索範囲
     DEBUG_LOG("M=%d, N=%d\n", M, N);
 
-    while (1)
+    const int iter = GetIterationCount(M, split);
+    mcon::Matrixd log(iter, split + 1); // + 1 はインデックスを入れるため。
+
+    for (int i = 0 ; ; ++i)
     {
         const int step = ClampLower<int>(0, (range + split - 1) / split);
-        //const int end = ( (seReference.start - offset) + step - 1 ) / step;
+        //const int end = ( (erReference.start - offset) + step - 1 ) / step;
         DEBUG_LOG("offset=%d, range=%d, step=%d\n", offset, range, step);
+        LOG("    Stage-%d: Range=%d-%d, Step=%d\n", i + 1, offset, offset + range - 1, step);
         mcon::Vectord Js(split);
 
         Js = 0;
@@ -263,7 +282,6 @@ int Optimizer(
             NormalEquationPre(inversed, Ut, signal, W);
             DEBUG_LOG("Inv: (%d, %d)\n", inversed.GetRowLength(), inversed.GetColumnLength());
             DEBUG_LOG("r=%d: Do, Optimizing ...\n", r);
-            //for (int k = 0; k < N; k += step)
             for (int k = 0; k < split; ++k)
             {
                 double J;
@@ -281,24 +299,30 @@ int Optimizer(
                 Js[ k ] += J;
             }
         }
+        for (int k = 0; k < log.GetColumnLength() - 1; ++k)
+        {
+            log[i][k] = Js[k];
+        }
         // 誤差配列で極小値をとるインデックスを取得する。
         int lmIndex = FindLocalMinimum(Js);
 
         // 見つからない場合は処理を打ち切る止める (TBD)。
         if (lmIndex < 0)
         {
+            LOG("        ==> Not found any local minimum ... exiting.\n");
             break;
         }
         // Reference 信号上のインデックスに直す。
         lmIndex *= step;
         lmIndex += offset;
-        LOG("    Found: index=%d\n", lmIndex);
-
+        log[i][log.GetColumnLength() - 1] = lmIndex;
+        DEBUG_LOG("    Found: index=%d\n", lmIndex);
+        LOG("        ==> Local minimum: %d.\n", lmIndex);
         // Step が 1 なら終了する。
         if (1 == step)
         {
             *pReferenceOffset = lmIndex;
-            return 0;
+            break;
         }
         // そうでなければ変数を更新して次のステージへ
         // 極小値が見つかった区間とその前後、合計3 の区間を対象にする。
@@ -307,7 +331,18 @@ int Optimizer(
         offset = ClampLower(0, lmIndex - step + 1); // オフセットは1 区間前の先頭に置く
         range = 3 * step; // 範囲は3 区間
     }
-    *pReferenceOffset = 0;
+    // ここで変更する必要はない
+    // *pReferenceOffset = 0;
+    if (true == outputLog)
+    {
+        const std::string logFilepath = outputBase + std::string("_optlog.csv");
+        LOG("    Output a log of optimizing: %s\n", logFilepath.c_str());
+        if (NO_ERROR != mfio::Csv::Write(logFilepath, log))
+        {
+            ERROR_LOG("    Failed int writing %s\n", logFilepath.c_str());
+        }
+    }
+    LOG("Done.\n\n");
     return 0;
 }
 
@@ -319,9 +354,12 @@ status_t PreProcess(ProgramParameter* param)
     {
         return NO_ERROR;
     }
+    LOG("Optimizing ...\n");
     return Optimizer(
         &param->referenceOffset,
         param->inputSignal,
         param->referenceSignal,
-        param->tapps);
+        param->tapps,
+        param->outputLog,
+        param->outputBase);
 }

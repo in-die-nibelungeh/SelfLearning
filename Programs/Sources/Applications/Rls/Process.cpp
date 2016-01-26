@@ -360,7 +360,7 @@ status_t Estimater(
 
 status_t Process(ProgramParameter* param)
 {
-    int referenceOffset =
+    const int referenceOffset =
         param->optimize == true && param->referenceOffset != -1 ?
         param->referenceOffset : 0;
 

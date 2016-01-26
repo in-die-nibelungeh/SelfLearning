@@ -38,8 +38,10 @@ namespace {
         {"o" , 1},
         {"d" , 1},
         {"c" , 1},
+        {"l" , 1},
         {"m" , 1},
-        {"opt" ,0}
+        {"opt" ,0},
+        {"log" ,0}
     };
     ProgramParameter param = ProgramParameter();
 
@@ -53,15 +55,15 @@ namespace {
         LOG("  -d: spefity an output directory, which should already exist.\n");
         LOG("  -m: spefity the tapps, which should be a positive number.\n");
         LOG("  -c: spefity the absolute value clamped at leveling state (default=%f).\n", param.upperValue);
+        LOG("  -l: spefity to use input signal with the specified length.\n");
         LOG("  -opt: spefity to optimize so as to minimize error.\n");
+        LOG("  -log: spefity to output a log file on the process of optimization.\n");
     }
 }
 
 int main(int argc, const char* argv[])
 {
     mutl::ArgumentParser parser;
-
-    param.upperValue = 32767.0;
 
     if( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(Desc))
         || parser.IsEnabled("h")
@@ -70,13 +72,16 @@ int main(int argc, const char* argv[])
         usage(param);
         return 0;
     }
+    param.upperValue = 32767.0;
     param.optimize = false;
+    param.outputLog = false;
     param.referenceOffset = -1;
+    param.inputLength = -1;
 
     param.inputFilepath = parser.GetArgument(0);
     param.referenceFilepath = parser.GetArgument(1);
 
-    int& tapps = param.tapps;
+    uint& tapps = param.tapps;
 
     tapps = 256;
     if (parser.IsEnabled("m"))
@@ -91,15 +96,28 @@ int main(int argc, const char* argv[])
     if (parser.IsEnabled("c"))
     {
         param.upperValue = atof( parser.GetOption("c").c_str() );
+        if (param.upperValue <= 0.0)
+        {
+            ERROR_LOG("The specified value with -c (%f) must be positive.\n", param.upperValue);
+            return 0;
+        }
     }
-    if (param.upperValue <= 0.0)
+    if (parser.IsEnabled("l"))
     {
-        ERROR_LOG("The specified value with -c (%f) must be positive.\n", param.upperValue);
-        return 0;
+        param.inputLength = atoi( parser.GetOption("l").c_str() );
+        if (param.inputLength < 1)
+        {
+            ERROR_LOG("The specified value with -l (%d) must be positive.\n", param.inputLength);
+            return 0;
+        }
     }
     if (parser.IsEnabled("opt"))
     {
         param.optimize = true;
+    }
+    if (parser.IsEnabled("log"))
+    {
+        param.outputLog = true;
     }
 
     std::string outputPrefix;
@@ -138,7 +156,7 @@ int main(int argc, const char* argv[])
     LOG("\n");
 
     status_t status;
-    status = Startup(&param);
+    status = Setup(&param);
     if ( NO_ERROR != status )
     {
         ERROR_LOG("Failed in Startup(): %d\n", status);
