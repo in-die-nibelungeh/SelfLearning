@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,19 +27,18 @@
 #include <string.h>
 
 #include "debug.h"
-#include "Vector.h"
 #include "VectordBase.h"
 
 namespace mcon {
 
-template <typename Type>
-class Vector;
+typedef Vector<double> Vectord;
 
-class Vectord : public VectordBase
+template <>
+class Vector<double> : public VectordBase
 {
 public:
 
-    explicit Vectord(int length = 0)
+    explicit Vector<double>(int length = 0)
         : VectordBase(length)
         , m_AddressBase(NULL)
     {
@@ -49,7 +48,7 @@ public:
         ASSERT(status == true);
     }
 
-    Vectord(const Vectord& v)
+    Vector<double>(const Vector<double>& v)
         : VectordBase(v.GetLength())
         , m_AddressBase(NULL)
     {
@@ -59,7 +58,7 @@ public:
         memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
     }
 
-    Vectord(const VectordBase& v)
+    Vector<double>(const VectordBase& v)
         : VectordBase(v.GetLength())
         , m_AddressBase(NULL)
     {
@@ -69,7 +68,8 @@ public:
         memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
     }
 
-    template <typename U> Vectord(const Vector<U>& v)
+    template <typename Alian>
+    Vector<double>(const Vector<Alian>& v)
         : VectordBase(v.GetLength())
         , m_AddressBase(NULL)
     {
@@ -81,10 +81,10 @@ public:
             (*this)[i] = static_cast<double>(v[i]);
         }
     }
-    ~Vectord();
+    ~Vector<double>();
 
-    template <typename U>
-    Vectord& operator=(const Vector<U>& v)
+    template <typename Alian>
+    Vector<double>& operator=(const Vector<Alian>& v)
     {
         bool status = Resize(v.GetLength());
         UNUSED(status);
@@ -96,27 +96,25 @@ public:
         return *this;
     }
 
-    // operator= make the same Vectord as the input Vectord.
-    Vectord& operator=(const Vectord& Vectord);
-    Vectord& operator=(double v)
+    // operator= make the same Vector<double> as the input Vector<double>.
+    Vector<double>& operator=(const Vector<double>& v);
+    Vector<double>& operator=(double v)
     {
         *dynamic_cast<VectordBase*>(this) = v;
         return *this;
     }
 
-    Vectord operator()(int offset, int length) const;
+    const Vector<double> operator+(double v) const;
+    const Vector<double> operator-(double v) const;
+    const Vector<double> operator*(double v) const;
+    const Vector<double> operator/(double v) const;
 
-    const Vectord operator+(double v) const;
-    const Vectord operator-(double v) const;
-    const Vectord operator*(double v) const;
-    const Vectord operator/(double v) const;
+    const Vector<double> operator+(const VectordBase& v) const;
+    const Vector<double> operator-(const VectordBase& v) const;
+    const Vector<double> operator*(const VectordBase& v) const;
+    const Vector<double> operator/(const VectordBase& v) const;
 
-    const Vectord operator+(const VectordBase& v) const;
-    const Vectord operator-(const VectordBase& v) const;
-    const Vectord operator*(const VectordBase& v) const;
-    const Vectord operator/(const VectordBase& v) const;
-
-
+    Vector<double> operator()(int offset, int length) const;
 	bool Resize(int length);
 
     // Inline functions.
@@ -133,5 +131,19 @@ private:
     // Private member variables.
     double*  m_AddressBase;
 };
+
+// Defining double [+-*/] Vector<double>
+#define MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(ope) \
+    template <typename Type>                               \
+    inline const Vector<double> operator ope(              \
+        const Type v, const Vector<double>& vec)           \
+    {                                                      \
+        return vec ope static_cast<double>(v);             \
+    }
+
+MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(+)
+MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(-)
+MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(*)
+MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(/)
 
 } // namespace mcon {

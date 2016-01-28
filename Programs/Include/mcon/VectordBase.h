@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ class Vector;
 
 class VectordBase
 {
-    friend class Vectord;
+    friend class Vector<double>;
     friend class Matrixd;
 public:
 
@@ -102,11 +102,17 @@ public:
         memcpy(*this, v, GetLength() * sizeof(double));
         return *this;
     }
-
+    VectordBase& operator=(const VectordBase& v)
+    {
+        ASSERT(v.GetLength() == GetLength());
+        memcpy(*this, v, GetLength() * sizeof(double));
+        return *this;
+    }
     VectordBase& operator+=(double v);
     VectordBase& operator-=(double v);
     VectordBase& operator*=(double v);
     VectordBase& operator/=(double v);
+
     VectordBase& operator+=(const VectordBase& v);
     VectordBase& operator-=(const VectordBase& v);
     VectordBase& operator*=(const VectordBase& v);
@@ -173,13 +179,6 @@ private:
         , m_Length(length)
     {}
 
-    // Forbidden to be called.
-    VectordBase& operator=(const VectordBase& v)
-    {
-        ASSERT(v.GetLength() == GetLength());
-        memcpy(*this, v, GetLength() * sizeof(double));
-        return *this;
-    }
     // Private member functions.
     inline int Smaller(int input)      const { return m_Length < input ? m_Length : input; }
     inline int Larger(int input)       const { return m_Length < input ? input : m_Length ; }
