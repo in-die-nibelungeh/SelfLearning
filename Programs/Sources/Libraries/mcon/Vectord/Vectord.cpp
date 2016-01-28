@@ -64,6 +64,16 @@ Vectord& Vectord::operator=(const Vectord& v)
     return *this;
 }
 
+const Vectord Vectord::operator+(double v) const { Vectord vec(*this);  vec += v; return vec; }
+const Vectord Vectord::operator-(double v) const { Vectord vec(*this);  vec -= v; return vec; }
+const Vectord Vectord::operator*(double v) const { Vectord vec(*this);  vec *= v; return vec; }
+const Vectord Vectord::operator/(double v) const { Vectord vec(*this);  vec /= v; return vec; }
+
+const Vectord Vectord::operator+(const VectordBase& v) const { Vectord vec(*this);  vec += v; return vec; }
+const Vectord Vectord::operator-(const VectordBase& v) const { Vectord vec(*this);  vec -= v; return vec; }
+const Vectord Vectord::operator*(const VectordBase& v) const { Vectord vec(*this);  vec *= v; return vec; }
+const Vectord Vectord::operator/(const VectordBase& v) const { Vectord vec(*this);  vec /= v; return vec; }
+
 double* Align(double* ptr, int align)
 {
     const unsigned char* aligned = reinterpret_cast<const unsigned char*>(ptr);

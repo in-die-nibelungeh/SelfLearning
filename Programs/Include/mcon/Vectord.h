@@ -104,6 +104,16 @@ public:
         return *this;
     }
 
+    const Vectord operator+(double v) const;
+    const Vectord operator-(double v) const;
+    const Vectord operator*(double v) const;
+    const Vectord operator/(double v) const;
+
+    const Vectord operator+(const VectordBase& v) const;
+    const Vectord operator-(const VectordBase& v) const;
+    const Vectord operator*(const VectordBase& v) const;
+    const Vectord operator/(const VectordBase& v) const;
+
     Vectord operator()(int offset, int length) const;
     bool Resize(int length);
 
@@ -121,5 +131,15 @@ private:
     // Private member variables.
     double*  m_AddressBase;
 };
+
+// Defining double [+-*/] Vectord
+template <typename Type>
+inline const Vectord operator+(const Type v, const Vectord& vec) { return vec + static_cast<double>(v); }
+template <typename Type>
+inline const Vectord operator-(const Type v, const Vectord& vec) { return vec - static_cast<double>(v); }
+template <typename Type>
+inline const Vectord operator*(const Type v, const Vectord& vec) { return vec * static_cast<double>(v); }
+template <typename Type>
+inline const Vectord operator/(const Type v, const Vectord& vec) { return vec / static_cast<double>(v); }
 
 } // namespace mcon {

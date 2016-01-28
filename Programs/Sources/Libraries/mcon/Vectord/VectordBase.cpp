@@ -94,16 +94,6 @@ VectordBase& VectordBase::operator=(double v)
     return *this;
 };
 
-const VectordBase VectordBase::operator+(double v) const { VectordBase vec(*this);  vec += v; return vec; }
-const VectordBase VectordBase::operator-(double v) const { VectordBase vec(*this);  vec -= v; return vec; }
-const VectordBase VectordBase::operator*(double v) const { VectordBase vec(*this);  vec *= v; return vec; }
-const VectordBase VectordBase::operator/(double v) const { VectordBase vec(*this);  vec /= v; return vec; }
-
-const VectordBase VectordBase::operator+(const VectordBase& v) const { VectordBase vec(*this);  vec += v; return vec; }
-const VectordBase VectordBase::operator-(const VectordBase& v) const { VectordBase vec(*this);  vec -= v; return vec; }
-const VectordBase VectordBase::operator*(const VectordBase& v) const { VectordBase vec(*this);  vec *= v; return vec; }
-const VectordBase VectordBase::operator/(const VectordBase& v) const { VectordBase vec(*this);  vec /= v; return vec; }
-
 VectordBase& VectordBase::operator+=(double v)
 {
     double* const pBase = *this;
