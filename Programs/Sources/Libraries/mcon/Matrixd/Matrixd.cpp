@@ -343,7 +343,8 @@ Matrixd Matrixd::Inverse(void) const
         // 注目している列の中で、最大値を持つ列を探す。
         int index = r;
         double maximum = fabs(m[r][r]);
-        for ( int k = index + 1; k < m.GetRowLength() - 1; ++k )
+        // "k < m.GetRowLength() - 1" となっていたが、意図不明なので修正。
+        for ( int k = index + 1; k < m.GetRowLength(); ++k )
         {
             if ( fabs(m[k][r]) > maximum )
             {
@@ -367,7 +368,7 @@ Matrixd Matrixd::Inverse(void) const
         }
         // 上で入れ替えたので 以降では index は不要、r を使用する。
         // 注目している行の、注目している列の値を 1.0 にする
-        m[r] /= maximum;
+        m[r] /= m[r][r]; // /= maximum; // maximum では符号が考慮されない。
 
         // 他の行から引く。
         for ( int k = 0; k < m.GetRowLength(); ++k )
@@ -376,9 +377,8 @@ Matrixd Matrixd::Inverse(void) const
             {
                 continue;
             }
-        	Vectord tmp(m[r]);
-        	tmp *= m[k][r];
-            m[k] -= tmp;
+            const Vectord tmp(m[r]);
+            m[k] -= (tmp * m[k][r]);
         }
     }
     for (int row = 0; row < rowCount; ++row)
