@@ -13,10 +13,10 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
     else if (typeid(double) == typeid(T))
     {
     }
-    for (int i = 0; i < m.GetRowLength(); ++i)
+    for (uint i = 0; i < m.GetRowLength(); ++i)
     {
         printf("| ");
-        for (int j = 0; j < m.GetColumnLength(); ++j)
+        for (uint j = 0; j < m.GetColumnLength(); ++j)
         {
             printf("%g", static_cast<double>(m[i][j]));
             printf("\t");
@@ -25,15 +25,15 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
     }
 }
 
-double initializer(int row, size_t rowLength, int column, size_t columnLength)
+double initializer(uint row, size_t rowLength, uint column, size_t columnLength)
 {
     return (row+rowLength) + (column+columnLength) * 10;
 }
 
 void test_Matrix()
 {
-    const int row = 4;
-    const int col = 4;
+    const uint row = 4;
+    const uint col = 4;
 
     mcon::Matrix<double> m;
 
@@ -49,9 +49,9 @@ void test_Matrix()
     const double init = 0;
     m = init;
 
-    for ( int k = 0; k < m.GetRowLength(); ++k )
+    for (uint k = 0; k < m.GetRowLength(); ++k )
     {
-        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        for (uint n = 0; n < m.GetColumnLength(); ++n )
         {
             CHECK_VALUE(m[k][n], init);
         }
@@ -62,9 +62,9 @@ void test_Matrix()
     // Initialize
 /*
     m.Initialize();
-    for ( int k = 0; k < m.GetRowLength(); ++k )
+    for (uint k = 0; k < m.GetRowLength(); ++k )
     {
-        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        for (uint n = 0; n < m.GetColumnLength(); ++n )
         {
             CHECK_VALUE(m[k][n], n);
         }
@@ -73,9 +73,9 @@ void test_Matrix()
     m.Initialize( 1,  2);
 */
     m.Initialize( initializer );
-    for ( int k = 0; k < m.GetRowLength(); ++k )
+    for (uint k = 0; k < m.GetRowLength(); ++k )
     {
-        for ( int n = 0; n < m.GetColumnLength(); ++n )
+        for (uint n = 0; n < m.GetColumnLength(); ++n )
         {
             CHECK_VALUE(m[k][n], initializer(k, m.GetRowLength(), n, m.GetColumnLength()));
         }
@@ -162,12 +162,12 @@ static void test_matrix_inverse(void)
 
 static void test_matrix_multiply(void)
 {
-    int numArray = 3;
-    int numData= 4;
+    const uint numArray = 3;
+    const uint numData= 4;
     mcon::Matrix<double> mat1(numArray, numData);
-    for (int c = 1, i = 0; i < numArray; ++i)
+    for (uint c = 1, i = 0; i < numArray; ++i)
     {
-        for (int j = 0; j < numData; ++j, ++c)
+        for (uint j = 0; j < numData; ++j, ++c)
         {
             mat1[i][j] = c;
         }
@@ -189,12 +189,13 @@ static void test_matrix_multiply(void)
 
 static void test_transpose(void)
 {
-    int numArray = 3, numData= 5;
+    const uint numArray = 3;
+    const uint numData= 5;
     mcon::Matrix<double> mat(numArray, numData);
-    for (int i = 0; i < numArray; ++i)
+    for (uint i = 0; i < numArray; ++i)
     {
         printf("mat [%d, 0 .. %d] ", i, numData-1);
-        for (int j = 0; j < numData; ++j)
+        for (uint j = 0; j < numData; ++j)
         {
             mat[i][j] = (i+1)*10+(j+1);
             printf("%f ", mat[i][j]);
@@ -204,10 +205,10 @@ static void test_transpose(void)
 
     mcon::Matrix<double> matt(1,1);
     matt = mat.Transpose();
-    for (int i = 0; i < matt.GetRowLength(); ++i)
+    for (uint i = 0; i < matt.GetRowLength(); ++i)
     {
         printf("mat [%d,0-%d] ", i, matt.GetColumnLength()-1);
-        for (int j = 0; j < matt.GetColumnLength(); ++j)
+        for (uint j = 0; j < matt.GetColumnLength(); ++j)
         {
             printf("%f ", matt[i][j]);
         }

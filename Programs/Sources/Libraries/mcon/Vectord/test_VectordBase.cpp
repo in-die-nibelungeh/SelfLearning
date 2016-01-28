@@ -11,8 +11,8 @@ static double _fabs(double v)
 
 void ShowVectordBase(const mcon::VectordBase& v)
 {
-    const int n = v.GetLength();
-    for (int i = 0; i < n; ++i )
+    const uint n = v.GetLength();
+    for (uint i = 0; i < n; ++i )
     {
         printf("\t%g", v[i]);
         if ( (i % 8) == 7 )
@@ -33,11 +33,11 @@ void test_VectordBase(void)
     CHECK_VALUE(dvec.GetLength(), length);
 
     LOG("* [operator[]]\n");
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         dvec[i] = i;
     }
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], i);
     }
@@ -45,99 +45,95 @@ void test_VectordBase(void)
     LOG("* [operator+=(double)]\n");
     // operator+=(T)
     dvec += 1;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], i+1);
     }
     // operator*=(T)
     LOG("* [operator*=(double)]\n");
     dvec *= 10;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1)*10);
     }
     // operator/=(T)
     LOG("* [operator/=(double)]\n");
     dvec /= 5;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1)*2);
     }
     // operator-=(T)
     LOG("* [operator-=(double)]\n");
     dvec -= 5;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
-        CHECK_VALUE(dvec[i], (i+1)*2-5);
+        CHECK_VALUE(dvec[i], (static_cast<int>(i)+1)*2-5);
     }
     LOG("* [Copy]\n");
     mcon::VectordBase dvec2(area+(length/4+1)*4, length*2);
 
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = -(i+1);
     }
     // Copy
     dvec2.Copy(dvec);
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         if (0 <= i && i < length)
         {
-            CHECK_VALUE(dvec2[i], (i+1)*2-5);
-        }
-        else if (length <= i && i < length*2)
-        {
-            CHECK_VALUE(dvec2[i], -(i+1));
+            CHECK_VALUE(dvec2[i], (static_cast<int>(i)+1)*2-5);
         }
     }
     dvec = 10;
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 1;
     }
 
     LOG("* [operator+=]\n");
     dvec += dvec2;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1) + 10);
     }
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = (i & 1) ? 1.0 : 2.0;
     }
 
     LOG("* [operator*=]\n");
     dvec *= dvec2;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], ((i+1) + 10) * ((i & 1) ? 1.0 : 2.0));
     }
     LOG("* [operator/=]\n");
     dvec /= dvec2;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1) + 10);
     }
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 1;
     }
     LOG("* [operator-=]\n");
     dvec -= dvec2;
-    for (int i = 0; i < length; ++i)
+    for (uint i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], 10);
     }
     // Fifo
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 2;
     }
     LOG("* [Fifo]\n");
-    double v = dvec2.FifoIn(5);
+    double v = dvec2.Fifo(5);
     CHECK_VALUE(v, 2);
-    for (int i = 0; i < dvec2.GetLength()-1; ++i)
+    for (uint i = 0; i < dvec2.GetLength()-1; ++i)
     {
         CHECK_VALUE(dvec2[i], i+3);
     }
@@ -147,7 +143,7 @@ void test_VectordBase(void)
     LOG("* [Unshift]\n");
     v = dvec2.Unshift(2);
     CHECK_VALUE(v, 5);
-    for (int i = 0; i < dvec2.GetLength(); ++i)
+    for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
         CHECK_VALUE(dvec2[i], i+2);
     }

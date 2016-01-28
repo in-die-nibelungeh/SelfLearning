@@ -4,8 +4,6 @@ LIB=libmcon.a
 
 INC=$(addprefix $(SELF_LEARNING_INCDIR)/mcon/, Vector.h Matrix.h Vectord.h VectordBase.h Matrixd.h)
 
-$(info $(INC))
-
 MODULE_SRC=	\
 	Vectord/VectordBase.cpp \
 	Vectord/Vectord.cpp \
