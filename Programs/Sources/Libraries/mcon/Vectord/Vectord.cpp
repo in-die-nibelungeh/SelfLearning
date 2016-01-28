@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,8 @@
  * THE SOFTWARE.
  */
 
-#include <string.h>
+#include <string>
+#include <cstring>
 
 #include "debug.h"
 #include "mcon.h"
@@ -37,17 +38,17 @@ Vector<double>::~Vector<double>()
     }
 }
 
-Vector<double> Vector<double>::operator()(int offset, int length) const
+Vector<double> Vector<double>::operator()(uint offset, uint length) const
 {
     Vector<double> carveout;
-    if (offset < 0 || GetLength() <= offset || length <= 0)
+    if (GetLength() <= offset)
     {
         // Null object.
         return carveout;
     }
     // Smaller value as length
-    carveout.Resize( Smaller(GetLength() - offset, length) );
-    for (int i = offset; i < Smaller(offset + length); ++i)
+    carveout.Resize( std::min(GetLength() - offset, length) );
+    for (uint i = offset; i < std::min(GetLength(), offset + length); ++i)
     {
         carveout[i-offset] = (*this)[i];
     }
@@ -58,9 +59,9 @@ Vector<double> Vector<double>::operator()(int offset, int length) const
 Vector<double>& Vector<double>::operator=(const Vector<double>& v)
 {
     // m_Length is updated in Resize().
-    const int n = v.GetLength();
+    const uint n = v.GetLength();
     Resize(n);
-    memcpy(*this, v, n * sizeof(double));
+    std::memcpy(*this, v, n * sizeof(double));
     return *this;
 }
 
@@ -97,12 +98,8 @@ bool Vector<double>::Allocate(void)
     return true;
 }
 
-bool Vector<double>::Resize(int length)
+bool Vector<double>::Resize(uint length)
 {
-    if (length < 0)
-    {
-        return false;
-    }
     if (length == m_Length)
     {
         return true;

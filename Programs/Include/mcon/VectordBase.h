@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <string.h>
+#include <cstring>
 
 #include "debug.h"
 
@@ -53,13 +53,13 @@ public:
     }
 
     // For const object
-    const double& operator[](const int i) const
+    const double& operator[](const uint i) const
     {
         ASSERT (0 <= i && i < m_Length);
         return m_AddressAligned[i];
     }
     // For non-const object
-    double& operator[](const int i)
+    double& operator[](const uint i)
     {
         ASSERT (0 <= i && i < m_Length);
         return m_AddressAligned[i];
@@ -90,8 +90,6 @@ public:
 
     double PushFromFront(double v);
     double PushFromBack(double v);
-    double PopFromFront(double v);
-    double PopFromBack(double v);
 
     VectordBase& operator=(double v);
 
@@ -99,13 +97,13 @@ public:
     VectordBase& operator=(const Vector<U>& v)
     {
         ASSERT(v.GetLength() == GetLength());
-        memcpy(*this, v, GetLength() * sizeof(double));
+        std::memcpy(*this, v, GetLength() * sizeof(double));
         return *this;
     }
     VectordBase& operator=(const VectordBase& v)
     {
         ASSERT(v.GetLength() == GetLength());
-        memcpy(*this, v, GetLength() * sizeof(double));
+        std::memcpy(*this, v, GetLength() * sizeof(double));
         return *this;
     }
     VectordBase& operator+=(double v);
@@ -117,6 +115,22 @@ public:
     VectordBase& operator-=(const VectordBase& v);
     VectordBase& operator*=(const VectordBase& v);
     VectordBase& operator/=(const VectordBase& v);
+
+    void Initialize(int offset = 0, int step = 1)
+    {
+        for (uint k = 0; k < GetLength(); ++k )
+        {
+            (*this)[k] = offset + step * k;
+        }
+    }
+
+    void Initialize( double (*initializer)(uint, uint) )
+    {
+        for (uint k = 0; k < GetLength(); ++k )
+        {
+            (*this)[k] = initializer(k, GetLength());
+        }
+    }
 
     double GetMaximum(void) const;
     double GetMaximumAbsolute(void) const;
@@ -130,7 +144,7 @@ public:
     VectordBase GetCrossProduct(const VectordBase& v) const;
 
     // Inline functions.
-    inline int GetLength(void) const
+    inline uint GetLength(void) const
     {
         return m_Length;
     }
@@ -139,25 +153,13 @@ public:
         return GetSum()/GetLength();
     }
     // Will be depricated.
-    inline double FifoIn(double v)
+    inline double Fifo(double v)
     {
         return PushFromBack(v);
-    }
-    inline double FifoOut(double v)
-    {
-        return PopFromFront(v);
-    }
-    inline double Push(double v)
-    {
-        return PushFromBack(v);
-    }
-    inline double Pop(double v)
-    {
-        return PopFromBack(v);
     }
     inline double Shift(double v)
     {
-        return PopFromFront(v);
+        return PushFromFront(v);
     }
     inline double Unshift(double v)
     {
@@ -180,18 +182,13 @@ private:
     {}
 
     // Private member functions.
-    inline int Smaller(int input)      const { return m_Length < input ? m_Length : input; }
-    inline int Larger(int input)       const { return m_Length < input ? input : m_Length ; }
-    inline int Smaller(int a1, int a2) const { return a1 < a2 ? a1 : a2; }
-    inline int Larger(int a1, int a2)  const { return a1 > a2 ? a1 : a2; }
-    inline double Absolute(double v)   const { return (v < 0) ? -v : v; }
 
     // Private class variables.
     static const int g_Alignment = 32;
 
     // Private member variables.
     double*  m_AddressAligned;
-    int      m_Length;
+    uint     m_Length;
 };
 
 } // namespace mcon {

@@ -483,7 +483,7 @@ const VectordBase& VectordBase::Copy(const VectordBase& v)
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -505,8 +505,10 @@ const VectordBase& VectordBase::Copy(const VectordBase& v)
  */
 
 #include <x86intrin.h>
-#include <string.h>
+
 #include <math.h>
+#include <string>
+#include <cstring>
 
 #include "debug.h"
 #include "mcon.h"
@@ -537,7 +539,7 @@ namespace mcon {
 double VectordBase::PushFromBack(double v)
 {
     double ret = (*this)[0];
-    for (int i = 0; i < GetLength() - 1; ++i)
+    for (uint i = 0; i < GetLength() - 1; ++i)
     {
         (*this)[i] = (*this)[i+1];
     }
@@ -548,7 +550,7 @@ double VectordBase::PushFromBack(double v)
 double VectordBase::PushFromFront(double v)
 {
     double ret = (*this)[GetLength()-1];
-    for (int i = GetLength() - 1; i > 0; --i)
+    for (uint i = GetLength() - 1; i > 0; --i)
     {
         (*this)[i] = (*this)[i-1];
     }
@@ -630,7 +632,7 @@ VectordBase& VectordBase::operator/=(double v) { *this *= (1/v); return *this; }
     const double* pEe = ee;                           \
     ASSERT_ALIGNED(pEr, g_Alignment);                 \
     ASSERT_ALIGNED(pEe, g_Alignment);                 \
-    const int length = Smaller(ee.GetLength());       \
+    const int length = std::min(GetLength(), ee.GetLength()); \
     const int units = (length / unit) * unit;         \
     for ( ; pEr < ptr + units ; pEr += unit, pEe += unit ) \
     {                                                 \
@@ -954,8 +956,8 @@ double VectordBase::GetDotProduct(const VectordBase& v) const
 
 const VectordBase& VectordBase::Copy(const VectordBase& v)
 {
-    const int n = Smaller(v.GetLength());
-    memcpy(*this, v, n * sizeof(double));
+    const uint n = std::min(GetLength(), v.GetLength());
+    std::memcpy(*this, v, n * sizeof(double));
     return *this;
 }
 

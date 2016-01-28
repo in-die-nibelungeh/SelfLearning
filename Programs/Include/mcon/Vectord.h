@@ -114,8 +114,9 @@ public:
     const Vector<double> operator*(const VectordBase& v) const;
     const Vector<double> operator/(const VectordBase& v) const;
 
-    Vector<double> operator()(int offset, int length) const;
-	bool Resize(int length);
+    Vector<double> operator()(uint offset, uint length) const;
+
+    bool Resize(uint length);
 
     // Inline functions.
     inline bool IsNull(void) const
