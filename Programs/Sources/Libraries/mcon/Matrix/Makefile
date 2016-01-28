@@ -1,15 +1,7 @@
 BIN=mcon_matrix.exe
 
-MODULE_HEADER=$(SELF_LEARNING_INCDIR)/mcon/Matrix.h
-MODULE_SRC=
-
-INC=$(MODULE_HEADER)
-
-INCDIRS += \
-	../Vector  \
-	../Vectord  \
-
-LIBS=
+INC=$(SELF_LEARNING_INCDIR)/mcon/Matrix.h
+SRC=../Vectord/Vectord.cpp ../Vectord/VectordBase.cpp
 
 CPPFLAGS += -O3
 

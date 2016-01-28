@@ -29,7 +29,7 @@
 
 namespace mcon {
 
-Vectord::~Vectord()
+Vector<double>::~Vector<double>()
 {
     if (NULL != m_AddressBase)
     {
@@ -37,9 +37,9 @@ Vectord::~Vectord()
     }
 }
 
-Vectord Vectord::operator()(int offset, int length) const
+Vector<double> Vector<double>::operator()(int offset, int length) const
 {
-    Vectord carveout;
+    Vector<double> carveout;
     if (offset < 0 || GetLength() <= offset || length <= 0)
     {
         // Null object.
@@ -55,7 +55,7 @@ Vectord Vectord::operator()(int offset, int length) const
 }
 
 
-Vectord& Vectord::operator=(const Vectord& v)
+Vector<double>& Vector<double>::operator=(const Vector<double>& v)
 {
     // m_Length is updated in Resize().
     const int n = v.GetLength();
@@ -64,15 +64,15 @@ Vectord& Vectord::operator=(const Vectord& v)
     return *this;
 }
 
-const Vectord Vectord::operator+(double v) const { Vectord vec(*this);  vec += v; return vec; }
-const Vectord Vectord::operator-(double v) const { Vectord vec(*this);  vec -= v; return vec; }
-const Vectord Vectord::operator*(double v) const { Vectord vec(*this);  vec *= v; return vec; }
-const Vectord Vectord::operator/(double v) const { Vectord vec(*this);  vec /= v; return vec; }
+const Vector<double> Vector<double>::operator+(double v) const { Vector<double> vec(*this);  vec += v; return vec; }
+const Vector<double> Vector<double>::operator-(double v) const { Vector<double> vec(*this);  vec -= v; return vec; }
+const Vector<double> Vector<double>::operator*(double v) const { Vector<double> vec(*this);  vec *= v; return vec; }
+const Vector<double> Vector<double>::operator/(double v) const { Vector<double> vec(*this);  vec /= v; return vec; }
 
-const Vectord Vectord::operator+(const VectordBase& v) const { Vectord vec(*this);  vec += v; return vec; }
-const Vectord Vectord::operator-(const VectordBase& v) const { Vectord vec(*this);  vec -= v; return vec; }
-const Vectord Vectord::operator*(const VectordBase& v) const { Vectord vec(*this);  vec *= v; return vec; }
-const Vectord Vectord::operator/(const VectordBase& v) const { Vectord vec(*this);  vec /= v; return vec; }
+const Vector<double> Vector<double>::operator+(const VectordBase& v) const { Vector<double> vec(*this);  vec += v; return vec; }
+const Vector<double> Vector<double>::operator-(const VectordBase& v) const { Vector<double> vec(*this);  vec -= v; return vec; }
+const Vector<double> Vector<double>::operator*(const VectordBase& v) const { Vector<double> vec(*this);  vec *= v; return vec; }
+const Vector<double> Vector<double>::operator/(const VectordBase& v) const { Vector<double> vec(*this);  vec /= v; return vec; }
 
 double* Align(double* ptr, int align)
 {
@@ -81,7 +81,7 @@ double* Align(double* ptr, int align)
     return const_cast<double*>(reinterpret_cast<const double*>(aligned));
 }
 
-bool Vectord::Allocate(void)
+bool Vector<double>::Allocate(void)
 {
     m_AddressBase = NULL;
     m_AddressAligned = NULL;
@@ -97,7 +97,7 @@ bool Vectord::Allocate(void)
     return true;
 }
 
-bool Vectord::Resize(int length)
+bool Vector<double>::Resize(int length)
 {
     if (length < 0)
     {
