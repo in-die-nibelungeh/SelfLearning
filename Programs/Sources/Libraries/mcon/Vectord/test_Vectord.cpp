@@ -364,5 +364,25 @@ void test_Vectord(void)
             CHECK_VALUE(dot, v.GetDotProduct(w));
         }
     }
+    LOG("* [ToMatrix]\n");
+    for (uint i = 0; i < dvec.GetLength(); ++i)
+    {
+        dvec[i] = i + 1;
+    }
+    const mcon::Matrix<double> m = dvec.ToMatrix();
+    CHECK_VALUE(m.GetRowLength(), 1);
+    CHECK_VALUE(m.GetColumnLength(), dvec.GetLength());
+    for (uint i = 0; i < dvec.GetLength(); ++i)
+    {
+        CHECK_VALUE(m[0][i], i+1);
+    }
+    const mcon::Matrix<double> mt = dvec.ToMatrix().Transpose();
+
+    CHECK_VALUE(mt.GetRowLength(), dvec.GetLength());
+    CHECK_VALUE(mt.GetColumnLength(), 1);
+    for (uint i = 0; i < dvec.GetLength(); ++i)
+    {
+        CHECK_VALUE(mt[i][0], i+1);
+    }
     LOG("END\n");
 }

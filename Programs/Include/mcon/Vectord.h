@@ -114,7 +114,9 @@ public:
     const Vector<double> operator*(const VectordBase& v) const;
     const Vector<double> operator/(const VectordBase& v) const;
 
-    Vector<double> operator()(uint offset, uint length) const;
+    const Vector<double> operator()(uint offset, uint length) const;
+
+    const Matrix<double> ToMatrix(void) const;
 
     bool Resize(uint length);
 
