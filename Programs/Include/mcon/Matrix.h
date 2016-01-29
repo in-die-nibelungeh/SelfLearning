@@ -563,3 +563,5 @@ Matrix<Type> Matrix<Type>::Inverse(void) const
 }
 
 } // namespace mcon {
+
+#include "Matrixd.h"

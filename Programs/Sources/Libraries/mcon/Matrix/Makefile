@@ -1,9 +1,12 @@
 BIN=mcon_matrix.exe
 
 INC=$(SELF_LEARNING_INCDIR)/mcon/Matrix.h
-SRC=../Vectord/Vectord.cpp ../Vectord/VectordBase.cpp
+SRC=
 
-CPPFLAGS += -O3
+CPPFLAGS += \
+    -O3 \
+	-mavx \
+	-DTestType=float \
 
 WARNINGS +=  \
 	-Werror \
