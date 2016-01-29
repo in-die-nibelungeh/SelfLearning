@@ -18,14 +18,14 @@ void DumpMatrix(mcon::Matrix<T>&m, const char* fmt = NULL)
         printf("| ");
         for (uint j = 0; j < m.GetColumnLength(); ++j)
         {
-            printf("%g", static_cast<double>(m[i][j]));
+            printf("%g", static_cast<TestType>(m[i][j]));
             printf("\t");
         }
         printf(" |\n");
     }
 }
 
-double initializer(uint row, size_t rowLength, uint column, size_t columnLength)
+TestType initializer(uint row, size_t rowLength, uint column, size_t columnLength)
 {
     return (row+rowLength) + (column+columnLength) * 10;
 }
@@ -35,9 +35,9 @@ void test_Matrix()
     const uint row = 4;
     const uint col = 4;
 
-    mcon::Matrix<double> m;
+    mcon::Matrix<TestType> m;
 
-    CHECK_VALUE(m.IsNull(), false);
+    CHECK_VALUE(m.IsNull(), true);
     CHECK_VALUE(m.GetRowLength(), 0);
     CHECK_VALUE(m.GetColumnLength(), 0);
 
@@ -86,7 +86,7 @@ static void test_matrix_determinant(void)
 {
     int numArray = 4;
     int numData= 4;
-    mcon::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<TestType> mat1(numArray, numData);
     mat1[0][0] = 1;
     mat1[0][1] = 2;
     mat1[0][2] = 1;
@@ -112,7 +112,7 @@ static void test_matrix_inverse(void)
 {
     int numArray = 4;
     int numData= 4;
-    mcon::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<TestType> mat1(numArray, numData);
 #if 0
     mat1[0][0] = 1;
     mat1[0][1] = 2;
@@ -150,7 +150,7 @@ static void test_matrix_inverse(void)
 #endif
     printf("mat1:\n");
     DumpMatrix(mat1, "%f");
-    mcon::Matrix<double> mat2(1,1), mat3(1, 1);
+    mcon::Matrix<TestType> mat2(1,1), mat3(1, 1);
     mat2 = mat1.Inverse();
     printf("mat2:\n");
     DumpMatrix(mat2, "%f");
@@ -164,7 +164,7 @@ static void test_matrix_multiply(void)
 {
     const uint numArray = 3;
     const uint numData= 4;
-    mcon::Matrix<double> mat1(numArray, numData);
+    mcon::Matrix<TestType> mat1(numArray, numData);
     for (uint c = 1, i = 0; i < numArray; ++i)
     {
         for (uint j = 0; j < numData; ++j, ++c)
@@ -175,12 +175,12 @@ static void test_matrix_multiply(void)
     printf("mat1:\n");
     DumpMatrix(mat1, "%f");
 
-    mcon::Matrix<double> mat2(mat1);
+    mcon::Matrix<TestType> mat2(mat1);
     mat2 = mat2.Transpose();
     printf("mat2:\n");
     DumpMatrix(mat2, "%f");
 
-    mcon::Matrix<double> mat3(1, 1);
+    mcon::Matrix<TestType> mat3(1, 1);
 
     mat3 = mat1.Multiply(mat2);
     printf("mat3:\n");
@@ -191,7 +191,7 @@ static void test_transpose(void)
 {
     const uint numArray = 3;
     const uint numData= 5;
-    mcon::Matrix<double> mat(numArray, numData);
+    mcon::Matrix<TestType> mat(numArray, numData);
     for (uint i = 0; i < numArray; ++i)
     {
         printf("mat [%d, 0 .. %d] ", i, numData-1);
@@ -203,7 +203,7 @@ static void test_transpose(void)
         printf("\n");
     }
 
-    mcon::Matrix<double> matt(1,1);
+    mcon::Matrix<TestType> matt(1,1);
     matt = mat.Transpose();
     for (uint i = 0; i < matt.GetRowLength(); ++i)
     {

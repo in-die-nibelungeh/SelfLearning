@@ -4,15 +4,15 @@
 #include "debug.h"
 #include "mcon.h"
 
-double initializer(uint i, uint n)
+TestType initializer(uint i, uint n)
 {
-    return log10( static_cast<double>(i + 1) / n );
+    return log10( static_cast<TestType>(i + 1) / n );
 }
 
 void test_vector_api(void)
 {
     // Empty vector.
-    mcon::Vector<double> dvec;
+    mcon::Vector<TestType> dvec;
 
     // Zero length
     CHECK_VALUE(dvec.GetLength(), 0);
@@ -59,7 +59,7 @@ void test_vector_api(void)
     {
         CHECK_VALUE(dvec[i], (static_cast<int>(i)+1)*2-5);
     }
-    mcon::Vector<double> dvec2(length*2);
+    mcon::Vector<TestType> dvec2(length*2);
 
     for (uint i = 0; i < dvec2.GetLength(); ++i)
     {
@@ -184,7 +184,7 @@ void test_vector_api(void)
     // MaximumAbsolute/MinimumAbsolute
     {
         const int length = 6;
-        mcon::Vector<double> vec(length);
+        mcon::Vector<TestType> vec(length);
         // 1, -2, 3, -4, 5, -6
         for (uint i = 0; i < length; ++i)
         {
@@ -200,7 +200,7 @@ void test_vector_api(void)
     printf("[GetSum/Average/GetNorm]\n");
     {
         const int length = 10;
-        mcon::Vector<double> v(length);
+        mcon::Vector<TestType> v(length);
         for (uint i = 0; i < length; ++i)
         {
             v[i] = i + 1;
@@ -219,7 +219,7 @@ void test_vector_api(void)
     printf("[Initialize]\n");
     {
         const int length = 10;
-        mcon::Vector<double> v(length);
+        mcon::Vector<TestType> v(length);
         v.Initialize();
         for (uint i = 0; i < length; ++i)
         {

@@ -5,15 +5,14 @@ MODULE_SRC=
 
 INC=$(MODULE_HEADER)
 SRC= \
-	../Vectord/Vectord.cpp \
-	../Vectord/VectordBase.cpp \
+    ../Vectord/VectordBase.cpp \
     test_vector.cpp \
 	test_matrix.cpp \
 	benchmark_vector.cpp \
 
 LIBS=-lmtbx -lmutl
 
-CPPFLAGS += -O3 -mavx
+CPPFLAGS += -O3 -mavx -DTestType=float
 
 
 WARNINGS +=  \

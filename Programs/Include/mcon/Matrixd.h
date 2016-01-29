@@ -30,16 +30,19 @@
 namespace mcon {
 
 // こんなんしたい
-// typedef Matrixd(1, n) Vectord(n);
+// typedef Matrix<double>(1, n) Vectord(n);
 
 /*--------------------------------------------------------------------
- * Matrixd
+ * Matrix<double>
  *--------------------------------------------------------------------*/
 
-class Matrixd
+typedef Matrix<double> Matrixd;
+
+template <>
+class Matrix<double>
 {
 public:
-    Matrixd(uint rowLength = 0, uint columnLength = 0)
+    Matrix<double>(uint rowLength = 0, uint columnLength = 0)
         : m_RowLength(rowLength)
         , m_ColumnLength(columnLength)
         , m_Address(NULL)
@@ -51,7 +54,7 @@ public:
         ASSERT(true == status);
     }
 
-    Matrixd(const VectordBase& v, bool transpose = false)
+    Matrix<double>(const VectordBase& v, bool transpose = false)
         : m_RowLength(transpose ? v.GetLength() : 1)
         , m_ColumnLength(transpose ? 1 : v.GetLength())
         , m_Address(NULL)
@@ -73,7 +76,7 @@ public:
         }
     }
 
-    Matrixd(const Matrixd& m)
+    Matrix<double>(const Matrix<double>& m)
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
@@ -89,7 +92,7 @@ public:
     }
 
     template <typename U>
-    Matrixd(const Matrix<U>& m)
+    Matrix<double>(const Matrix<U>& m)
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())
         , m_Address(NULL)
@@ -104,7 +107,7 @@ public:
         }
     }
 
-    ~Matrixd();
+    ~Matrix<double>();
 
     const VectordBase& operator[](uint i) const
     {
@@ -118,40 +121,41 @@ public:
         return *(m_ObjectBase + i);
     }
 
-    Matrixd& operator=(double v);
+    Matrix<double>& operator=(double v);
 
-    const Matrixd operator+(double v) const;
-    const Matrixd operator-(double v) const;
-    const Matrixd operator*(double v) const;
-    const Matrixd operator/(double v) const;
+    const Matrix<double> operator+(double v) const;
+    const Matrix<double> operator-(double v) const;
+    const Matrix<double> operator*(double v) const;
+    const Matrix<double> operator/(double v) const;
 
-    Matrixd& operator+=(double v);
-    Matrixd& operator-=(double v);
-    Matrixd& operator*=(double v);
-    Matrixd& operator/=(double v);
+    Matrix<double>& operator+=(double v);
+    Matrix<double>& operator-=(double v);
+    Matrix<double>& operator*=(double v);
+    Matrix<double>& operator/=(double v);
 
-    Matrixd& operator=(const Matrixd& m);
+    Matrix<double>& operator=(const Matrix<double>& m);
 
-    const Matrixd operator+(const Matrixd& m) const;
-    const Matrixd operator-(const Matrixd& m) const;
-    const Matrixd operator*(const Matrixd& m) const;
-    const Matrixd operator/(const Matrixd& m) const;
+    const Matrix<double> operator+(const Matrix<double>& m) const;
+    const Matrix<double> operator-(const Matrix<double>& m) const;
+    const Matrix<double> operator*(const Matrix<double>& m) const;
+    const Matrix<double> operator/(const Matrix<double>& m) const;
 
-    Matrixd& operator+=(const Matrixd& m);
-    Matrixd& operator-=(const Matrixd& m);
-    Matrixd& operator*=(const Matrixd& m);
-    Matrixd& operator/=(const Matrixd& m);
+    Matrix<double>& operator+=(const Matrix<double>& m);
+    Matrix<double>& operator-=(const Matrix<double>& m);
+    Matrix<double>& operator*=(const Matrix<double>& m);
+    Matrix<double>& operator/=(const Matrix<double>& m);
 
     double Determinant(void) const;
-    Matrixd Transpose(void) const;
-    Matrixd Multiply(const Matrixd& m) const;
-    Matrixd Inverse(void) const;
-    Matrixd GetCofactorMatrix(uint row, uint col) const;
+    Matrix<double> Transpose(void) const;
+    Matrix<double> Multiply(const Matrix<double>& m) const;
+    Matrix<double> Inverse(void) const;
+    Matrix<double> GetCofactorMatrix(uint row, uint col) const;
     double GetCofactor(uint row, uint col) const;
 
     bool Resize(uint, uint);
+    void Initialize( double (*initializer)(uint, size_t, uint, size_t) );
 
-    static Matrixd Identify(uint size);
+    static Matrix<double> Identify(uint size);
 
     // Inline functions.
     inline bool IsNull(void) const { return m_Address == NULL; }
@@ -159,10 +163,10 @@ public:
     inline uint GetColumnLength(void) const { return m_ColumnLength; }
 
     // Aliases
-    inline Matrixd T(void) const { return Transpose(); }
-    inline Matrixd I(void) const { return Inverse(); }
+    inline Matrix<double> T(void) const { return Transpose(); }
+    inline Matrix<double> I(void) const { return Inverse(); }
     inline double  D(void) const { return Determinant(); }
-    inline static Matrixd E(uint size) { return Identify(size); }
+    inline static Matrix<double> E(uint size) { return Identify(size); }
 
 private:
     // Member functions (private).

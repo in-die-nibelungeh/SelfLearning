@@ -33,10 +33,13 @@ namespace mcon {
 template <typename Type>
 class Vector;
 
+template <typename Type>
+class Matrix;
+
 class VectordBase
 {
     friend class Vector<double>;
-    friend class Matrixd;
+    friend class Matrix<double>;
 public:
 
     VectordBase(void* addressAligned, int length)
