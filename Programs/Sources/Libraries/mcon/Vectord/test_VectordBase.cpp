@@ -26,7 +26,7 @@ void ShowVectordBase(const mcon::VectordBase& v)
 void test_VectordBase(void)
 {
     const int length = 6;
-    double __attribute((aligned(32))) area[128];
+    double __attribute((aligned(mcon::VectordBase::g_Alignment))) area[128];
     mcon::VectordBase dvec(area, length);
 
     LOG("* [GetLength]\n");
@@ -157,7 +157,7 @@ void test_VectordBase(void)
             double ans = - __DBL_MAX__;
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[128];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[128];
             mcon::VectordBase v(_area, n);
             // 昇順
             for ( int k = 0; k < n; ++k )
@@ -191,7 +191,7 @@ void test_VectordBase(void)
             double ans = __DBL_MAX__;
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[128];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[128];
             mcon::VectordBase v(_area, n);
             // 昇順
             for ( int k = 0; k < n; ++k )
@@ -224,7 +224,7 @@ void test_VectordBase(void)
             double ans = 0;
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[128];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[128];
             mcon::VectordBase v(_area, n);
             // 昇順
             for ( int k = 0; k < n; ++k )
@@ -265,7 +265,7 @@ void test_VectordBase(void)
             double ans = __DBL_MAX__;
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[128];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[128];
             mcon::VectordBase v(_area, n);
             // 昇順
             for ( int k = 0; k < n; ++k )
@@ -306,7 +306,7 @@ void test_VectordBase(void)
         {
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[128];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[128];
             mcon::VectordBase v(_area, n);
             double sum = 0;
             double norm = 0;
@@ -330,7 +330,7 @@ void test_VectordBase(void)
         {
             const int n = lens[i];
             LOG("    Lenght=%d:\n", n);
-            double __attribute((aligned(32))) _area[256];
+            double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[256];
             mcon::VectordBase v(_area, n);
             mcon::VectordBase w(_area+128, n);
             double dot = 0;
@@ -342,6 +342,36 @@ void test_VectordBase(void)
             }
             CHECK_VALUE(dot, v.GetDotProduct(w));
         }
+    }
+    LOG("* [GetLocalMinimumIndex/GetLocalMaximumIndex]\n");
+    {
+        const int lens[] = {1, -1, -2, 4, 5, 6, 5, -2, -6, 7, 10, 11, 0};
+        const uint length = sizeof(lens)/sizeof(int);
+        double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[length];
+        mcon::VectordBase v(_area, length);
+        for (uint k = 0; k < v.GetLength(); ++k)
+        {
+            v[k] = static_cast<double>(lens[k]);
+        }
+        // LocalMinimum
+        int index = v.GetLocalMinimumIndex();
+        CHECK_VALUE(index, 2);
+        CHECK_VALUE(v[index], -2);
+        index = v.GetLocalMinimumIndex(index + 1);
+        CHECK_VALUE(index, 8);
+        CHECK_VALUE(v[index], -6);
+        index = v.GetLocalMinimumIndex(index + 1);
+        CHECK_VALUE(index, -1);
+
+        // LocalMaximum
+        index = v.GetLocalMaximumIndex();
+        CHECK_VALUE(index, 5);
+        CHECK_VALUE(v[index], 6);
+        index = v.GetLocalMaximumIndex(index + 1);
+        CHECK_VALUE(index, 11);
+        CHECK_VALUE(v[index], 11);
+        index = v.GetLocalMaximumIndex(index + 1);
+        CHECK_VALUE(index, -1);
     }
     LOG("END\n");
 }
