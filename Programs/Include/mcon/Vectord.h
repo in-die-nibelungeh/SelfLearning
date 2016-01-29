@@ -24,14 +24,13 @@
 
 #pragma once
 
-#include <string.h>
+#include <cstring>
 
 #include "debug.h"
+#include "Macros.h"
 #include "VectordBase.h"
 
 namespace mcon {
-
-typedef Vector<double> Vectord;
 
 template <>
 class Vector<double> : public VectordBase
@@ -55,7 +54,7 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(status == true);
-        memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
+        std::memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
     }
 
     Vector<double>(const VectordBase& v)
@@ -65,7 +64,7 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(status == true);
-        memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
+        std::memcpy(m_AddressAligned, v, GetLength() * sizeof(double));
     }
 
     template <typename Alian>
@@ -76,7 +75,7 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(status == true);
-        for ( int i = 0; i < GetLength(); ++i )
+        for (uint i = 0; i < GetLength(); ++i )
         {
             (*this)[i] = static_cast<double>(v[i]);
         }
@@ -89,7 +88,7 @@ public:
         bool status = Resize(v.GetLength());
         UNUSED(status);
         ASSERT(status == true);
-        for ( int i = 0; i < GetLength(); ++i )
+        for (uint i = 0; i < GetLength(); ++i )
         {
             (*this)[i] = static_cast<double>(v[i]);
         }
@@ -116,7 +115,7 @@ public:
 
     const Vector<double> operator()(uint offset, uint length) const;
 
-    const Matrix<double> ToMatrix(void) const;
+    const Matrix<double> ToMatrix() const;
 
     bool Resize(uint length);
 
@@ -125,6 +124,8 @@ public:
     {
         return m_AddressBase == NULL;
     }
+    // Aliases.
+    const Matrix<double> M() const;
 
 private:
     // Private member functions.
@@ -135,18 +136,10 @@ private:
     double*  m_AddressBase;
 };
 
-// Defining double [+-*/] Vector<double>
-#define MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(ope) \
-    template <typename Type>                               \
-    inline const Vector<double> operator ope(              \
-        const Type v, const Vector<double>& vec)           \
-    {                                                      \
-        return vec ope static_cast<double>(v);             \
-    }
+// Type definition.
+typedef Vector<double> Vectord;
 
-MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(+)
-MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(-)
-MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(*)
-MACRO_MCON_VECTORD_GLOBAL_OPERATOR_DEFINITION(/)
+// Global operators.
+MACRO_MCON_GLOBAL_OPERATOR_DEFINITION(Vector<double>, double)
 
 } // namespace mcon {
