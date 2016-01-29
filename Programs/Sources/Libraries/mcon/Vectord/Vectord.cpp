@@ -38,7 +38,7 @@ Vector<double>::~Vector<double>()
     }
 }
 
-Vector<double> Vector<double>::operator()(uint offset, uint length) const
+const Vector<double> Vector<double>::operator()(uint offset, uint length) const
 {
     Vector<double> carveout;
     if (GetLength() <= offset)
@@ -96,6 +96,13 @@ bool Vector<double>::Allocate(void)
         m_AddressAligned = Align(m_AddressBase, g_Alignment);
     }
     return true;
+}
+
+const Matrix<double> Vector<double>::ToMatrix(void) const
+{
+    Matrix<double> m(1, GetLength());
+    m[0] = *this;
+    return m;
 }
 
 bool Vector<double>::Resize(uint length)
