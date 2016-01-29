@@ -42,6 +42,9 @@ class VectordBase
     friend class Matrix<double>;
 public:
 
+    // Private class variables.
+    static const int g_Alignment = 32;
+
     VectordBase(void* addressAligned, int length)
         : m_AddressAligned(reinterpret_cast<double*>(addressAligned))
         , m_Length(length)
@@ -58,13 +61,13 @@ public:
     // For const object
     const double& operator[](const uint i) const
     {
-        ASSERT (0 <= i && i < m_Length);
+        ASSERT (i < m_Length);
         return m_AddressAligned[i];
     }
     // For non-const object
     double& operator[](const uint i)
     {
-        ASSERT (0 <= i && i < m_Length);
+        ASSERT (i < m_Length);
         return m_AddressAligned[i];
     }
 
@@ -140,6 +143,14 @@ public:
     double GetMinimum(void) const;
     double GetMinimumAbsolute(void) const;
 
+    uint GetMaximumIndex(uint offset = 0) const;
+    uint GetMaximumAbsoluteIndex(uint offset = 0) const;
+    uint GetMinimumIndex(uint offset = 0) const;
+    uint GetMinimumAbsoluteIndex(uint offset = 0) const;
+
+    int GetLocalMaximumIndex(uint offset = 0) const;
+    int GetLocalMinimumIndex(uint offset = 0) const;
+
     double GetSum(void) const;
 
     double GetNorm(void) const;
@@ -162,7 +173,7 @@ public:
     }
     inline double Shift(double v)
     {
-        return PushFromFront(v);
+        return PushFromBack(v);
     }
     inline double Unshift(double v)
     {
@@ -183,11 +194,6 @@ private:
         : m_AddressAligned(NULL)
         , m_Length(length)
     {}
-
-    // Private member functions.
-
-    // Private class variables.
-    static const int g_Alignment = 32;
 
     // Private member variables.
     double*  m_AddressAligned;

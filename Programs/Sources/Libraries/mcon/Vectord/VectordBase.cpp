@@ -43,8 +43,8 @@
 
 namespace {
 
-    static const int g_NumSimdLanes = 4;
-    static const __m256i g_RemainMask[g_NumSimdLanes-1] =
+    const int g_NumSimdLanes = 4;
+    const __m256i g_RemainMask[g_NumSimdLanes-1] =
     {
         {VDB_PASS,        0,        0,        0},
         {VDB_PASS, VDB_PASS,        0,        0},
@@ -78,7 +78,7 @@ double VectordBase::PushFromFront(double v)
 
 VectordBase& VectordBase::operator=(double v)
 {
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     double* const ptr = (*this);
     double* pEr = ptr;
     ASSERT_ALIGNED(ptr, g_Alignment);
@@ -101,7 +101,7 @@ VectordBase& VectordBase::operator+=(double v)
     double* const pBase = *this;
     ASSERT_ALIGNED(pBase, g_Alignment);
     double* pEr = pBase;
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const int length = GetLength();
     const int units = (length / unit) * unit;
     const __m256d vv = _mm256_set_pd(v, v, v, v);
@@ -123,7 +123,7 @@ VectordBase& VectordBase::operator*=(double v)
     double* const pBase = *this;
     ASSERT_ALIGNED(pBase, g_Alignment);
     double* pEr = pBase;
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const int length = GetLength();
     const int units = (length / unit) * unit;
     const __m256d vv = _mm256_set_pd(v, v, v, v);
@@ -144,7 +144,7 @@ VectordBase& VectordBase::operator-=(double v) { *this += (-v) ; return *this; }
 VectordBase& VectordBase::operator/=(double v) { *this *= (1/v); return *this; }
 
 #define TEMPLATE_VECTOR_VECTOR_OPERATION(er, ee, ope) \
-    const int unit = 4;                               \
+    const int unit = g_NumSimdLanes;                               \
     const double* const ptr = er;                     \
     double* pEr = er;                                 \
     const double* pEe = ee;                           \
@@ -195,10 +195,10 @@ VectordBase& VectordBase::operator/=(const VectordBase& v)
 
 double VectordBase::GetMaximum(void) const
 {
-    double VDB_ALIGN(32) max;
+    double VDB_ALIGN(g_Alignment) max;
     const double* const ptr = *this;
     const int length = GetLength();
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* pEr = ptr;
 
     if (length <= unit*2)
@@ -220,7 +220,7 @@ double VectordBase::GetMaximum(void) const
             __m256d xv = _mm256_load_pd(pEr);
             maxv = _mm256_max_pd(maxv, xv);
         }
-        double VDB_ALIGN(32) maxs[unit] = {0};
+        double VDB_ALIGN(g_Alignment) maxs[unit] = {0};
         _mm256_store_pd(maxs, maxv);
         __m128d _max = _mm_load_sd(maxs);
         for ( int i = 1; i < unit; ++i )
@@ -235,10 +235,10 @@ double VectordBase::GetMaximum(void) const
 
 double VectordBase::GetMaximumAbsolute(void) const
 {
-    double VDB_ALIGN(32) maxAbs;
+    double VDB_ALIGN(g_Alignment) maxAbs;
     const int length = GetLength();
     const double* const ptr = *this;
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* pEr = ptr;
     if (length <= unit*2)
     {
@@ -266,7 +266,7 @@ double VectordBase::GetMaximumAbsolute(void) const
             xv = _mm256_andnot_pd(mask, xv);
             maxabsv = _mm256_max_pd(maxabsv, xv);
         }
-        double VDB_ALIGN(32) maxabss[4];
+        double VDB_ALIGN(g_Alignment) maxabss[g_NumSimdLanes];
         _mm256_store_pd(maxabss, maxabsv);
         __m128d _maxabs = _mm_load_sd(maxabss);
         for ( int i = 1; i < unit; ++i )
@@ -281,10 +281,10 @@ double VectordBase::GetMaximumAbsolute(void) const
 
 double VectordBase::GetMinimum(void) const
 {
-    double VDB_ALIGN(32) min;
+    double VDB_ALIGN(g_Alignment) min;
     const double* const ptr = *this;
     const int length = GetLength();
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* pEr = ptr;
     if (length <= unit*2)
     {
@@ -305,7 +305,7 @@ double VectordBase::GetMinimum(void) const
             __m256d xv = _mm256_load_pd(pEr);
             minv = _mm256_min_pd(minv, xv);
         }
-        double VDB_ALIGN(32) mins[unit];
+        double VDB_ALIGN(g_Alignment) mins[unit];
         _mm256_store_pd(mins, minv);
         __m128d _min = _mm_load_sd(mins);
         for ( int i = 1; i < unit; ++i )
@@ -320,10 +320,10 @@ double VectordBase::GetMinimum(void) const
 
 double VectordBase::GetMinimumAbsolute(void) const
 {
-    double VDB_ALIGN(32) minAbs;
+    double VDB_ALIGN(g_Alignment) minAbs;
     const double* const ptr = *this;
     const int length = GetLength();
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* pEr = ptr;
 
     if (length <= unit * 2)
@@ -352,7 +352,7 @@ double VectordBase::GetMinimumAbsolute(void) const
             xv = _mm256_andnot_pd(mask, xv);
             minabsv = _mm256_min_pd(minabsv, xv);
         }
-        double VDB_ALIGN(32) minabss[4];
+        double VDB_ALIGN(g_Alignment) minabss[g_NumSimdLanes];
         _mm256_store_pd(minabss, minabsv);
         __m128d _minabs = _mm_load_sd(minabss);
         for ( int i = 1; i < unit; ++i )
@@ -365,11 +365,98 @@ double VectordBase::GetMinimumAbsolute(void) const
     return minAbs;
 }
 
+uint VectordBase::GetMaximumIndex(uint offset) const
+{
+    const double max = GetMaximum();
+    for (uint k = offset; k < GetLength(); ++k)
+    {
+        if ((*this)[k] == max)
+        {
+            return k;
+        }
+    }
+    // Never reach here;
+    return __UINT32_MAX__;
+}
+
+uint VectordBase::GetMaximumAbsoluteIndex(uint offset) const
+{
+    const double maxAbs = GetMaximumAbsolute();
+    for (uint k = offset; k < GetLength(); ++k)
+    {
+        if ((*this)[k] == maxAbs)
+        {
+            return k;
+        }
+    }
+    // Never reach here;
+    return __UINT32_MAX__;
+}
+
+uint VectordBase::GetMinimumIndex(uint offset) const
+{
+    const double min = GetMinimum();
+    for (uint k = offset; k < GetLength(); ++k)
+    {
+        if ((*this)[k] == min)
+        {
+            return k;
+        }
+    }
+    // Never reach here;
+    return __UINT32_MAX__;
+}
+
+uint VectordBase::GetMinimumAbsoluteIndex(uint offset) const
+{
+    const double minAbs = GetMinimumAbsolute();
+    for (uint k = offset; k < GetLength(); ++k)
+    {
+        if ((*this)[k] == minAbs)
+        {
+            return k;
+        }
+    }
+    // Never reach here;
+    return __UINT32_MAX__;
+}
+
+int VectordBase::GetLocalMaximumIndex(uint offset) const
+{
+    if (offset > GetLength() - 1)
+    {
+        return -1;
+    }
+    for (uint k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
+    {
+        if ((*this)[k - 1] < (*this)[k] && (*this)[k] > (*this)[k + 1])
+        {
+            return k;
+        }
+    }
+    return -1;
+}
+
+int VectordBase::GetLocalMinimumIndex(uint offset) const
+{
+    if (offset > GetLength() - 1)
+    {
+        return -1;
+    }
+    for (uint k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
+    {
+        if ((*this)[k - 1] > (*this)[k] && (*this)[k] < (*this)[k + 1])
+        {
+            return k;
+        }
+    }
+    return -1;
+}
 
 double VectordBase::GetSum(void) const
 {
     double sum = 0;
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const int length = GetLength();
     const double* const ptr = *this;
     const double* pEr = ptr;
@@ -396,7 +483,7 @@ double VectordBase::GetSum(void) const
             const __m256d xv = _mm256_maskload_pd(pEr, g_RemainMask[remain-1]);
             accv = _mm256_add_pd(xv, accv);
         }
-        double VDB_ALIGN(32) accs[4] = {0};
+        double VDB_ALIGN(g_Alignment) accs[g_NumSimdLanes] = {0};
         _mm256_store_pd(accs, accv);
         sum = accs[0] + accs[1] + accs[2] + accs[3];
     }
@@ -407,7 +494,7 @@ double VectordBase::GetNorm(void) const
 {
     double squaredSum = 0;
     const int length = GetLength();
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* const ptr = *this;
     const double* pEr = ptr;
     if ( length < unit * 2 )
@@ -435,7 +522,7 @@ double VectordBase::GetNorm(void) const
             xv = _mm256_mul_pd(xv, xv);
             normv = _mm256_add_pd(normv, xv);
         }
-        double VDB_ALIGN(32) norms[unit];
+        double VDB_ALIGN(g_Alignment) norms[unit];
         _mm256_store_pd(norms, normv);
         squaredSum = norms[0] + norms[1] + norms[2] + norms[3];
     }
@@ -445,7 +532,7 @@ double VectordBase::GetNorm(void) const
 double VectordBase::GetDotProduct(const VectordBase& v) const
 {
     const int length = GetLength();
-    const int unit = 4;
+    const int unit = g_NumSimdLanes;
     const double* const ptr = *this;
     const double* pEr = ptr;
     const double* pEe = v;
@@ -467,7 +554,7 @@ double VectordBase::GetDotProduct(const VectordBase& v) const
         xv = _mm256_mul_pd(xv, yv);
         accv = _mm256_add_pd(xv, accv);
     }
-    double VDB_ALIGN(32) accs[4];
+    double VDB_ALIGN(g_Alignment) accs[g_NumSimdLanes];
     _mm256_store_pd(accs, accv);
     return accs[0] + accs[1] + accs[2] + accs[3];
 }
