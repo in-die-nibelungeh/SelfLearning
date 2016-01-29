@@ -373,7 +373,7 @@ Matrix<double> Matrix<double>::Inverse(void) const
         // 必要なら入れ替える
         if ( r != index )
         {
-            mcon::Vectord tmp(m[r]);
+            const Vectord tmp(m[r]);
             m[r] = m[index];
             m[index] = tmp;
         }
@@ -401,6 +401,34 @@ Matrix<double> Matrix<double>::Inverse(void) const
     }
 #endif
     return inversed;
+}
+
+const Matrix<double> Matrix<double>::SubMatrix(
+    uint rowBegin,
+    uint rowEnd,
+    uint columnBegin,
+    uint columnEnd
+) const
+{
+    Matrix<double> m;
+    if (rowEnd < rowBegin || columnEnd < columnBegin)
+    {
+        return m;
+    }
+    const uint rowLength = rowEnd - rowBegin + 1;
+    const uint columnLength = columnEnd - columnBegin + 1;
+    const uint copyRowLength = std::min(rowLength, GetRowLength() - rowBegin);
+    const uint copyColumnLength = std::min(columnLength, GetColumnLength() - columnBegin);
+    if (false == m.Resize(copyRowLength, copyColumnLength))
+    {
+        return m;
+    }
+    for (uint r = 0; r < copyRowLength; ++r)
+    {
+        const double* ptr = (*this)[r + rowBegin];
+        std::memcpy(m[r], ptr + columnBegin, copyColumnLength * sizeof(double));
+    }
+    return m;
 }
 
 } // namespace mcon {

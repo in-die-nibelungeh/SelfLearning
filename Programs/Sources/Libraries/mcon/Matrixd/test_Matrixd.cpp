@@ -1,6 +1,20 @@
 
 #include "mcon.h"
 
+void DumpMatrix(const mcon::Matrix<double>&m, const char* fmt = NULL)
+{
+    for (uint i = 0; i < m.GetRowLength(); ++i)
+    {
+        printf("| ");
+        for (uint j = 0; j < m.GetColumnLength(); ++j)
+        {
+            printf("%g", static_cast<double>(m[i][j]));
+            printf("\t");
+        }
+        printf(" |\n");
+    }
+}
+
 void test_Matrixd(void)
 {
     LOG("* [Empty]\n");
@@ -374,6 +388,90 @@ void test_Matrixd(void)
                 double correct = ( k == i ) ? 1.0 : 0.0;
                 CHECK_VALUE(m3[i][k], correct);
             }
+        }
+    }
+    {
+        LOG("* [SubMatrix]\n");
+        const uint numArray = 4;
+        const uint numData= 5;
+        mcon::Matrixd m(numArray, numData);
+
+        for (uint i = 0; i < numArray; ++i)
+        {
+            for (uint k = 0; k < numArray; ++k)
+            {
+                m[i][k] = (i + 1) * 10 + k + 1;
+            }
+        }
+        // Normal Case
+        {
+            const uint rowBegin = 1;
+            const uint rowEnd = 2;
+            const uint columnBegin = 2;
+            const uint columnEnd = 3;
+
+            const mcon::Matrixd ms = m(rowBegin, rowEnd, columnBegin, columnEnd);
+
+            CHECK_VALUE(ms.IsNull(), false);
+            CHECK_VALUE(ms.GetRowLength(), rowEnd - rowBegin + 1);
+            CHECK_VALUE(ms.GetColumnLength(), columnEnd - columnBegin + 1);
+
+            for (uint i = 0; i < ms.GetRowLength(); ++i)
+            {
+                for (uint k = 0; k < ms.GetColumnLength(); ++k)
+                {
+                    CHECK_VALUE(ms[i][k], m[i + rowBegin][k + columnBegin]);
+                }
+            }
+            const mcon::Matrixd ms1 = m(0, 0, 0, 0);
+            CHECK_VALUE(ms1.IsNull(), false);
+            CHECK_VALUE(ms1[0][0], 11);
+        }
+        // Normal Case (All)
+        {
+            const uint rowBegin = 0;
+            const uint rowEnd = numArray - 1;
+            const uint columnBegin = 0;
+            const uint columnEnd = numData - 1;
+
+            const mcon::Matrixd ma = m(rowBegin, rowEnd, columnBegin, columnEnd);
+
+            CHECK_VALUE(ma.IsNull(), false);
+            CHECK_VALUE(ma.GetRowLength(), rowEnd - rowBegin + 1);
+            CHECK_VALUE(ma.GetColumnLength(), columnEnd - columnBegin + 1);
+
+            for (uint i = 0; i < ma.GetRowLength(); ++i)
+            {
+                for (uint k = 0; k < ma.GetColumnLength(); ++k)
+                {
+                    CHECK_VALUE(ma[i][k], m[i + rowBegin][k + columnBegin]);
+                }
+            }
+        }
+        // Error Case
+        {
+            const uint rowBegin = 2;
+            const uint rowEnd = 6;
+            const uint columnBegin = 3;
+            const uint columnEnd = 7;
+
+            const mcon::Matrixd ms = m(rowBegin, rowEnd, columnBegin, columnEnd);
+
+            CHECK_VALUE(ms.IsNull(), false);
+            CHECK_VALUE(ms.GetRowLength(),  m.GetRowLength() - rowBegin);
+            CHECK_VALUE(ms.GetColumnLength(),  m.GetColumnLength() - columnBegin);
+
+            for (uint i = 0; i < ms.GetRowLength(); ++i)
+            {
+                for (uint k = 0; k < ms.GetColumnLength(); ++k)
+                {
+                    CHECK_VALUE(ms[i][k], m[i + rowBegin][k + columnBegin]);
+                }
+            }
+            const mcon::Matrixd ms1 = m(1, 0, 0, 1);
+            CHECK_VALUE(ms1.IsNull(), true);
+            const mcon::Matrixd ms2 = m(0, 1, 1, 0);
+            CHECK_VALUE(ms2.IsNull(), true);
         }
     }
 

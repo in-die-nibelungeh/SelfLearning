@@ -98,7 +98,14 @@ bool Vector<double>::Allocate(void)
     return true;
 }
 
-const Matrix<double> Vector<double>::ToMatrix(void) const
+// Really want to declare in Vector<double> class, but won't do because
+// the include relationship of mcon headers gets complicated.
+const Matrix<double> Vector<double>::M() const
+{
+    return ToMatrix();
+}
+
+const Matrix<double> Vector<double>::ToMatrix() const
 {
     Matrix<double> m(1, GetLength());
     m[0] = *this;

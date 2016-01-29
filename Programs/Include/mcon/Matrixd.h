@@ -25,6 +25,7 @@
 #pragma once
 
 #include "debug.h"
+#include "Macros.h"
 #include "VectordBase.h"
 
 namespace mcon {
@@ -35,8 +36,6 @@ namespace mcon {
 /*--------------------------------------------------------------------
  * Matrix<double>
  *--------------------------------------------------------------------*/
-
-typedef Matrix<double> Matrixd;
 
 template <>
 class Matrix<double>
@@ -54,6 +53,7 @@ public:
         ASSERT(true == status);
     }
 
+    // Will be depricated.
     Matrix<double>(const VectordBase& v, bool transpose = false)
         : m_RowLength(transpose ? v.GetLength() : 1)
         , m_ColumnLength(transpose ? 1 : v.GetLength())
@@ -121,6 +121,23 @@ public:
         return *(m_ObjectBase + i);
     }
 
+    const Matrix<double> SubMatrix(
+        uint rowBegin,
+        uint rowEnd,
+        uint columnBegin,
+        uint columnEnd
+    ) const;
+
+    inline const Matrix<double> operator()(
+        uint rowBegin,
+        uint rowEnd,
+        uint columnBegin,
+        uint columnEnd
+    ) const
+    {
+        return SubMatrix(rowBegin, rowEnd, columnBegin, columnEnd);
+    }
+
     Matrix<double>& operator=(double v);
 
     const Matrix<double> operator+(double v) const;
@@ -180,5 +197,11 @@ private:
     void* m_Address;
     VectordBase* m_ObjectBase;
 };
+
+// Type definition.
+typedef Matrix<double> Matrixd;
+
+// Global operators.
+MACRO_MCON_GLOBAL_OPERATOR_DEFINITION(Matrix<double>, double)
 
 } // namespace mcon {
