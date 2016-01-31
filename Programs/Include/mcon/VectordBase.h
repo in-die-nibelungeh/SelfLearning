@@ -95,29 +95,10 @@ public:
 
     VectordBase& operator=(double v);
 
-    template <typename U>
-    VectordBase& operator=(const Vector<U>& v)
-    {
-        ASSERT(v.GetLength() == GetLength());
-        memcpy(*this, v, GetLength() * sizeof(double));
-        return *this;
-    }
-
-    const VectordBase operator+(double v) const;
-    const VectordBase operator-(double v) const;
-    const VectordBase operator*(double v) const;
-    const VectordBase operator/(double v) const;
-
     VectordBase& operator+=(double v);
     VectordBase& operator-=(double v);
     VectordBase& operator*=(double v);
     VectordBase& operator/=(double v);
-
-    const VectordBase operator+(const VectordBase& v) const;
-    const VectordBase operator-(const VectordBase& v) const;
-    const VectordBase operator*(const VectordBase& v) const;
-    const VectordBase operator/(const VectordBase& v) const;
-
     VectordBase& operator+=(const VectordBase& v);
     VectordBase& operator-=(const VectordBase& v);
     VectordBase& operator*=(const VectordBase& v);
