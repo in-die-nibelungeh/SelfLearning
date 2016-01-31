@@ -91,8 +91,7 @@ public:
         // should appear before the last slash.
         const size_t lastComma = m_Fullpath.find_last_of(".");
         if (lastComma != std::string::npos
-            && lastSlash != std::string::npos
-            && lastComma > lastSlash)
+            && !(lastSlash != std::string::npos &&lastComma < lastSlash) )
         {
             m_Extension = m_Fullpath.substr(lastComma + 1);
         }
@@ -109,7 +108,7 @@ public:
         }
         else if (lastSlash == std::string::npos)
         {
-            m_Basename = m_Fullpath.substr(0, lastComma - 1);
+            m_Basename = m_Fullpath.substr(0, lastComma);
         }
         else
         {

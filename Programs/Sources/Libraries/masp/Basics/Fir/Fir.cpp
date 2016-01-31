@@ -225,21 +225,25 @@ int GetNumOfTapps(double delta)
     return tapps;
 }
 
-status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse)
+status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impulse)
 {
-    if (in.GetLength() < impluse.GetLength())
+    const int M = impulse.GetLength();
+    if (in.GetLength() < M)
     {
         return -ERROR_ILLEGAL;
     }
 
-    out.Resize(in.GetLength());
+    if ( false == out.Resize(in.GetLength()) )
+	{
+		return -ERROR_CANNOT_ALLOCATE_MEMORY;
+	}
 
     for (int i = 0; i < in.GetLength(); ++i)
     {
         out[i] = 0.0;
-        for (int k = 0; k < impluse.GetLength(); ++k)
+        for (int k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
         {
-            out[i] += in[i - k] * impluse[k];
+            out[i] += in[i - k] * impulse[k];
         }
     }
     return NO_ERROR;

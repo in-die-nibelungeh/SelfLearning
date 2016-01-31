@@ -45,7 +45,8 @@ static void usage(void)
     printf("  -h: show help.\n");
     printf("  -s: split multi-channel .wav to some .wav files.\n");
     printf("  -c: combine some .wav files into one .wav.\n");
-    printf("  -o: spefity the output filename.\n");
+    printf("  -o: spefity an output filename.\n");
+    printf("  -d: spefity an output directory, which should already exist.\n");
 }
 
 // Description
@@ -55,6 +56,7 @@ const Desc descs[] =
 {
     {"h" , 0},
     {"o" , 1},
+    {"d" , 1},
     {"s" , 0},
     {"c" , 0}
 };
@@ -77,49 +79,59 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
+    std::string outdir("./");
+    if ( parser.IsEnabled("d") )
+    {
+        outdir = parser.GetOption("d");
+        outdir += std::string("/");
+    }
+
     if ( parser.IsEnabled("s") )
     {
     }
     else if ( parser.IsEnabled("c") )
     {
         mcon::Matrix<double> wavRoot;
-        std::string filename("");
+        std::string outfile("");
         int fs = 0;
         mfio::Wave::WaveFormat format = mfio::Wave::LPCM;
         int bits = 0;
         const int inputCount = parser.GetArgumentCount();
         for (int k = 0; k < inputCount; ++k )
         {
-            std::string name = parser.GetArgument(k);
+            const mutl::NodePath node(parser.GetArgument(k));
+            const std::string path = node.GetFullpath();
+            const std::string basename = node.GetBasename();
+            DEBUG_LOG("basename=%s\n", basename.c_str());
             mfio::Wave wavFile;
             mcon::Matrix<double> wav;
-            status_t status = wavFile.Read(name, wav);
+            status_t status = wavFile.Read(path, wav);
             if ( NO_ERROR != status )
             {
                 ERROR_LOG("An error occured during reading %s: error=%d\n",
-                    name.c_str(), status);
-                ERROR_LOG("Skippe %s\n", name.c_str());
+                    path.c_str(), status);
+                ERROR_LOG("Skipping\n");
                 continue;
             }
             if ( !wavRoot.IsNull() )
             {
                 if ( fs != wavFile.GetSamplingRate() )
                 {
-                    ERROR_LOG("The fs doesn't match one of the root: %d (wav) <==> %d (root)\n",
-                        wavFile.GetSamplingRate(), fs);
-                    ERROR_LOG("Skippe %s\n", name.c_str());
+                    ERROR_LOG("The fs doesn't match one of the root: %d (%s) <==> %d (root)\n",
+                        wavFile.GetSamplingRate(), path.c_str(), fs);
+                    ERROR_LOG("Skipping\n");
                     continue;
                 }
 
                 if ( wav.GetColumnLength() != wavRoot.GetColumnLength() )
                 {
-                    ERROR_LOG("The length doesn't match one of the root: %d (wav) <==> %d (root)\n",
-                        wav.GetColumnLength(), wavRoot.GetColumnLength());
-                    ERROR_LOG("Skippe %s\n", name.c_str());
+                    ERROR_LOG("The length doesn't match one of the root: %d (%s) <==> %d (root)\n",
+                        wav.GetColumnLength(), path.c_str(), wavRoot.GetColumnLength());
+                    ERROR_LOG("Skipping\n");
                     continue;
                 }
-                filename.append( std::string("-") + name);
-                filename.erase( filename.length()-4, 4 ); // ägí£éqÇçÌèú
+
+                outfile.append( std::string("-") + basename);
 
                 const int length = wavRoot.GetColumnLength();
                 const int row = wavRoot.GetRowLength() + wav.GetRowLength();
@@ -147,29 +159,29 @@ int main(int argc, const char* argv[])
                 fs = wavFile.GetSamplingRate();
                 format = wavFile.GetWaveFormat();
                 bits = wavFile.GetBitDepth();
-                filename.append(name);
-                filename.erase( filename.length()-4, 4 ); // ägí£éqÇçÌèú
+                outfile.append(basename);
             }
         }
         // Write
         {
             const std::string ewav(".wav");
-            filename += ewav;
+            outfile += ewav;
             if (parser.IsEnabled("o"))
             {
-                filename = parser.GetOption("o");
+                outfile = parser.GetOption("o");
             }
+            const std::string outpath = outdir + outfile;
 
             LOG("fs=%d\n", fs);
             LOG("bits=%d\n", bits);
             LOG("format=%d\n", format);
             LOG("ch=%d\n", wavRoot.GetRowLength());
-            LOG("fn=%s\n", filename.c_str());
+            LOG("fn=%s\n", outpath.c_str());
             mfio::Wave wav(fs, wavRoot.GetRowLength(), bits, format);
-            status_t status = wav.Write( filename, wavRoot );
+            status_t status = wav.Write( outpath, wavRoot );
             if (status != NO_ERROR)
             {
-                ERROR_LOG("An error occured during writing %s: error=%d\n", filename.c_str(), status);
+                ERROR_LOG("An error occured during writing %s: error=%d\n", outpath.c_str(), status);
             }
         }
     }
