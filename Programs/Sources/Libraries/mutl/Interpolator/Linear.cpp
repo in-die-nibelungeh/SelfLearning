@@ -32,7 +32,7 @@
 namespace mutl {
 namespace interp {
 
-status_t Linear::Interpolate(mcon::Vector<double>& output, const mcon::Vector<double>& input, int sampleCount)
+status_t Linear::Interpolate(mcon::Vector<double>& output, const mcon::VectordBase& input, int sampleCount)
 {
     if ( sampleCount <= 0 )
     {
