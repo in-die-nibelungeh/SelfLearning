@@ -5,6 +5,8 @@ MODULE_SRC=Csv.cpp
 
 CPPFLAGS += -O3
 
+LIBS=-lmcon
+
 WARNINGS +=  \
 	-Werror \
 

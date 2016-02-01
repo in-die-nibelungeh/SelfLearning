@@ -41,7 +41,7 @@ static void test_csv(void)
     {
         darray[i] = i + 1.0;
         vector[i] = i + 1.0;
-        for ( int k = 0; k < matrix.GetRowLength(); ++k)
+        for (uint k = 0; k < matrix.GetRowLength(); ++k)
         {
             matrix[k][i] = 10*(k+1) + i + 1.0;
         }
@@ -80,18 +80,18 @@ static void test_csv(void)
         int ec = 0;
         CHECK_VALUE(m1.GetRowLength()   , matrix.GetRowLength() + 1);
         CHECK_VALUE(m1.GetColumnLength(), matrix.GetColumnLength() * 2);
-        for ( int c = 0; c < m1.GetColumnLength(); ++c )
+        for (uint c = 0; c < m1.GetColumnLength(); ++c )
         {
             const int _c = c % matrix.GetColumnLength();
             ec += m1[0][c] != _c ? 1 : 0;
-            for ( int r = 0; r < m1.GetRowLength() - 1; ++r )
+            for (uint r = 0; r < m1.GetRowLength() - 1; ++r )
             {
                 ec += m1[r+1][c] != matrix[r][_c] ? 1 : 0;
             }
         }
         CHECK_VALUE(ec, 0);
     }
-    
+
 }
 
 int main(void)
