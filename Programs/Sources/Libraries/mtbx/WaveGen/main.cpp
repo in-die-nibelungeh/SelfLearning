@@ -21,7 +21,6 @@ static int test_wavetype(void)
         WaveGen::WT_SAWTOOTH
     };
 
-    double fs = wg.GetSamplingRate();
     wg.SetWaveFrequency(440);
 
     for (j = 0; j < NUM_TYPES; ++j)
@@ -308,9 +307,6 @@ static int test_indexing(void)
 
 static int test_(void)
 {
-    int i, j;
-    double buffer[NUM_TYPES][NUM_SAMPLES];
-
     WaveGen wg;
     wg = wg + 3;
     wg = wg - 4;
@@ -324,14 +320,14 @@ static void test_buffer(void)
     int samplingRate = 48000;
     double freq = 440;
     WaveGen wg(samplingRate, freq, WaveGen::WT_SINE);
-    int numData = static_cast<int>(duration * samplingRate);
+    const uint numData = static_cast<int>(duration * samplingRate);
     wg.Reset();
 
     mcon::Vector<double> buffer(numData);
 
-    wg.GenerateWaveform(buffer, numData);
+    wg.GenerateWaveform(buffer);
 
-    for (int i = 0; i < numData; ++i)
+    for (uint i = 0; i < numData; ++i)
     {
         printf("%d,%f\n", i, buffer[i]);
     }

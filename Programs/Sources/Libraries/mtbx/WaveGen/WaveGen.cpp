@@ -225,7 +225,7 @@ double WaveGen::GenerateOne(double p)
 
 void WaveGen::GenerateWaveform(mcon::Vector<double>& buffer, double amp)
 {
-    for (int i = 0; i < buffer.GetLength(); ++i, ++(*this))
+    for (uint i = 0; i < buffer.GetLength(); ++i, ++(*this))
     {
         buffer[i] = amp * GetValue();
     }
