@@ -59,7 +59,7 @@ static void test_read(void)
     }
     LOG("Comparing data buffer (Vector):\n");
     int numUnequal = 0;
-    for ( int i = 0; i < bufferVector.GetLength(); ++i )
+    for (uint i = 0; i < bufferVector.GetLength(); ++i )
     {
         if ( buffer[i] != bufferVector[i] )
         {
@@ -93,7 +93,7 @@ static void test_read(void)
     LOG("Comparing data buffer (Matrix):\n");
     numUnequal = 0;
     const int ch = waveMatrix.GetNumChannels();
-    for ( int i = 0; i < bufferObj.GetColumnLength(); ++i )
+    for (uint i = 0; i < bufferObj.GetColumnLength(); ++i )
     {
         for (int c = 0; c < ch; ++c)
         {

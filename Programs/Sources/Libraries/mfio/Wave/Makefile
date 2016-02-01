@@ -3,7 +3,7 @@ BIN=mfio_wave
 INC=$(addprefix $(SELF_LEARNING_INCDIR)/mfio/, Wave.h)
 MODULE_SRC=Wave.cpp
 
-LIBS=-lmtbx
+LIBS=-lmtbx -lmcon
 
 CPPFLAGS += -O3
 
