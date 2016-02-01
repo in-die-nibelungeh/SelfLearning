@@ -84,7 +84,7 @@ static void test_filtering(void)
     printf("BEF: b0=%f,b1=%f,b2=%f,a1=%f,a2=%f\n",
         coef.b[0], coef.b[1], coef.b[2], coef.a[0], coef.a[1]);
 
-    for (int i = 0; i < sweep.GetLength(); ++i)
+    for (uint i = 0; i < sweep.GetLength(); ++i)
     {
         double audioIn = static_cast<double>(sweep[i]);
         double v = lpf.ApplyFilter(audioIn); sweep_filtered_lpf[i] = static_cast<int16_t>(v);

@@ -58,8 +58,8 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    mcon::Vector<double>& real = complex[0];
-    mcon::Vector<double>& imag = complex[1];
+    mcon::VectordBase& real = complex[0];
+    mcon::VectordBase& imag = complex[1];
 
     const double df = 2.0 * g_Pi / N;
 
@@ -283,8 +283,8 @@ status_t Ft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSerie
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
 
-    mcon::Vector<double>& real = complex[0];
-    mcon::Vector<double>& imag = complex[1];
+    mcon::VectordBase& real = complex[0];
+    mcon::VectordBase& imag = complex[1];
 
     const int N = timeSeries.GetLength();
     const double df = 2.0 * g_Pi / N;
@@ -358,7 +358,7 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     const mcon::Vector<double>& real = complex[0];
     const mcon::Vector<double>& imag = complex[1];
 
-    for (int i = 0; i < timeSeries.GetLength(); ++i)
+    for (uint i = 0; i < timeSeries.GetLength(); ++i)
     {
         const int N = complex.GetColumnLength();
         timeSeries[i] = 0.0;
@@ -385,12 +385,12 @@ status_t ConvertToPolarCoords(mcon::Matrix<double>& polar, const mcon::Matrix<do
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    mcon::Vector<double>& r  = polar[0];
-    mcon::Vector<double>& arg = polar[1];
+    mcon::VectordBase& r  = polar[0];
+    mcon::VectordBase& arg = polar[1];
     const mcon::Vector<double>& real  = complex[0];
     const mcon::Vector<double>& imag  = complex[1];
 
-    for (int i = 0; i < complex.GetColumnLength(); ++i)
+    for (uint i = 0; i < complex.GetColumnLength(); ++i)
     {
         r[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
         arg[i] = atan(imag[i]/real[i]);
@@ -411,10 +411,10 @@ status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<doub
     }
     const mcon::Vector<double>& r = polar[0];
     const mcon::Vector<double>& arg = polar[1];
-    mcon::Vector<double>& real  = complex[0];
-    mcon::Vector<double>& imag  = complex[1];
+    mcon::VectordBase& real  = complex[0];
+    mcon::VectordBase& imag  = complex[1];
 
-    for (int i = 0; i < polar.GetColumnLength(); ++i)
+    for (uint i = 0; i < polar.GetColumnLength(); ++i)
     {
         const double v = r[i];
         real[i] = v * cos(arg[i]);

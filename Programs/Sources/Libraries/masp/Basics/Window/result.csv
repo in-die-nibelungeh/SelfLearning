@@ -1,3 +1,4 @@
+Running ./masp_win ...
 ,Hanning,Hamming,Blackman,BlackmanHarris,Nuttall,Kaiser,Flattop,Rectangular
 0,0.004278,0.083935,0.001552,0.000312,0.000215,0.002338,0.000389,1.000000
 1,0.038060,0.115015,0.014629,0.003059,0.002637,0.011313,-0.004181,1.000000
