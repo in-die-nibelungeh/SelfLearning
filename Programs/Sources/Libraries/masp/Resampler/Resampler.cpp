@@ -25,9 +25,8 @@
 #include "status.h"
 #include "masp.h"
 
-namespace masp {
-
 namespace {
+
     static const int g_KaiserAlphaOffset = 2;
     static const float g_KaiserTransitionBand[] =
     {
@@ -58,6 +57,8 @@ namespace {
         return reinterpret_cast<double*>(ptr);
     }
 }
+
+namespace masp {
 
 status_t Resampler::UpdateCoefficients(int windowType, double alpha)
 {
@@ -99,8 +100,8 @@ status_t Resampler::UpdateCoefficients(int windowType, double alpha)
     case KAISER:
         {
             ASSERT( 2.0 <= alpha && alpha <= 10.0 );
-            const int index = static_cast<int>(alpha + 0.5) - masp::g_KaiserAlphaOffset;
-            N = static_cast<int>( masp::g_KaiserTransitionBand[index] / bandWidth + 0.5);
+            const int index = static_cast<int>(alpha + 0.5) - g_KaiserAlphaOffset;
+            N = static_cast<int>( g_KaiserTransitionBand[index] / bandWidth + 0.5);
             N += (N & 1 ? 0 : 1);
             N *= m_L;
             DEBUG_LOG("N=%d (Kaiser), alpha=%g\n", N, alpha);
@@ -219,11 +220,11 @@ status_t Resampler::MakeFilterByWindowType(int windowType, double _alpha)
 status_t Resampler::MakeFilterBySpec(double pbRipple, double sbDecay)
 {
     UNUSED(pbRipple);
-    const int length = static_cast<int>(sizeof(masp::g_KaiserStopbandDecay)/sizeof(int));
+    const int length = static_cast<int>(sizeof(g_KaiserStopbandDecay)/sizeof(int));
     int index;
     for ( index = 0; index < length; ++index)
     {
-        if ( masp::g_KaiserStopbandDecay[index] > sbDecay )
+        if ( g_KaiserStopbandDecay[index] > sbDecay )
         {
             break;
         }
@@ -232,12 +233,19 @@ status_t Resampler::MakeFilterBySpec(double pbRipple, double sbDecay)
     {
         return -ERROR_NOT_FOUND;
     }
-    return UpdateCoefficients(KAISER, static_cast<double>(index + masp::g_KaiserAlphaOffset));
+    return UpdateCoefficients(KAISER, static_cast<double>(index + g_KaiserAlphaOffset));
 }
 
 double Convolution(const double* pData, const double* pCoefs, int N, int step)
 {
     double ans = 0.0;
+
+/*
+    for (uint k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
+    {
+        out[i] += in[i - k] * impulse[k];
+    }
+*/
     for ( int i = 0; i < N; ++i )
     {
         ans += pData[N - 1 - i] * pCoefs[i * step];
@@ -259,18 +267,18 @@ status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<dou
     // L=1, M=2 の場合、純粋なダウンサンプルなので、サンプル数は1/2 になる。
     // 入力バッファのサンプルの進みは 2 (M / L)、係数は N (N * L) である。
 
-    const double* pInput = masp::_Cast(input);
-    const double* pCoefficients = masp::_Cast(m_Coefficients);
-    const int width = m_Coefficients.GetLength() / m_L;
+    const double* pInput = _Cast(input);
+    const double* pCoefficients = _Cast(m_Coefficients);
+    const uint width = m_Coefficients.GetLength() / m_L;
 
     int acc = 0;
-    for ( int i = 0; i < output.GetLength(); ++i )
+    for (uint i = 0; i < output.GetLength(); ++i )
     {
         acc += m_M;
-        int index = acc / m_L;
-        int amari = acc % m_L;
-        const int M = (width - 1 - i > 0) ? i + 1 : width;
-        DEBUG_LOG("i=%3d, M=%3d\n", i, M);
+        const int index = acc / m_L;
+        const int amari = acc % m_L;
+        const int M = (width - 1 > i) ? i + 1 : width;
+        DEBUG_LOG("i=%3d/%3d, M=%3d\n", i, output.GetLength(), M);
         output[i] = masp::Convolution(pInput + index, pCoefficients + amari, M, m_L);
     }
     return NO_ERROR;

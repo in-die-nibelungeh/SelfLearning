@@ -89,17 +89,16 @@ FilterFunction GetFilterFunction(int type)
     return function;
 }
 
-void GenerateLpfFilter(double coef[], size_t _N, double fe, int type, double arg)
+void GenerateLpfFilter(double coef[], size_t N, double fe, int type, double arg)
 {
-    const int N = _N;
     BaseFunction function = GetBaseFunction(type);
     ASSERT(NULL != function);
-    for (int i = 0; i < N/2; ++i)
+    for (uint i = 0; i < N / 2; ++i)
     {
-        const double x = 2.0 * fe * (2 * i + 1 - N) / 2.0 * g_Pi;
+        const double x = 2.0 * fe * static_cast<int>(2 * i + 1 - N) / 2.0 * g_Pi;
         double v = 2.0 * fe * function(x, arg);
         coef[i] = v;
-        coef[N-i-1] = v;
+        coef[N - i - 1] = v;
     }
     if (1 == (N & 1))
     {
@@ -127,7 +126,7 @@ static void GetCoefficients(double coef[], size_t N, double fe1, double fe2, dou
 {
     mcon::Vector<double> _coef(N);
     GetCoefficients(_coef, fe1, fe2, arg, typeId, functionId);
-    for (int i = 0; i < _coef.GetLength(); ++i)
+    for (uint i = 0; i < _coef.GetLength(); ++i)
     {
         coef[i] = _coef[i];
     }
@@ -173,10 +172,10 @@ void GetCoefficientsBefLanczos(mcon::Vector<double>& coef, double fe1, double fe
     GetCoefficients(coef, fe1, fe2, n, FTI_BEF, FBI_LANCZOS);
 }
 
-void FilterSinc(double coef[], size_t _N, double fe)
+void FilterSinc(double coef[], size_t N, double fe)
 {
     //GenerateLpfFilter(coef, _N, fe, FBI_SINC, 0.0);
-    GetCoefficients(coef, _N, fe, 0.0, 0.0, FTI_LPF, FBI_SINC);
+    GetCoefficients(coef, N, fe, 0.0, 0.0, FTI_LPF, FBI_SINC);
 #if 0
     for (int i = 0; i < N/2; ++i)
     {
@@ -192,14 +191,14 @@ void FilterSinc(double coef[], size_t _N, double fe)
 #endif
 }
 
-void FilterLanczos(double coef[], size_t _N, double fe, double n)
+void FilterLanczos(double coef[], size_t N, double fe, double n)
 {
     if (n < 1.0)
     {
         n = 1.0;
     }
-    GenerateLpfFilter(coef, _N, fe, FBI_LANCZOS, n);
-    GetCoefficients(coef, _N, fe, 0.0, n, FTI_LPF, FBI_LANCZOS);
+    GenerateLpfFilter(coef, N, fe, FBI_LANCZOS, n);
+    GetCoefficients(coef, N, fe, 0.0, n, FTI_LPF, FBI_LANCZOS);
 #if 0
     for (int i = 0; i < N/2; ++i)
     {
@@ -227,21 +226,21 @@ int GetNumOfTapps(double delta)
 
 status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impulse)
 {
-    const int M = impulse.GetLength();
+    const uint M = impulse.GetLength();
     if (in.GetLength() < M)
     {
         return -ERROR_ILLEGAL;
     }
 
     if ( false == out.Resize(in.GetLength()) )
-	{
-		return -ERROR_CANNOT_ALLOCATE_MEMORY;
-	}
+    {
+        return -ERROR_CANNOT_ALLOCATE_MEMORY;
+    }
 
-    for (int i = 0; i < in.GetLength(); ++i)
+    for (uint i = 0; i < in.GetLength(); ++i)
     {
         out[i] = 0.0;
-        for (int k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
+        for (uint k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
         {
             out[i] += in[i - k] * impulse[k];
         }

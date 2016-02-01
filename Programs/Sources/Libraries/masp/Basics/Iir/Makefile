@@ -1,6 +1,6 @@
 
 BIN=masp_iir
-LIBS=-lmasp -lmfio -lmtbx
+LIBS=-lmcon -lmfio -lmtbx
 
 MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Iir.h
 MODULE_SRC=Iir.cpp
