@@ -34,7 +34,7 @@ namespace interp {
 class Linear
 {
 public:
-    static status_t Interpolate(mcon::Vector<double>& output, const mcon::Vector<double>& input, int sampleCount);
+    static status_t Interpolate(mcon::Vector<double>& output, const mcon::VectordBase& input, int sampleCount);
 };
 
 } // namespace interp {

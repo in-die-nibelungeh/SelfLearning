@@ -40,7 +40,7 @@ namespace {
 namespace mutl {
 namespace interp {
 
-status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<double>& input, int sampleCount)
+status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBase& input, int sampleCount)
 {
     if ( sampleCount <= 0 )
     {
@@ -74,14 +74,14 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     }
 
     // r=1:N-4 (端点以外の方程式を設定)
-    for ( int r = 1; r < equation.GetRowLength() - 1; ++r )
+    for (uint r = 1; r < equation.GetRowLength() - 1; ++r )
     {
         equation[r][r - 1] = 1; // h[r];
         equation[r][r    ] = 4; // (h[r] + h[r+1]) * 2;
         equation[r][r + 1] = 1; // h[r+1];
     }
     // v を代入
-    for ( int r = 0; r < equation.GetRowLength(); ++r )
+    for (uint r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r][N - 2] = 6 * (input[r+2] - 2 * input[r+1] + input[r]);
     }
@@ -89,16 +89,16 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     // Gauss-Jordan
     //--------------------------------
     // 各行を正規化
-    for ( int r = 0; r < equation.GetRowLength(); ++r )
+    for (uint r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
     }
-    for ( int r = 0; r < equation.GetRowLength(); ++r )
+    for (uint r = 0; r < equation.GetRowLength(); ++r )
     {
         // 注目している列の中で、最大値を持つ列を探す。
-        int index = r;
+        uint index = r;
         double maximum = fabs(equation[r][r]);
-        for ( int k = index + 1; k < equation.GetRowLength() - 1; ++k )
+        for (uint k = index + 1; k < equation.GetRowLength() - 1; ++k )
         {
             if ( fabs(equation[k][r]) > maximum )
             {
@@ -125,13 +125,14 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         equation[r] /= maximum;
 
         // 他の行から引く。
-        for ( int m = 0; m < equation.GetRowLength(); ++m )
+        for (uint m = 0; m < equation.GetRowLength(); ++m )
         {
             if ( m == r )
             {
                 continue;
             }
-            equation[m] -= (equation[r] * equation[m][r]);
+            const mcon::Vectord tmp(equation[r]);
+            equation[m] -= (tmp * equation[m][r]);
         }
     }
     mcon::Vector<double> u;
@@ -141,7 +142,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     };
     u[0] = 0;
     u[N-1] = 0;
-    for ( int k = 0; k < u.GetLength() - 2; ++k )
+    for (uint k = 0; k < u.GetLength() - 2; ++k )
     {
         u[k+1] = equation[k][N - 2];
     }
@@ -155,11 +156,11 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
     // 補間計算
-    mcon::Vector<double>& a = coefficients[0];
-    mcon::Vector<double>& b = coefficients[1];
-    mcon::Vector<double>& c = coefficients[2];
-    mcon::Vector<double>& d = coefficients[3];
-    for ( int k = 0; k < coefficients.GetColumnLength(); ++k )
+    mcon::Vector<double> a(coefficients[0]);
+    mcon::Vector<double> b(coefficients[1]);
+    mcon::Vector<double> c(coefficients[2]);
+    mcon::Vector<double> d(coefficients[3]);
+    for (uint k = 0; k < coefficients.GetColumnLength(); ++k )
     {
         a[k] = (u[k+1] - u[k]) / 6;
         b[k] = u[k] / 2;
@@ -170,7 +171,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::Vector<do
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
     output[0] = input[0];
     output[sampleCount - 1] = input[N - 1];
-    for ( int k = 1; k < sampleCount - 1; ++k )
+    for (int k = 1; k < sampleCount - 1; ++k )
     {
         const double position = k * step;             // 換算した位置 (小数)
         const int index = static_cast<int>(position); // 入力配列インデックス (整数)
