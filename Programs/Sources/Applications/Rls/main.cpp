@@ -41,6 +41,7 @@ namespace {
         {"l" , 1},
         {"m" , 1},
         {"opt" ,0},
+        {"sep" ,0},
         {"log" ,0}
     };
     ProgramParameter param = ProgramParameter();
@@ -57,6 +58,7 @@ namespace {
         LOG("  -c: spefity the absolute value clamped at leveling state (default=%f).\n", param.upperValue);
         LOG("  -l: spefity to use input signal with the specified length.\n");
         LOG("  -opt: spefity to optimize so as to minimize error.\n");
+        LOG("  -sep: spefity to optimize each channel separately.\n");
         LOG("  -log: spefity to output a log file on the process of optimization.\n");
     }
 }
@@ -74,8 +76,8 @@ int main(int argc, const char* argv[])
     }
     param.upperValue = 32767.0;
     param.optimize = false;
+    param.optimizeSeparately = false;
     param.outputLog = false;
-    param.referenceOffset = -1;
     param.inputLength = -1;
 
     param.inputFilepath = parser.GetArgument(0);
@@ -114,6 +116,10 @@ int main(int argc, const char* argv[])
     if (parser.IsEnabled("opt"))
     {
         param.optimize = true;
+    }
+    if (parser.IsEnabled("sep"))
+    {
+        param.optimizeSeparately = true;
     }
     if (parser.IsEnabled("log"))
     {
