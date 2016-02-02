@@ -97,9 +97,9 @@ namespace {
         do
         {
             const std::string filepath = outbase + ewav;
-            const int Mono = 1;
-            const int Single = 32;
-            mfio::Wave wave(samplingRate, Mono, Single, mfio::Wave::IEEE_FLOAT);
+            const int channelCount = signal.GetRowLength();
+            const int SingleFloat = 32;
+            mfio::Wave wave(samplingRate, channelCount, SingleFloat, mfio::Wave::IEEE_FLOAT);
             status = wave.Write(filepath, signal);
             LOG("    Output: %s\n", filepath.c_str());
             if (NO_ERROR != status)
