@@ -1,11 +1,14 @@
 
 BIN=masp_fir
-LIBS=-lmasp -lmfio
+LIBS=-lmfio -lmcon
 
 MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Fir.h
-MODULE_SRC=Fir.cpp
 
 INC=$(MODULE_HEADER)
+SRC= \
+    Fir.cpp \
+    ../Ft/Ft.cpp \
+    ../Window/Window.cpp \
 
 CPPFLAGS += -O3
 

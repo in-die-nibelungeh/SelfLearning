@@ -1,6 +1,6 @@
 
 BIN=masp_resampler
-LIBS=-lmasp -lmfio
+LIBS=-lmasp -lmfio -lmcon
 
 MODULE_HEADER=$(SELF_LEARNING_INCDIR)/masp/Resampler.h
 MODULE_SRC=Resampler.cpp
