@@ -113,12 +113,12 @@ status_t Rls(mcon::Vector<double>& h, const mcon::Vectord& u, const mcon::Vector
     mcon::Vectord uv(M);
 
     mcon::Matrix<double> logs(6, N);
-    mcon::Vector<double>& e   = logs[0];
-    mcon::Vector<double>& eta = logs[1];
-    mcon::Vector<double>& J   = logs[2];
-    mcon::Vector<double>& K   = logs[3];
-    mcon::Vector<double>& U   = logs[4];
-    mcon::Vector<double>& E   = logs[5];
+    mcon::VectordBase& e   = logs[0];
+    mcon::VectordBase& eta = logs[1];
+    mcon::VectordBase& J   = logs[2];
+    mcon::VectordBase& K   = logs[3];
+    mcon::VectordBase& U   = logs[4];
+    mcon::VectordBase& E   = logs[5];
 
     hm = 0;
     P /= c;
@@ -327,11 +327,12 @@ status_t Estimater(
     const mcon::Matrixd& input,
     const mcon::Vectord& reference,
     const int tapps,
-    const int referenceOffset
+    const mcon::Vectord& referenceOffsets
     )
 {
     const int M = tapps;
-    const int N = std::min(input.GetColumnLength(), reference.GetLength() - referenceOffset + 1);
+    const int referenceOffsetMaximum = referenceOffsets.IsNull() ? 0 : referenceOffsets.GetMaximum();
+    const int N = std::min(input.GetColumnLength(), reference.GetLength() - referenceOffsetMaximum + 1);
     // Can't continue processing...
     if (M > N)
     {
@@ -342,9 +343,14 @@ status_t Estimater(
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
     status_t status = NO_ERROR;
-    const mcon::Vectord d = reference(referenceOffset, N);
-    for (int r = 0; r < input.GetRowLength(); ++r)
+    for (uint r = 0; r < input.GetRowLength(); ++r)
     {
+        const uint referenceOffset = referenceOffsets.IsNull() ? 0 : referenceOffsets[r];
+        if (!referenceOffsets.IsNull())
+        {
+            LOG("    Ch-%d: ReferenceOffset=%d\n", r, referenceOffset);
+        }
+        const mcon::Vectord d = reference(referenceOffset, N);
         const mcon::Vectord _u = input[r];
         const mcon::Vectord u = _u(0, N);
         mcon::Vector<double> h(M);
@@ -360,15 +366,11 @@ status_t Estimater(
 
 status_t Process(ProgramParameter* param)
 {
-    const int referenceOffset =
-        param->optimize == true && param->referenceOffset != -1 ?
-        param->referenceOffset : 0;
-
     return Estimater(
         param->inversedSignal,
         param->inputSignal,
         param->referenceSignal,
         param->tapps,
-        referenceOffset
+        param->referenceOffset
     );
 }

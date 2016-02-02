@@ -30,14 +30,11 @@
 #include "Common.h"
 
 namespace {
-    status_t Verify(mcon::Vector<double>& origin, const mcon::Vectord& _input, const mcon::Vectord& _estimated)
+    status_t Verify(mcon::Vector<double>& origin, const mcon::VectordBase& input, const mcon::VectordBase& estimated)
     {
         status_t status = NO_ERROR;
-        const mcon::Vector<double> input(_input);
-        const mcon::Vector<double> estimated(_estimated);
         const int N = input.GetLength();
         UNUSED(N);
-
         ASSERT( N > 0 );
         ASSERT( estimated.GetLength() > 0 );
 
@@ -113,10 +110,11 @@ status_t PostProcess(ProgramParameter* param)
         mcon::Matrix<double> saved(ch, N);
         for (int c = 0; c < ch; ++c)
         {
-            const mcon::Vectord input(param->inputSignal[c]);
-            const mcon::Vectord inversed(param->inversedSignal[c]);
+            const mcon::VectordBase& input(param->inputSignal[c]);
+            const mcon::VectordBase& inversed(param->inversedSignal[c]);
+            mcon::Vectord origin;
             status = Verify(
-                saved[c],
+                origin,
                 input,
                 inversed);
             if ( NO_ERROR != status )
@@ -124,6 +122,7 @@ status_t PostProcess(ProgramParameter* param)
                 ERROR_LOG("Failed in Verify(): error=%d\n", status);
                 return status;
             }
+            saved[c] = origin;
         }
         const std::string ewav(".wav");
         const std::string filepath = param->outputBase + std::string("_iconv") + ewav;

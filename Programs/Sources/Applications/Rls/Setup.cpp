@@ -77,7 +77,7 @@ status_t Setup(ProgramParameter* param)
                 param->inputSignal[r] = in;
             }
         }
-        for (int r = 0; r < param->inputSignal.GetRowLength(); ++r)
+        for (uint r = 0; r < param->inputSignal.GetRowLength(); ++r)
         {
             const mcon::Vectord& d = param->inputSignal[r];
             LOG("    Energy-%d: %f\n", r, sqrt(d.Dot(d)));
@@ -98,7 +98,7 @@ status_t Setup(ProgramParameter* param)
         mcon::Matrix<double> saved(2, n);
         saved[0] = input(base, n);
         input = input(base, n);
-        for (int i = 0; i < input.GetLength(); ++i)
+        for (uint i = 0; i < input.GetLength(); ++i)
         {
             input[i] *= window[i+n-1];
         }
