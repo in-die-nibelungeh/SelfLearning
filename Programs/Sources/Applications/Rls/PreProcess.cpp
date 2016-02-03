@@ -143,7 +143,7 @@ Range GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double thresho
     const int N = input.GetColumnLength();
     int startIndex = N - 1;
     int endIndex = 0;
-    for (int r = 0; r < input.GetRowLength(); ++r)
+    for (uint r = 0; r < input.GetRowLength(); ++r)
     {
         int startSpot = 0;
         int endSpot = 0;
@@ -180,7 +180,7 @@ int FindLocalMinimum(const mcon::Vectord& v)
     // 値が最少となる極小値を探す
     double minimum = v.GetMaximum();
     int index = -1;
-    for (int k = 0; k < v.GetLength(); ++k)
+    for (uint k = 0; k < v.GetLength(); ++k)
     {
         if (v[k]==0)
         {
@@ -221,10 +221,11 @@ int GetIterationCount(const uint M, const int split)
 //   - できる限り簡単な計算で最少誤差の場所を特定したい。
 
 int Optimizer(
-    int* pReferenceOffset,
+    mcon::Vectord& referenceOffset,
     const mcon::Matrixd& input,
     const mcon::Vectord& reference,
     const int tapps,
+    const bool separately,
     const bool outputLog,
     const std::string& outputBase
 )
@@ -250,29 +251,32 @@ int Optimizer(
     // 2. N == 1.1 M くらいならまだうまくいくが、N == 1.05 M ではダメ。
     //    何故か理解できていないのが残念
     // とりあえず、タップ数の1.5 倍にしておく
-    const int N = std::min(static_cast<int>(M * 1.5), input.GetColumnLength());
-
+    const uint N = std::min(static_cast<int>(M * 1.5), static_cast<int>(input.GetColumnLength()));
+    const uint channelCount = input.GetRowLength() + 1;
     const Range erReference = GetEnergySpotIndexOfReference(reference, 0.99);
     LOG("    Reference: %d-%d (width=%d)\n", erReference.start, erReference.end, erReference.width);
-    int offset = ClampLower<int>(0, erReference.end - M + 1); // 捜索開始インデックス
+    int offsets[channelCount];
     int range = M; // 捜索範囲
-    DEBUG_LOG("M=%d, N=%d\n", M, N);
-
     const int iter = GetIterationCount(M, split);
-    mcon::Matrixd log(iter, split + 1); // + 1 はインデックスを入れるため。
+    mcon::Matrixd log(iter * channelCount, split + 1); // + 1 はインデックスを入れるため。
+    DEBUG_LOG("M=%d, N=%d\n", M, N);
+    for (uint ch = 0; ch < channelCount; ++ch)
+    {
+        offsets[ch] = ClampLower<int>(0, erReference.end - M + 1); // 捜索開始インデックス
+    }
 
     for (int i = 0 ; ; ++i)
     {
         const int step = ClampLower<int>(0, (range + split - 1) / split);
-        //const int end = ( (erReference.start - offset) + step - 1 ) / step;
-        DEBUG_LOG("offset=%d, range=%d, step=%d\n", offset, range, step);
-        LOG("    Stage-%d: Range=%d-%d, Step=%d\n", i + 1, offset, offset + range - 1, step);
-        mcon::Vectord Js(split);
-
-        Js = 0;
-
-        for (int r = 0; r < input.GetRowLength(); ++r)
+        mcon::VectordBase& JsAll = log[channelCount * (i + 1) - 1];
+        JsAll  = 0;
+        for (uint r = 0; r < input.GetRowLength(); ++r)
         {
+            const int& offset = separately ? offsets[r] : offsets[channelCount - 1];
+            //const int end = ( (erReference.start - offset) + step - 1 ) / step;
+            LOG("    Stage-%d: Ch=%d, Range=%d-%d, Step=%d\n", i + 1, r, offset, offset + range - 1, step);
+            mcon::VectordBase& Js = log[channelCount * i + r];
+            Js = 0;
             const mcon::Vectord _signal(input[r]);
             const mcon::Vectord signal = _signal(0, N);
             mcon::Matrixd Ut(M, N);
@@ -297,38 +301,77 @@ int Optimizer(
 
                 NormalEquationPost(h, inversed, Ut, d, W, &J);
                 Js[ k ] += J;
+                JsAll[ k ] += J;
             }
         }
-        for (int k = 0; k < log.GetColumnLength() - 1; ++k)
-        {
-            log[i][k] = Js[k];
-        }
         // 誤差配列で極小値をとるインデックスを取得する。
-        int lmIndex = FindLocalMinimum(Js);
+        for (uint ch = 0; ch < channelCount; ++ch)
+        {
+            const int idx = channelCount * i + ch;
+            mcon::VectordBase& Js = log[idx];
+            int lmIndex = FindLocalMinimum(Js);
+            if (lmIndex < 0)
+            {
+                Js[log.GetColumnLength() - 1] = lmIndex;
+                continue;
+            }
+            // Reference 信号上のインデックスに直す。
+            const int& offset = separately ? offsets[ch] : offsets[channelCount - 1];
+            lmIndex *= step;
+            lmIndex += offset;
+            Js[log.GetColumnLength() - 1] = lmIndex;
+            LOG("        ==> Local minimum (Ch-%d): %d.\n", ch, lmIndex);
+        }
 
+        bool isNotFound = true;
+        for (uint ch = 0; ch < channelCount; ++ch)
+        {
+            const int ridx = channelCount * (i + 1) - 1;
+            const int cidx = log.GetColumnLength() - 1;
+            isNotFound &= (0 > log[ridx][cidx]);
+        }
         // 見つからない場合は処理を打ち切る止める (TBD)。
-        if (lmIndex < 0)
+        if (isNotFound)
         {
             LOG("        ==> Not found any local minimum ... exiting.\n");
             break;
         }
-        // Reference 信号上のインデックスに直す。
-        lmIndex *= step;
-        lmIndex += offset;
-        log[i][log.GetColumnLength() - 1] = lmIndex;
-        DEBUG_LOG("    Found: index=%d\n", lmIndex);
-        LOG("        ==> Local minimum: %d.\n", lmIndex);
         // Step が 1 なら終了する。
         if (1 == step)
         {
-            *pReferenceOffset = lmIndex;
+            referenceOffset.Resize(channelCount - 1);
+            ASSERT(!referenceOffset.IsNull());
+            const int cidx = log.GetColumnLength() - 1;
+            if (separately)
+            {
+                for (uint ch = 0; ch < referenceOffset.GetLength(); ++ch)
+                {
+                    const int ridx = channelCount * i + ch;
+                    referenceOffset[ch] = log[ridx][cidx];
+                }
+            }
+            else
+            {
+                const int ridx = channelCount * (i + 1) - 1;
+                for (uint ch = 0; ch < referenceOffset.GetLength(); ++ch)
+                {
+                    referenceOffset[ch] = log[ridx][cidx];
+                }
+            }
             break;
         }
         // そうでなければ変数を更新して次のステージへ
         // 極小値が見つかった区間とその前後、合計3 の区間を対象にする。
         // そうすると、確実に次も極小値が見つかる。
         // なので...
-        offset = ClampLower(0, lmIndex - step + 1); // オフセットは1 区間前の先頭に置く
+        for (uint ch = 0; ch < channelCount; ++ch)
+        {
+            const int ridx = channelCount * i + ch; // Each channel (Row)
+            const int aidx = channelCount * (i + 1) - 1; // All (Row)
+            const int cidx = log.GetColumnLength() - 1; // Column index
+            const int offsetIndex = separately ? log[ridx][cidx] : log[aidx][cidx];
+            offsets[ch] = ClampLower(0, offsetIndex - step + 1); // オフセットは1 区間前の先頭に置く
+        }
         range = 3 * step; // 範囲は3 区間
     }
     // ここで変更する必要はない
@@ -356,10 +399,11 @@ status_t PreProcess(ProgramParameter* param)
     }
     LOG("Optimizing ...\n");
     return Optimizer(
-        &param->referenceOffset,
+        param->referenceOffset,
         param->inputSignal,
         param->referenceSignal,
         param->tapps,
+        param->optimizeSeparately,
         param->outputLog,
         param->outputBase);
 }

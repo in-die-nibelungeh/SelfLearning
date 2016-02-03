@@ -45,11 +45,12 @@ typedef struct _ProgramParameter
     float upperValue;
 
     bool optimize;
+    bool optimizeSeparately;
     bool outputLog;
 
 // Private
     uint samplingRate;
-    int referenceOffset;
+    mcon::Vectord referenceOffset;
 
 } ProgramParameter;
 
