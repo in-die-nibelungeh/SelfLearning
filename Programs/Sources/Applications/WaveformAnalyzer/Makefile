@@ -6,7 +6,7 @@ SRC = Setup.cpp \
     PreProcess.cpp \
     Process.cpp \
 
-LIBS = -lmasp -lmfio
+LIBS = -lmasp -lmfio -lmcon
 
 CPPFLAGS += -O3 \
 	-DPROGRAM_NAME="\"$(BIN)\"" \
