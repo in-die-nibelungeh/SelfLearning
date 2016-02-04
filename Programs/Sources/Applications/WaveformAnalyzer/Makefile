@@ -1,12 +1,14 @@
 BIN=wanalyzer
 
-MODULE_HEADER=
-MODULE_SRC=
+INC = Common.h
 
-INC=$(MODULE_HEADER)
+SRC = Setup.cpp \
+    PreProcess.cpp \
+    Process.cpp \
 
-LIBS=-lmasp -lmfio
+LIBS = -lmasp -lmfio -lmcon
 
-CPPFLAGS += -O3
+CPPFLAGS += -O3 \
+	-DPROGRAM_NAME="\"$(BIN)\"" \
 
 include $(SELF_LEARNING_ROOT)/Build/Make/modulerules.mk

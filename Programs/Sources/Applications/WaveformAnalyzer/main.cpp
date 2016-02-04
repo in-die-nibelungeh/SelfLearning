@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,28 +24,27 @@
 
 #include <string>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-
-#include "status.h"
-#include "types.h"
-#include "debug.h"
-
-#include "mcon.h"
-#include "mfio.h"
-#include "masp.h"
 #include "mutl.h"
 
-status_t Analyze(const char* inputFile, const std::string& = "", const std::string& outdir = "");
+#include "Common.h"
 
 static void usage(void)
 {
-    printf("Usage: %s INPUT \n", "wanalyzer");
-    printf("\n");
-    printf("INPUT must be .wav files.\n");
-    printf("  -o: spefity an output filename.\n");
-    printf("  -d: spefity an output directory, which should already exist.\n");
+    LOG("Usage: %s INPUT \n", PROGRAM_NAME);
+    LOG("\n");
+    LOG("INPUT must be .wav files.\n");
+    LOG("  -h: display this help.\n");
+    LOG("  -o: spefity an output filename.\n");
+    LOG("  -d: spefity an output directory, which should already exist.\n");
+    LOG("  -w: spefity a window length of fft, which must be factrial of 2.\n");
+    LOG("  -wt: spefity a window type, which accepts only \"rec\", \"han\", \"ham\", \"blk\", or \"hrs\".\n");
+    LOG("  -l: spefity a sample length used in analyzing.\n");
+    LOG("  -ft: spefity to use only ft.\n");
+    LOG("  -amp: spefity to output in amplitude.\n");
+    LOG("  -10log: spefity to output in 10 * log.\n");
+    LOG("  -20log: spefity to output in 20 * log.\n");
+    LOG("  -deg: spefity to output in degree.\n");
+    LOG("  -rad: spefity to output in radian.\n");
 }
 
 // Description
@@ -54,12 +53,45 @@ typedef struct mutl::ArgumentDescription Desc;
 const Desc descs[] =
 {
     {"h" , 0},
+    {"ft" , 0},
+    {"rad" , 0},
+    {"deg" , 0},
+    {"amp" , 0},
+    {"10log" , 0},
+    {"20log" , 0},
+    {"w" , 1},
+    {"wt" , 1},
+    {"l" , 1},
     {"d" , 1},
     {"o" , 1}
 };
 
 int main(int argc, const char* argv[])
 {
+#if 0
+    const uint freqs[] =
+    {
+        4000,
+        8000,
+        16000,
+        32000,
+        44100,
+        48000,
+        96000,
+        192000
+    };
+    for (uint k = 0; k < sizeof(freqs)/sizeof(uint); ++k)
+    {
+        const size_t size = GetLowerLimitSize(freqs[k]);
+        printf("%3dk: %ld\n", freqs[k]/1000, size);
+    }
+
+    const uint base = 3;
+    for (uint k = 0; k < 33; ++k)
+    {
+        LOG("%d: %s\n", k, IsFactorial(k, base) ? "yes" : "no ");
+    }
+#endif
     mutl::ArgumentParser parser;
     if( false == parser.Initialize(argc, argv, descs, sizeof(descs)/sizeof(Desc))
         || parser.IsEnabled("h")
@@ -69,14 +101,23 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    const std::string input = parser.GetArgument(0);
-    std::string outfile;
+    // Display messages real-time
+    setvbuf(stdout, NULL, _IONBF, 0);
 
-    LOG("Input : %s\n", input.c_str());
+    ProgramParameter param;
+    param.sampleCount = 0;
+    param.windowLength = 0;
+    param.windowType = WindowType_Rectangular;
+    param.isUsedOnlyFt = false;
+    param.gainFormat = GainFormat_Amplitude;
+    param.argFormat = ArgFormat_Radian;
+    param.inputFilepath = parser.GetArgument(0);
+
+    const mutl::NodePath inputPath(param.inputFilepath);
+    std::string outfile = inputPath.GetBasename();
     if (parser.IsEnabled("o"))
     {
         outfile = parser.GetOption("o");
-        LOG("Output: %s\n", outfile.c_str());
     }
     std::string outdir("./");
     if ( parser.IsEnabled("d") )
@@ -84,104 +125,99 @@ int main(int argc, const char* argv[])
         outdir = parser.GetOption("d");
         outdir += std::string("/");
     }
+    param.outputBase = outdir + outfile;
 
-    Analyze(input.c_str(), outfile, outdir);
-
-    return 0;
-}
-
-status_t Analyze(const char* inputFile, const std::string& outfile, const std::string& outdir)
-{
-    mcon::Vector<double> input;
-    mfio::Wave wave;
-    mutl::NodePath inputPath(inputFile);
-    std::string outbase = outdir;
-
+    if ( parser.IsEnabled("ft") )
     {
-        std::string fbody = inputPath.GetBasename();
-        if ( !outfile.empty() )
-        {
-            fbody = outfile;
-        }
-        outbase += fbody;
+        param.isUsedOnlyFt = true;
     }
-
-    // Input
+    if ( parser.IsEnabled("w") )
     {
-        mcon::Matrix<double> inputMatrix;
-        LOG("Loading input ... ");
-        status_t status = wave.Read(inputFile, inputMatrix);
-
-        if (NO_ERROR != status)
+        const uint width  = atoi( parser.GetOption("w").c_str() );
+        if ( !IsFactorial(width, 2) )
         {
-            printf("An error occured during reading %s: error=%d\n", inputFile, status);
-            return -ERROR_CANNOT_OPEN_FILE;
+            ERROR_LOG("The value specified with -w must be 2^n: %d\n", width);
+            return 0;
         }
-        if ( wave.GetNumChannels() > 1 )
+        param.windowLength = width;
+    }
+    if ( parser.IsEnabled("wt") )
+    {
+        const std::string windowType = parser.GetOption("wt");
+        if (windowType == std::string("rec"))
         {
-            LOG("%d-channel waveform was input.\n", wave.GetNumChannels());
-            LOG("Only left channel is used for estimation.\n");
+            param.windowType = WindowType_Rectangular;
         }
-        LOG("Done\n");
-
-        input = inputMatrix[0];
+        else if (windowType == std::string("han"))
+        {
+            param.windowType = WindowType_Hanning;
+        }
+        else if (windowType == std::string("ham"))
+        {
+            param.windowType = WindowType_Hamming;
+        }
+        else if (windowType == std::string("blk"))
+        {
+            param.windowType = WindowType_Blackman;
+        }
+        else if (windowType == std::string("hrs"))
+        {
+            param.windowType = WindowType_BlackmanHarris;
+        }
+        else
+        {
+            ERROR_LOG("The value specified with -wt must be \"rec\", \"han\", \"ham\", \"blk\", or \"hrs\": %s\n", windowType.c_str());
+            return 0;
+        }
+    }
+    if ( parser.IsEnabled("l") )
+    {
+        param.sampleCount = atoi( parser.GetOption("l").c_str() );
+    }
+    if ( parser.IsEnabled("10log") )
+    {
+        param.gainFormat = GainFormat_10Log;
+    }
+    else if ( parser.IsEnabled("20log") )
+    {
+        param.gainFormat = GainFormat_20Log;
+    }
+    else if ( parser.IsEnabled("amp") )
+    {
+        param.gainFormat = GainFormat_Amplitude;
+    }
+    if ( parser.IsEnabled("rad") )
+    {
+        param.argFormat = ArgFormat_Radian;
+    }
+    else if ( parser.IsEnabled("deg") )
+    {
+        param.argFormat = ArgFormat_Degree;
     }
 
     LOG("[Input]\n");
-    LOG("    SamplingRate: %d\n", wave.GetSamplingRate());
-    LOG("    Length      : %d\n", input.GetLength());
+    LOG("    InputFile   : %s\n", param.inputFilepath.c_str());
+    LOG("    OutputFile  : %s\n", param.outputBase.c_str());
+    LOG("    Window      : %d\n", param.windowLength);
+    LOG("    WindowType  : %d\n", param.windowType);
+    LOG("    Sample      : %d\n", param.sampleCount);
+    LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
+    LOG("    Gain        : %d\n", param.gainFormat);
+    LOG("    Argument    : %d\n", param.argFormat);
 
-    // Energy
-    {
-        const size_t N = input.GetLength();
-        mcon::Matrix<double> energyRatio(2, N);
-        const double energy = sqrt(input.GetDotProduct(input));
-        LOG("    Energy      : %g\n", energy);
-        double sum = 0;
-        for ( uint k = 0; k < N; ++k )
-        {
-            sum += input[k] * input[k];
-            energyRatio[0][k] = sqrt(sum);
-            energyRatio[1][k] = sqrt(sum) / energy;
-        }
-        const std::string ecsv("_energy.csv");
+    PRINT_RETURN_IF_FAILED( Setup(&param) );
+    LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
+    LOG("    SamplingRate: %d\n", param.samplingRate);
+    LOG("\n");
 
-        mfio::Csv csv(outbase + ecsv);
-        csv.Write(",Enegy,Energy ratio\n");
-        csv.Write(energyRatio);
-        csv.Close();
-    }
+    PRINT_RETURN_IF_FAILED( PreProcess(&param) );
+    LOG("[PreProcessed]\n");
+    LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
+    LOG("    Window      : %d\n", param.windowLength);
+    LOG("    Count       : %d (%d)\n", param.signal.GetColumnLength() / param.windowLength, param.signal.GetColumnLength() % param.windowLength);
+    LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
 
-    {
-        LOG("\n");
-        mcon::Matrix<double> polar;
+    PRINT_RETURN_IF_FAILED( Process(&param) );
 
-        {
-            mcon::Matrix<double> complex;
-            masp::ft::Ft(complex, input);
-            masp::ft::ConvertToPolarCoords(polar, complex);
-        }
-        {
-            const int N = input.GetLength();
-            mcon::Matrix<double> matrix(4, N);
-
-            for ( int i = 0; i < N; ++i )
-            {
-                matrix[0][i] = 1.0 * i / N * wave.GetSamplingRate();
-            }
-            matrix[1] = polar[0];
-            matrix[2] = polar[1];
-            matrix[3] = input;
-
-            const std::string ecsv("_spectrum.csv");
-
-            mfio::Csv csv(outbase + ecsv);
-            csv.Write("Id,Frequency,Amplitude,Argument,Impulse\n");
-            csv.Write(matrix);
-            csv.Close();
-        }
-        LOG("Done\n");
-    }
-    LOG("Finished.\n");
-    return NO_ERROR;
+    return 0;
 }
