@@ -66,41 +66,35 @@ status_t PostProcess(ProgramParameter* param)
         const size_t ch = param->inversedSignal.GetRowLength();
         const size_t N = param->inversedSignal.GetColumnLength();
 
-        mcon::Vectord levels(ch);
+        mcon::Vectord sumups(ch);
+        mcon::Vectord energies(ch);
 
         for (uint r = 0; r < ch; ++r)
         {
+            // チャンネル毎のレベル調整
+            const mcon::VectordBase& signal = param->inversedSignal[r];
+            energies[r] = sqrt(signal.Dot(signal));
+            LOG("    Ch-%d Energy: %g\n", r, energies[r]);
+            // 積算 (畳み込み) する時のための最大値調整 (全体)
+            double sumup = 0;
+            for (uint k = 0; k < N; ++k)
             {
-                const mcon::Vector<double>& signal(param->inversedSignal[r]);
-                double e = 0;
-                for (uint k = 0; k < N; ++k)
-                {
-                    e += fabs(signal[k]);
-                }
-                // 16 bit 最大値を超えないようにレベルを合わせる。
-                param->inversedSignal[r] *= param->upperValue / e;
+                sumup += fabs(signal[k]);
             }
-            {
-                const mcon::Vector<double>& signal(param->inversedSignal[r]);
-                // レベルを計算、保存
-                mcon::Matrix<double> complex(2, N);
-                mcon::Matrix<double> polar(2, N);
-                masp::ft::Ft(complex, signal);
-                masp::ft::ConvertToPolarCoords(polar, complex);
-                levels[r] = sqrt(polar[0].GetDotProduct(polar[0]));
-                LOG("    Ch-%d Level: %f\n", r, levels[r]);
-            }
+            sumups[r] = sumup;
         }
-
-        const double minLevel = levels.GetMinimum();
-
+        LOG("    Ajusted Level:\n");
+        // レベル調整 (上げる方向)
+        const double maxEnergy = energies.GetMaximum();
         for (uint r = 0; r < ch; ++r)
         {
-            const double compressFactor =
-                sqrt( minLevel / levels[r] );
-            param->inversedSignal[r] *= compressFactor;
-            LOG("    Ch-%d Level Comppression: %f\n", r, compressFactor);
+            mcon::VectordBase& signal = param->inversedSignal[r];
+            const double extendFactor =
+                sqrt( maxEnergy / energies[r]  );
+            signal *= extendFactor;
+            LOG("    Ch-%d Energy: %g\n", r, sqrt(signal.Dot(signal)) );
         }
+        param->inversedSignal *= param->upperValue / sumups.GetMaximum();
     }
 
     LOG("Verifying ... \n");
