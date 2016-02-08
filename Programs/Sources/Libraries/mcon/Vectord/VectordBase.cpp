@@ -539,7 +539,7 @@ namespace mcon {
 double VectordBase::PushFromBack(double v)
 {
     double ret = (*this)[0];
-    for (uint i = 0; i < GetLength() - 1; ++i)
+    for (size_t i = 0; i < GetLength() - 1; ++i)
     {
         (*this)[i] = (*this)[i+1];
     }
@@ -550,7 +550,7 @@ double VectordBase::PushFromBack(double v)
 double VectordBase::PushFromFront(double v)
 {
     double ret = (*this)[GetLength()-1];
-    for (uint i = GetLength() - 1; i > 0; --i)
+    for (size_t i = GetLength() - 1; i > 0; --i)
     {
         (*this)[i] = (*this)[i-1];
     }
@@ -847,10 +847,10 @@ double VectordBase::GetMinimumAbsolute(void) const
     return minAbs;
 }
 
-uint VectordBase::GetMaximumIndex(uint offset) const
+size_t VectordBase::GetMaximumIndex(size_t offset) const
 {
     const double max = GetMaximum();
-    for (uint k = offset; k < GetLength(); ++k)
+    for (size_t k = offset; k < GetLength(); ++k)
     {
         if ((*this)[k] == max)
         {
@@ -858,13 +858,13 @@ uint VectordBase::GetMaximumIndex(uint offset) const
         }
     }
     // Never reach here;
-    return __UINT32_MAX__;
+    return __SIZE_MAX__;
 }
 
-uint VectordBase::GetMaximumAbsoluteIndex(uint offset) const
+size_t VectordBase::GetMaximumAbsoluteIndex(size_t offset) const
 {
     const double maxAbs = GetMaximumAbsolute();
-    for (uint k = offset; k < GetLength(); ++k)
+    for (size_t k = offset; k < GetLength(); ++k)
     {
         if ((*this)[k] == maxAbs)
         {
@@ -872,13 +872,13 @@ uint VectordBase::GetMaximumAbsoluteIndex(uint offset) const
         }
     }
     // Never reach here;
-    return __UINT32_MAX__;
+    return __SIZE_MAX__;
 }
 
-uint VectordBase::GetMinimumIndex(uint offset) const
+size_t VectordBase::GetMinimumIndex(size_t offset) const
 {
     const double min = GetMinimum();
-    for (uint k = offset; k < GetLength(); ++k)
+    for (size_t k = offset; k < GetLength(); ++k)
     {
         if ((*this)[k] == min)
         {
@@ -886,13 +886,13 @@ uint VectordBase::GetMinimumIndex(uint offset) const
         }
     }
     // Never reach here;
-    return __UINT32_MAX__;
+    return __SIZE_MAX__;
 }
 
-uint VectordBase::GetMinimumAbsoluteIndex(uint offset) const
+size_t VectordBase::GetMinimumAbsoluteIndex(size_t offset) const
 {
     const double minAbs = GetMinimumAbsolute();
-    for (uint k = offset; k < GetLength(); ++k)
+    for (size_t k = offset; k < GetLength(); ++k)
     {
         if ((*this)[k] == minAbs)
         {
@@ -900,16 +900,16 @@ uint VectordBase::GetMinimumAbsoluteIndex(uint offset) const
         }
     }
     // Never reach here;
-    return __UINT32_MAX__;
+    return __SIZE_MAX__;
 }
 
-int VectordBase::GetLocalMaximumIndex(uint offset) const
+int VectordBase::GetLocalMaximumIndex(size_t offset) const
 {
     if (offset > GetLength() - 1)
     {
         return -1;
     }
-    for (uint k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
+    for (size_t k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
     {
         if ((*this)[k - 1] < (*this)[k] && (*this)[k] > (*this)[k + 1])
         {
@@ -919,13 +919,13 @@ int VectordBase::GetLocalMaximumIndex(uint offset) const
     return -1;
 }
 
-int VectordBase::GetLocalMinimumIndex(uint offset) const
+int VectordBase::GetLocalMinimumIndex(size_t offset) const
 {
     if (offset > GetLength() - 1)
     {
         return -1;
     }
-    for (uint k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
+    for (size_t k = offset == 0 ? 1 : offset; k < GetLength() - 1; ++k)
     {
         if ((*this)[k - 1] > (*this)[k] && (*this)[k] < (*this)[k + 1])
         {
@@ -1043,7 +1043,7 @@ double VectordBase::GetDotProduct(const VectordBase& v) const
 
 const VectordBase& VectordBase::Copy(const VectordBase& v)
 {
-    const uint n = std::min(GetLength(), v.GetLength());
+    const size_t n = std::min(GetLength(), v.GetLength());
     std::memcpy(*this, v, n * sizeof(double));
     return *this;
 }

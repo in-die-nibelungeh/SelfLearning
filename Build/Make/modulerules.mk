@@ -71,6 +71,9 @@ CPPFLAGS += \
 	$(addprefix -L,$(LIBDIRS)) \
 	$(WARNINGS) \
 
+CPPFLAGS += \
+    -std=c++11
+
 # Macros
 # Mkdir=if not exist @1 mkdir @1
 Mkdir=if [ ! -d "$(1)" ] ; then mkdir -p "$(1)" ; fi

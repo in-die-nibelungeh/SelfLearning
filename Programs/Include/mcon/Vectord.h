@@ -24,9 +24,10 @@
 
 #pragma once
 
-#include <cstring>
+#include <cstring> // std::mem***
 
-#include "debug.h"
+#include "debug.h" // ASSERT()
+
 #include "Macros.h"
 #include "VectordBase.h"
 
@@ -37,7 +38,7 @@ class Vector<double> : public VectordBase
 {
 public:
 
-    explicit Vector<double>(int length = 0)
+    explicit Vector<double>(size_t length = 0)
         : VectordBase(length)
         , m_AddressBase(NULL)
     {
@@ -75,7 +76,7 @@ public:
         bool status = Allocate();
         UNUSED(status);
         ASSERT(status == true);
-        for (uint i = 0; i < GetLength(); ++i )
+        for (size_t i = 0; i < GetLength(); ++i )
         {
             (*this)[i] = static_cast<double>(v[i]);
         }
@@ -88,7 +89,7 @@ public:
         bool status = Resize(v.GetLength());
         UNUSED(status);
         ASSERT(status == true);
-        for (uint i = 0; i < GetLength(); ++i )
+        for (size_t i = 0; i < GetLength(); ++i )
         {
             (*this)[i] = static_cast<double>(v[i]);
         }
@@ -113,11 +114,11 @@ public:
     const Vector<double> operator*(const VectordBase& v) const;
     const Vector<double> operator/(const VectordBase& v) const;
 
-    const Vector<double> operator()(uint offset, uint length) const;
+    const Vector<double> operator()(size_t offset, size_t length) const;
 
     const Matrix<double> ToMatrix() const;
 
-    bool Resize(uint length);
+    bool Resize(size_t length);
 
     // Inline functions.
     inline bool IsNull(void) const
@@ -130,7 +131,7 @@ public:
 private:
     // Private member functions.
     bool  Allocate(void);
-    double* Aligned(double* ptr, int align);
+    double* Aligned(double* ptr, size_t align);
 
     // Private member variables.
     double*  m_AddressBase;

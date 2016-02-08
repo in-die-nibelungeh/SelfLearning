@@ -24,9 +24,8 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstring>
-
-#include "debug.h"
 
 namespace mcon {
 
@@ -43,9 +42,9 @@ class VectordBase
 public:
 
     // Private class variables.
-    static const int g_Alignment = 32;
+    static const size_t g_Alignment = 32;
 
-    VectordBase(void* addressAligned, int length)
+    VectordBase(void* addressAligned, size_t length)
         : m_AddressAligned(reinterpret_cast<double*>(addressAligned))
         , m_Length(length)
     {
@@ -59,13 +58,13 @@ public:
     }
 
     // For const object
-    const double& operator[](const uint i) const
+    const double& operator[](const size_t i) const
     {
         ASSERT (i < m_Length);
         return m_AddressAligned[i];
     }
     // For non-const object
-    double& operator[](const uint i)
+    double& operator[](const size_t i)
     {
         ASSERT (i < m_Length);
         return m_AddressAligned[i];
@@ -77,9 +76,9 @@ public:
     template <typename U>
     operator Vector<U>() const
     {
-        const int n = GetLength();
+        const size_t n = GetLength();
         Vector<U> v(n);
-        for ( int i = 0; n; ++i )
+        for (size_t i = 0; n; ++i )
         {
             v[i] = static_cast<U>((*this)[i]);
         }
@@ -124,15 +123,15 @@ public:
 
     void Initialize(int offset = 0, int step = 1)
     {
-        for (uint k = 0; k < GetLength(); ++k )
+        for (size_t k = 0; k < GetLength(); ++k )
         {
             (*this)[k] = offset + step * k;
         }
     }
 
-    void Initialize( double (*initializer)(uint, uint) )
+    void Initialize( double (*initializer)(size_t, size_t) )
     {
-        for (uint k = 0; k < GetLength(); ++k )
+        for (size_t k = 0; k < GetLength(); ++k )
         {
             (*this)[k] = initializer(k, GetLength());
         }
@@ -143,13 +142,13 @@ public:
     double GetMinimum(void) const;
     double GetMinimumAbsolute(void) const;
 
-    uint GetMaximumIndex(uint offset = 0) const;
-    uint GetMaximumAbsoluteIndex(uint offset = 0) const;
-    uint GetMinimumIndex(uint offset = 0) const;
-    uint GetMinimumAbsoluteIndex(uint offset = 0) const;
+    size_t GetMaximumIndex(size_t offset = 0) const;
+    size_t GetMaximumAbsoluteIndex(size_t offset = 0) const;
+    size_t GetMinimumIndex(size_t offset = 0) const;
+    size_t GetMinimumAbsoluteIndex(size_t offset = 0) const;
 
-    int GetLocalMaximumIndex(uint offset = 0) const;
-    int GetLocalMinimumIndex(uint offset = 0) const;
+    int GetLocalMaximumIndex(size_t offset = 0) const;
+    int GetLocalMinimumIndex(size_t offset = 0) const;
 
     double GetSum(void) const;
 
@@ -158,7 +157,7 @@ public:
     VectordBase GetCrossProduct(const VectordBase& v) const;
 
     // Inline functions.
-    inline uint GetLength(void) const
+    inline size_t GetLength(void) const
     {
         return m_Length;
     }
@@ -197,7 +196,7 @@ private:
 
     // Private member variables.
     double*  m_AddressAligned;
-    uint     m_Length;
+    size_t   m_Length;
 };
 
 } // namespace mcon {

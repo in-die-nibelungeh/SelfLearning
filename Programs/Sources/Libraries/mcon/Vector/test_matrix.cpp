@@ -2,9 +2,9 @@
 
 void test_matrix_api(void)
 {
-    const uint length = 6;
+    const size_t length = 6;
     mcon::Vector<TestType> dvec(length);
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         dvec[i] = i + 1;
     }
@@ -16,7 +16,7 @@ void test_matrix_api(void)
 
     CHECK_VALUE(m.GetRowLength(), length);
     CHECK_VALUE(m.GetColumnLength(), 1);
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(m[i][0], i+1);
     }
@@ -24,7 +24,7 @@ void test_matrix_api(void)
 
     CHECK_VALUE(m1.GetRowLength(), 1);
     CHECK_VALUE(m1.GetColumnLength(), length);
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(m1[0][i], i+1);
     }

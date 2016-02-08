@@ -22,7 +22,6 @@
  * THE SOFTWARE.
  */
 
-#include <string>
 #include <cstring>
 
 #include "debug.h"
@@ -38,7 +37,7 @@ Vector<double>::~Vector<double>()
     }
 }
 
-const Vector<double> Vector<double>::operator()(uint offset, uint length) const
+const Vector<double> Vector<double>::operator()(size_t offset, size_t length) const
 {
     Vector<double> carveout;
     if (GetLength() <= offset)
@@ -48,7 +47,7 @@ const Vector<double> Vector<double>::operator()(uint offset, uint length) const
     }
     // Smaller value as length
     carveout.Resize( std::min(GetLength() - offset, length) );
-    for (uint i = offset; i < std::min(GetLength(), offset + length); ++i)
+    for (size_t i = offset; i < std::min(GetLength(), offset + length); ++i)
     {
         carveout[i-offset] = (*this)[i];
     }
@@ -59,7 +58,7 @@ const Vector<double> Vector<double>::operator()(uint offset, uint length) const
 Vector<double>& Vector<double>::operator=(const Vector<double>& v)
 {
     // m_Length is updated in Resize().
-    const uint n = v.GetLength();
+    const size_t n = v.GetLength();
     Resize(n);
     std::memcpy(*this, v, n * sizeof(double));
     return *this;
@@ -77,8 +76,8 @@ const Vector<double> Vector<double>::operator/(const VectordBase& v) const { Vec
 
 double* Align(double* ptr, int align)
 {
-    const unsigned char* aligned = reinterpret_cast<const unsigned char*>(ptr);
-    while (reinterpret_cast<long unsigned int>(aligned) % align) { ++aligned; }
+    const uint8_t* aligned = reinterpret_cast<const uint8_t*>(ptr);
+    while (reinterpret_cast<uintptr_t>(aligned) % align) { ++aligned; }
     return const_cast<double*>(reinterpret_cast<const double*>(aligned));
 }
 
@@ -112,7 +111,7 @@ const Matrix<double> Vector<double>::ToMatrix() const
     return m;
 }
 
-bool Vector<double>::Resize(uint length)
+bool Vector<double>::Resize(size_t length)
 {
     if (length == m_Length)
     {
