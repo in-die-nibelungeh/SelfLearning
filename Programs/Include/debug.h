@@ -60,10 +60,11 @@
 
 #ifndef ASSERT_ALIGNED
 #define ASSERT_ALIGNED(p, n) \
-    do { if (!( (reinterpret_cast<long unsigned  int>(p) % (n)) == 0 )) \
+    do { if (!( (reinterpret_cast<uintptr_t>(p) % (n)) == 0 )) \
     {         \
-        printf("ASSERT (aligned) at %d in %s: " #p " %% " #n "(%p/%x)=%lx\n", __LINE__, __FILE__, p, n, reinterpret_cast<long unsigned int>(p) % (n)); \
-        assert((reinterpret_cast<long unsigned int>(p) % (n)) == 0); \
+        printf("ASSERT (aligned) at %d in %s: " #p " %% " #n "(%p/%x)=%x\n", \
+            __LINE__, __FILE__, p, static_cast<uint32_t>(n), static_cast<uint32_t>(reinterpret_cast<uintptr_t>(p) % (n))); \
+        assert((reinterpret_cast<uintptr_t>(p) % (n)) == 0); \
     } } while (0)
 
 #endif // #ifndef ASSERT_ALIGNED
