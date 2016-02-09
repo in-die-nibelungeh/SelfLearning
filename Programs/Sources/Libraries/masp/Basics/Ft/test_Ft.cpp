@@ -61,7 +61,7 @@ static void test_ft(void)
 
     {
         double df = (double)fs/n;
-        FILE* fh = fopen("test_ft_ft.csv", "w");
+        FILE* fh = fopen("test_ft_ft.csv", "wb");
         ASSERT(fh != NULL);
         fprintf(fh, "freq,gain,phase\n");
         for (int i = 1; i < n/2; ++i)
@@ -77,7 +77,7 @@ static void test_ft(void)
     printf("Ift\n");
     masp::ft::Ift(td, real, imag, n);
     {
-        FILE* fh = fopen("test_ft_ift.csv", "w");
+        FILE* fh = fopen("test_ft_ift.csv", "wb");
         ASSERT(fh != NULL);
         fprintf(fh, "time,orig,td,td1\n");
         for (int i = 1; i < n/10; ++i)
@@ -113,7 +113,7 @@ static void test_ft_buffer(void)
         mcon::Matrix<double> gp(2, n);
 
         masp::ft::ConvertToGainPhase(gp, fft);
-        FILE* fh = fopen("test_ft_buf_polar.csv", "w");
+        FILE* fh = fopen("test_ft_buf_polar.csv", "wb");
         ASSERT(fh != NULL);
         fprintf(fh, "freq,gain,phase\n");
         for (int i = 1; i < n; ++i)
@@ -122,7 +122,7 @@ static void test_ft_buffer(void)
         }
         fprintf(fh, "Max gain: %f\n", gp[0].GetMaximum());
         fclose(fh);
-        FILE* fp = fopen("test_ft_buf_ft.csv", "w");
+        FILE* fp = fopen("test_ft_buf_ft.csv", "wb");
         if (NULL != fp)
         {
             fprintf(fp, "i,fft_real,fft_imag,gain,phase\n");
@@ -136,7 +136,7 @@ static void test_ft_buffer(void)
     mcon::Vector<double> ifft(n);
     masp::ft::Ift(ifft, fft);
     {
-        FILE* fh = fopen("test_ft_buf_ift.csv", "w");
+        FILE* fh = fopen("test_ft_buf_ift.csv", "wb");
         fprintf(fh, "time,orig,td,td1\n");
         for (int i = 1; i < n/10; ++i)
         {

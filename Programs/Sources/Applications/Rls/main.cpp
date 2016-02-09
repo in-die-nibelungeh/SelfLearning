@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,7 +83,7 @@ int main(int argc, const char* argv[])
     param.inputFilepath = parser.GetArgument(0);
     param.referenceFilepath = parser.GetArgument(1);
 
-    uint& tapps = param.tapps;
+    size_t& tapps = param.tapps;
 
     tapps = 256;
     if (parser.IsEnabled("m"))
@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
     }
     if ( tapps < 1 )
     {
-        ERROR_LOG("tapps (an argument of \"-m\" swtich) must be larger than 0: %d\n", tapps);
+        ERROR_LOG("tapps (an argument of \"-m\" swtich) must be larger than 0: %d\n", static_cast<int>(tapps) );
         return 0;
     }
     if (parser.IsEnabled("c"))
@@ -109,7 +109,7 @@ int main(int argc, const char* argv[])
         param.inputLength = atoi( parser.GetOption("l").c_str() );
         if (param.inputLength < 1)
         {
-            ERROR_LOG("The specified value with -l (%d) must be positive.\n", param.inputLength);
+            ERROR_LOG("The specified value with -l (%d) must be positive.\n", static_cast<int>(param.inputLength) );
             return 0;
         }
     }
@@ -133,12 +133,13 @@ int main(int argc, const char* argv[])
     }
     else
     {
-        char outputBase[128];
         mutl::NodePath _inputPath(param.inputFilepath);
         mutl::NodePath _referencePath(param.referenceFilepath);
-
-        sprintf(outputBase, "./Af_%dtapps_", tapps);
-        outputPrefix = std::string(outputBase)
+        char tappsString[11];
+        sprintf(tappsString, "%d", static_cast<int>(tapps));
+        outputPrefix = std::string("./Af_")
+            + std::string(tappsString)
+            + std::string("tapps_")
             + _inputPath.GetBasename()
             + std::string("_")
             + _referencePath.GetBasename();
@@ -157,7 +158,7 @@ int main(int argc, const char* argv[])
 
     LOG("Input: %s\n", param.inputFilepath.c_str());
     LOG("Reference: %s\n", param.referenceFilepath.c_str());
-    LOG("Tapps: %d\n", tapps);
+    LOG("Tapps: %d\n", static_cast<int>(tapps) );
     LOG("Clamped Value: %g\n", param.upperValue);
     LOG("\n");
 
@@ -170,12 +171,12 @@ int main(int argc, const char* argv[])
     }
     LOG("[Input]\n");
     LOG("    File        : %s\n", param.inputFilepath.c_str());
-    LOG("    SamplingRate: %d\n", param.samplingRate);
-    LOG("    Length      : %d\n", param.inputSignal.GetColumnLength());
+    LOG("    SamplingRate: %d\n", static_cast<int>(param.samplingRate) );
+    LOG("    Length      : %d\n", static_cast<int>(param.inputSignal.GetColumnLength()) );
     LOG("\n");
     LOG("[Reference]\n");
     LOG("    File  : %s\n", param.referenceFilepath.c_str());
-    LOG("    Length: %d\n", param.referenceSignal.GetLength());
+    LOG("    Length: %d\n", static_cast<int>(param.referenceSignal.GetLength()));
     LOG("\n");
 
     status = PreProcess(&param);

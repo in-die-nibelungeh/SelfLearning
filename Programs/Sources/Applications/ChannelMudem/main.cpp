@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -126,7 +126,7 @@ int main(int argc, const char* argv[])
                 if ( wav.GetColumnLength() != wavRoot.GetColumnLength() )
                 {
                     ERROR_LOG("The length doesn't match one of the root: %d (%s) <==> %d (root)\n",
-                        wav.GetColumnLength(), path.c_str(), wavRoot.GetColumnLength());
+                        static_cast<int>(wav.GetColumnLength()), path.c_str(), static_cast<int>(wavRoot.GetColumnLength()) );
                     ERROR_LOG("Skipping\n");
                     continue;
                 }
@@ -175,7 +175,7 @@ int main(int argc, const char* argv[])
             LOG("fs=%d\n", fs);
             LOG("bits=%d\n", bits);
             LOG("format=%d\n", format);
-            LOG("ch=%d\n", wavRoot.GetRowLength());
+            LOG("ch=%d\n", static_cast<int>(wavRoot.GetRowLength()));
             LOG("fn=%s\n", outpath.c_str());
             mfio::Wave wav(fs, wavRoot.GetRowLength(), bits, format);
             status_t status = wav.Write( outpath, wavRoot );

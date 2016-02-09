@@ -257,7 +257,7 @@ status_t Wave::Read(const char* path, double** buffer, int* pLength)
     const size_t length = tmp.GetLength();
     const size_t _size =  length * sizeof(double);
     *pLength = length;
-    *buffer = reinterpret_cast<double*>(malloc(_size));
+    *buffer = new double[_size];
     if (*buffer == NULL)
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
@@ -468,16 +468,16 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
     {
         return -ERROR_NULL;
     }
-    const int ch = GetNumChannels();
-    const int length = buffer.GetColumnLength();
+    const size_t ch = GetNumChannels();
+    const size_t length = buffer.GetColumnLength();
     const int bits = GetBitDepth();
     UNUSED(bits);
 
     mcon::Vector<double> tmp(ch * length);
 
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
-        for (int c = 0; c < ch; ++c)
+        for (size_t c = 0; c < ch; ++c)
         {
             tmp[ch*i+c] = buffer[c][i];
         }

@@ -48,11 +48,7 @@ static void test_resampler(void)
     {
         mcon::Vector<double> coefs;
         resampler.GetCoefficients(coefs);
-#if defined(__WIN64)
-        LOG("Length=%I64d\n", coefs.GetLength());
-#else
-        LOG("Length=%lld\n", coefs.GetLength());
-#endif
+        LOG("Length=%d\n", static_cast<int>(coefs.GetLength()));
     }
     {
         mcon::Vector<double> output;
@@ -70,11 +66,7 @@ static void test_resampler(void)
     {
         mcon::Vector<double> coefs;
         resampler.GetCoefficients(coefs);
-#if defined(__WIN64)
-        LOG("Length=%I64d\n", coefs.GetLength());
-#else
-        LOG("Length=%lld\n", coefs.GetLength());
-#endif
+        LOG("Length=%d\n", static_cast<int>(coefs.GetLength()));
     }
     {
         mcon::Vector<double> output;

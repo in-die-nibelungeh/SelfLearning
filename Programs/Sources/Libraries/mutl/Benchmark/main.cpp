@@ -26,6 +26,8 @@
 
 #include "mutl.h"
 
+#if 0
+
 double g_Value = 0.0;
 
 #include <stdio.h>
@@ -77,7 +79,6 @@ inline int mtgettimeofday(struct timeval* p, void* tz /* IGNORED */)
 #endif
 
 //-----------------------------------------------------------------
-#if 0
 double gettimeofday_sec()
 {
     struct timeval tv;
@@ -256,13 +257,16 @@ void test_stopwatch(void)
         }
     }
     const double threshold = 0.01;
+    char tmp[32];
     for (int k = 0, loop = iterCount; k < iter; ++k, loop *= 10)
     {
-        std::string recordString(std::string("    ") + std::to_string(loop) + std::string(": "));
+        sprintf(tmp, "%d", loop);
+        std::string recordString(std::string("    ") + std::string(tmp) + std::string(": "));
 
         for (int c = 0; c < cases; ++c)
         {
-            recordString += std::string("\t") + std::to_string(records[c][k]);
+            sprintf(tmp, "\t%lf", records[c][k]);
+            recordString += std::string(tmp);
         }
         std::string resultString("\tSkipped...\n");
         if (0.0 != records[0][k])
@@ -274,7 +278,8 @@ void test_stopwatch(void)
             }
             else
             {
-                resultString = std::string("\t[NG] (") + std::to_string(error) + std::string(")\n");
+                sprintf(tmp, "%lf", error);
+                resultString = std::string("\t[NG] (") + std::string(tmp) + std::string(")\n");
             }
         }
 
@@ -315,13 +320,16 @@ void test_clockwatch(void)
             records[m][k] = cw.Tick();
         }
     }
+    char tmp[32];
     for (int k = 0, loop = iterCount; k < iter; ++k, loop *= 10)
     {
-        std::string recordString(std::string("    ") + std::to_string(loop) + std::string(": "));
+        sprintf(tmp, "%d", loop);
+        std::string recordString(std::string("    ") + std::string(tmp) + std::string(": "));
 
         for (int c = 0; c < cases; ++c)
         {
-            recordString += std::string("\t") + std::to_string(records[c][k]);
+            sprintf(tmp, "\t%g", records[c][k] / 1.0);
+            recordString += std::string("\t") + std::string(tmp);
         }
         recordString += std::string("\n");
         LOG(recordString.c_str());

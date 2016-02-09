@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,24 +40,24 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
 
 status_t Convolution(mcon::Matrix<double>& audioOut, const mcon::Matrix<double>& audioIn, const mcon::Matrix<double>& impluse)
 {
-    const int M = impluse.GetColumnLength();
+    const size_t M = impluse.GetColumnLength();
     if (audioIn.GetColumnLength() < M )
     {
         return -ERROR_ILLEGAL;
     }
 
     audioOut.Resize(audioIn.GetRowLength(), audioIn.GetColumnLength());
-    for (int ch = 0; ch < audioIn.GetRowLength(); ++ch)
+    for (size_t ch = 0; ch < audioIn.GetRowLength(); ++ch)
     {
         int ich = ch;
         if ( 1 == impluse.GetRowLength() )
         {
             ich = 0;
         }
-        for (int i = 0; i < audioIn.GetColumnLength(); ++i)
+        for (size_t i = 0; i < audioIn.GetColumnLength(); ++i)
         {
             audioOut[ch][i] = 0.0;
-            for (int k = 0; k < ( (M - 1 > i) ? i+1 : M); ++k)
+            for (int k = 0; k < static_cast<int>( ( (M - 1 > i) ? i+1 : M) ); ++k)
             {
                 audioOut[ch][i] += audioIn[ch][i - k] * impluse[ich][k];
             }
@@ -152,8 +152,8 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
 
     LOG("[Input]\n");
     LOG("    SamplingRate: %d\n", fs);
-    LOG("    Length      : %d\n", input.GetColumnLength());
-    LOG("    Channels    : %d\n", input.GetRowLength());
+    LOG("    Length      : %d\n", static_cast<int>(input.GetColumnLength()));
+    LOG("    Channels    : %d\n", static_cast<int>(input.GetRowLength()));
     LOG("\n");
 
     // System
@@ -177,19 +177,19 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
     if (system.GetRowLength() != 1
         && system.GetRowLength() != input.GetRowLength())
     {
-        ERROR_LOG("Illegal channel counts: %d (system)\n", system.GetRowLength());
-        ERROR_LOG("The number of system's should be 1 or the same as input's (%d) \n", input.GetRowLength());
+        ERROR_LOG("Illegal channel counts: %d (system)\n", static_cast<int>(system.GetRowLength()));
+        ERROR_LOG("The number of system's should be 1 or the same as input's (%d) \n", static_cast<int>(input.GetRowLength()));
         return -ERROR_ILLEGAL;
     }
 
     LOG("[System]\n");
-    LOG("    Length      : %d\n", system.GetColumnLength());
-    LOG("    Channels    : %d\n", system.GetRowLength());
+    LOG("    Length      : %d\n", static_cast<int>(system.GetColumnLength()));
+    LOG("    Channels    : %d\n", static_cast<int>(system.GetRowLength()));
     LOG("\n");
 
     if ( input.GetColumnLength() < system.GetColumnLength() )
     {
-        LOG("\Error: input (%d) is shorter than system (%d).\n", input.GetColumnLength(), system.GetColumnLength());
+        LOG("\Error: input (%d) is shorter than system (%d).\n", static_cast<int>(input.GetColumnLength()), static_cast<int>(system.GetColumnLength()));
         LOG("Exiting ... \n");
         return 0;
     }
@@ -208,7 +208,7 @@ status_t ConvoluteTwoWaveforms(const char* inputFile, const char* systemFile, co
         }
         LOG("Levelaring ... \n");
         double max = output[0].GetMaximumAbsolute();
-        for ( int ch = 1; ch < output.GetRowLength(); ++ch )
+        for (size_t ch = 1; ch < output.GetRowLength(); ++ch )
         {
             const double _max = output[ch].GetMaximumAbsolute();
             if ( max < _max )

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@ namespace {
             const int ch = signal.GetRowLength();
             mcon::Matrix<double> saved(1 + ch * 4, N);
 
-            for (uint i = 0; i < N; ++i)
+            for (size_t i = 0; i < N; ++i)
             {
                 saved[0][i] = i * df * samplingRate;
             }
@@ -56,7 +56,7 @@ namespace {
                 masp::ft::ConvertToPolarCoords(polar, complex);
                 double squaredSum = 0;
 
-                for (uint i = 0; i < N; ++i)
+                for (size_t i = 0; i < N; ++i)
                 {
                     squaredSum += signal[c][i] * signal[c][i];
                     saved[c * 4 + 3][i] = sqrt(squaredSum);

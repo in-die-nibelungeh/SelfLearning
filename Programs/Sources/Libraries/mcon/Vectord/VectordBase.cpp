@@ -56,7 +56,8 @@ namespace mcon {
 
 double VectordBase::PushFromBack(double v)
 {
-    double ret = (*this)[0];
+    const size_t _0 = 0;
+    double ret = (*this)[_0];
     for (size_t i = 0; i < GetLength() - 1; ++i)
     {
         (*this)[i] = (*this)[i+1];
@@ -72,7 +73,8 @@ double VectordBase::PushFromFront(double v)
     {
         (*this)[i] = (*this)[i-1];
     }
-    (*this)[0] = v;
+    const size_t _0 = 0;
+    (*this)[_0] = v;
     return ret;
 }
 

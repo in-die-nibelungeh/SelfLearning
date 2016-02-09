@@ -46,11 +46,7 @@ static void tune_ft(void)
         fs = wave.GetSamplingRate();
     }
     LOG("SamplingRate: %d\n", fs);
-#if defined(__WIN64)
-    LOG("Length: %I64d\n", sweep.GetLength());
-#else
-    LOG("Length: %lld\n", sweep.GetLength());
-#endif
+    LOG("Length: %d\n", static_cast<int>(sweep.GetLength()));
 
     status_t status;
     const int n = sweep.GetLength();

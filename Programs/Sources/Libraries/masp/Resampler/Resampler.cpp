@@ -278,11 +278,7 @@ status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<dou
         const int index = acc / m_L;
         const int amari = acc % m_L;
         const int M = (width - 1 > i) ? i + 1 : width;
-#if defined(__WIN64)
-        DEBUG_LOG("i=%I64d/%I64d, M=%3d\n", i, output.GetLength(), M);
-#else
-        DEBUG_LOG("i=%3lld/%3lld, M=%3d\n", i, output.GetLength(), M);
-#endif
+        DEBUG_LOG("i=%3d/%3d, M=%3d\n", static_cast<int>(i), static_cast<int>(output.GetLength()), M);
         output[i] = masp::Convolution(pInput + index, pCoefficients + amari, M, m_L);
     }
     return NO_ERROR;

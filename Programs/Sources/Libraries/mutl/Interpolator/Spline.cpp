@@ -42,6 +42,7 @@ namespace interp {
 
 status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBase& input, int sampleCount)
 {
+    const size_t _0 = 0;
     if ( sampleCount <= 0 )
     {
         return -ERROR_INVALID_ARGUMENT;
@@ -50,7 +51,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    const int N = input.GetLength();
+    const size_t N = input.GetLength();
     mcon::Matrix<double> equation;
     if ( false == equation.Resize(N-2, N-1) )
     {
@@ -61,14 +62,14 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
 
     // r=0 (開始点の方程式)
     {
-        const int r = 0;
+        const size_t r = 0;
         equation[r][r    ] = 4;
         equation[r][r + 1] = 1;
     }
 
     // r=N-3 (終端の方程式)
     {
-        const int r = N - 3;
+        const size_t r = N - 3;
         equation[r][r - 1] = 1;
         equation[r][r    ] = 4;
     }
@@ -140,7 +141,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
-    u[0] = 0;
+    u[_0] = 0;
     u[N-1] = 0;
     for (size_t k = 0; k < u.GetLength() - 2; ++k )
     {
@@ -169,12 +170,12 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     }
     // 両端の値はループ外で代入しておく。
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
-    output[0] = input[0];
-    output[sampleCount - 1] = input[N - 1];
-    for (int k = 1; k < sampleCount - 1; ++k )
+    output[_0] = input[_0];
+    output[static_cast<size_t>(sampleCount) - 1] = input[N - 1];
+    for (size_t k = 1; k < static_cast<size_t>(sampleCount) - 1; ++k )
     {
         const double position = k * step;             // 換算した位置 (小数)
-        const int index = static_cast<int>(position); // 入力配列インデックス (整数)
+        const size_t index = static_cast<size_t>(position); // 入力配列インデックス (整数)
         const double frac = position - index;         // 小数部
         DEBUG_LOG("k=%d, frac=%g, index=%d, (a, b, c, d)=(%g, %g, %g, %g)\n", k, frac, index, a[index], b[index], c[index], d[index]);
         const double frac2 = frac * frac;

@@ -27,6 +27,7 @@
 #include <string>
 
 #include "status.h"
+#include "types.h"
 
 #include "mcon.h"
 
@@ -59,12 +60,12 @@ typedef struct _ProgramParameter
 
     mcon::Matrix<double> signal;
 
-    uint samplingRate;
+    size_t samplingRate;
 
-    uint windowLength;
+    size_t windowLength;
     WindowType windowType;
 
-    uint sampleCount;
+    size_t sampleCount;
 
     bool isUsedOnlyFt;
 
@@ -73,7 +74,7 @@ typedef struct _ProgramParameter
 
 } ProgramParameter;
 
-bool IsFactorial(const uint value, const uint base); // in PreProcess
+bool IsFactorial(const size_t value, const size_t base); // in PreProcess
 
 status_t Setup      (ProgramParameter* param);
 status_t PreProcess (ProgramParameter* param);

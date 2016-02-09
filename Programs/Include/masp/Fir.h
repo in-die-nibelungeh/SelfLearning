@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <cerrno>
+#include "types.h"
 
 #include "mcon.h"
 
@@ -85,8 +85,7 @@ inline int GetNumOfTapps(double passband, int samplingRate)
     return GetNumOfTapps(static_cast<double>(passband)/samplingRate);
 }
 
-errno_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse);
-
+status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse);
 
 } // namespace fir {
 } // namespace masp {

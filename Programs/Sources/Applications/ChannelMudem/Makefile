@@ -1,6 +1,6 @@
 BIN=mudem
 
-LIBS=-lmfio
+LIBS=-lmfio -lmcon
 
 CPPFLAGS += -O3 \
 	-DPROGRAM_NAME="\"$(BIN)\"" \

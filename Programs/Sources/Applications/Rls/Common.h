@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,8 @@ typedef struct _ProgramParameter
     std::string referenceFilepath;
     std::string outputBase;
 
-    uint tapps;
-    uint inputLength;
+    size_t tapps;
+    size_t inputLength;
     float upperValue;
 
     bool optimize;
@@ -49,7 +49,7 @@ typedef struct _ProgramParameter
     bool outputLog;
 
 // Private
-    uint samplingRate;
+    size_t samplingRate;
     mcon::Vectord referenceOffset;
 
 } ProgramParameter;
@@ -65,12 +65,12 @@ status_t NormalEquation(mcon::Vector<double>& h, const mcon::Vectord& u, const m
 class ShowMessage
 {
 public:
-    ShowMessage(const char* func, uint indent = 1)
+    ShowMessage(const char* func, size_t indent = 1)
         : m_Indent(indent)
         , m_IndentString()
     {
         LOG("%s ...\n", func);
-        for (uint k = 0; k < m_Indent * 4; ++k)
+        for (size_t k = 0; k < m_Indent * 4; ++k)
         {
             m_IndentString.append(" ");
         }
@@ -84,7 +84,7 @@ public:
         LOG("%s%s", m_IndentString.c_str(), msg);
     }
 private:
-    uint m_Indent;
+    size_t m_Indent;
     std::string m_IndentString;
 };
 

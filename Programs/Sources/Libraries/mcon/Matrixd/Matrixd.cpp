@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -252,33 +252,36 @@ double Matrix<double>::Determinant(void) const
     int dimension = GetColumnLength();
     double det = 0;
 
+    const size_t _0 = 0;
+    const size_t _1 = 1;
+    const size_t _2 = 2;
     // Sarrus
     if ( 3 == dimension )
     {
         const Matrix<double>&m = *this;
-        det = m[0][0] * m[1][1] * m[2][2]
-              + m[0][1] * m[1][2] * m[2][0]
-              + m[0][2] * m[1][0] * m[2][1]
-              - m[0][2] * m[1][1] * m[2][0]
-              - m[0][1] * m[1][0] * m[2][2]
-              - m[0][0] * m[1][2] * m[2][1];
+        det = m[_0][_0] * m[_1][_1] * m[_2][_2]
+              + m[_0][_1] * m[_1][_2] * m[_2][_0]
+              + m[_0][_2] * m[_1][_0] * m[_2][_1]
+              - m[_0][_2] * m[_1][_1] * m[_2][_0]
+              - m[_0][_1] * m[_1][_0] * m[_2][_2]
+              - m[_0][_0] * m[_1][_2] * m[_2][_1];
     }
     else if ( 2 == dimension )
     {
         const Matrix<double>&m = *this;
-        det = m[0][0] * m[1][1]
-              - m[0][1] * m[1][0];
+        det = m[_0][_0] * m[_1][_1]
+              - m[_0][_1] * m[_1][_0];
     }
     else if ( 1 == dimension )
     {
         const Matrix<double>&m = *this;
-        det = m[0][0];
+        det = m[_0][_0];
     }
     else
     {
         for (size_t row = 0; row < GetRowLength(); ++row)
         {
-            det += GetCofactor(row, 0) * (*this)[row][0];
+            det += GetCofactor(row, 0) * (*this)[row][_0];
         }
     }
     return det;
@@ -366,7 +369,7 @@ Matrix<double> Matrix<double>::Inverse(void) const
         if ( maximum < threshold )
         {
             // ここに到達することはないはず。
-            DEBUG_LOG(" ~ 0 at r=%lld\n", static_cast<int64_t>(r));
+            DEBUG_LOG(" ~ 0 at r=%d\n", static_cast<int>(r));
             m.Resize(0, 0); // NULL を返す。
             return m;
         }
