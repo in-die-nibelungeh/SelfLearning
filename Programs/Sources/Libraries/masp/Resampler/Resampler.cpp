@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -241,7 +241,7 @@ double Convolution(const double* pData, const double* pCoefs, int N, int step)
     double ans = 0.0;
 
 /*
-    for (uint k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
+    for (size_t k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
     {
         out[i] += in[i - k] * impulse[k];
     }
@@ -269,16 +269,20 @@ status_t Resampler::Convert(mcon::Vector<double>& output, const mcon::Vector<dou
 
     const double* pInput = _Cast(input);
     const double* pCoefficients = _Cast(m_Coefficients);
-    const uint width = m_Coefficients.GetLength() / m_L;
+    const size_t width = m_Coefficients.GetLength() / m_L;
 
     int acc = 0;
-    for (uint i = 0; i < output.GetLength(); ++i )
+    for (size_t i = 0; i < output.GetLength(); ++i )
     {
         acc += m_M;
         const int index = acc / m_L;
         const int amari = acc % m_L;
         const int M = (width - 1 > i) ? i + 1 : width;
-        DEBUG_LOG("i=%3d/%3d, M=%3d\n", i, output.GetLength(), M);
+#if defined(__WIN64)
+        DEBUG_LOG("i=%I64d/%I64d, M=%3d\n", i, output.GetLength(), M);
+#else
+        DEBUG_LOG("i=%3lld/%3lld, M=%3d\n", i, output.GetLength(), M);
+#endif
         output[i] = masp::Convolution(pInput + index, pCoefficients + amari, M, m_L);
     }
     return NO_ERROR;

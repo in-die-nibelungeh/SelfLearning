@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <math.h>
 
 #include "mcon.h"
@@ -14,7 +38,7 @@ namespace ft {
 
 namespace
 {
-    static double g_Pi(M_PI);
+    const double g_Pi(M_PI);
     int Ilog2(int v)
     {
         for (int i = sizeof(v) * 8 - 1; i >= 0 ; --i)
@@ -358,7 +382,7 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     const mcon::Vector<double>& real = complex[0];
     const mcon::Vector<double>& imag = complex[1];
 
-    for (uint i = 0; i < timeSeries.GetLength(); ++i)
+    for (size_t i = 0; i < timeSeries.GetLength(); ++i)
     {
         const int N = complex.GetColumnLength();
         timeSeries[i] = 0.0;
@@ -390,7 +414,7 @@ status_t ConvertToPolarCoords(mcon::Matrix<double>& polar, const mcon::Matrix<do
     const mcon::Vector<double>& real  = complex[0];
     const mcon::Vector<double>& imag  = complex[1];
 
-    for (uint i = 0; i < complex.GetColumnLength(); ++i)
+    for (size_t i = 0; i < complex.GetColumnLength(); ++i)
     {
         r[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
         arg[i] = atan(imag[i]/real[i]);
@@ -414,7 +438,7 @@ status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<doub
     mcon::VectordBase& real  = complex[0];
     mcon::VectordBase& imag  = complex[1];
 
-    for (uint i = 0; i < polar.GetColumnLength(); ++i)
+    for (size_t i = 0; i < polar.GetColumnLength(); ++i)
     {
         const double v = r[i];
         real[i] = v * cos(arg[i]);
