@@ -20,8 +20,8 @@ static void test_read(void)
     int length;
     double* buffer;
     mfio::Wave wave;
-    wave.Read("ding.wav", &buffer, &length);
-
+    status_t status = wave.Read("ding.wav", &buffer, &length);
+    CHECK_VALUE(status, 0);
     //printf("Sizeof(PcmFormat)=%d\n", sizeof(FileIo::PcmFormat));
     //printf("Sizeof(MetaData)=%d\n", sizeof(FileIo::MetaData));
     {
@@ -47,7 +47,8 @@ static void test_read(void)
      *----------------------------------------------------------------*/
     mcon::Vector<double> bufferVector;
     mfio::Wave waveVector;
-    waveVector.Read("ding.wav", bufferVector);
+    status = waveVector.Read("ding.wav", bufferVector);
+    CHECK_VALUE(status, 0);
     {
         int32_t fs, ch, bit, fmt;
         waveVector.GetMetaData(&fs, &ch, &bit, &fmt);
@@ -59,13 +60,13 @@ static void test_read(void)
     }
     LOG("Comparing data buffer (Vector):\n");
     int numUnequal = 0;
-    for (uint i = 0; i < bufferVector.GetLength(); ++i )
+    for (size_t i = 0; i < bufferVector.GetLength(); ++i )
     {
         if ( buffer[i] != bufferVector[i] )
         {
             ++numUnequal;
             LOG("Not equal at %5d: buffer=%g, bufferVector=%g\n",
-                i, buffer[i], bufferVector[i]);
+              static_cast<uint32_t>(i), buffer[i], bufferVector[i]);
         }
     }
     CHECK_VALUE(numUnequal, 0);
@@ -93,7 +94,7 @@ static void test_read(void)
     LOG("Comparing data buffer (Matrix):\n");
     numUnequal = 0;
     const int ch = waveMatrix.GetNumChannels();
-    for (uint i = 0; i < bufferObj.GetColumnLength(); ++i )
+    for (size_t i = 0; i < bufferObj.GetColumnLength(); ++i )
     {
         for (int c = 0; c < ch; ++c)
         {
@@ -102,7 +103,7 @@ static void test_read(void)
             {
                 ++numUnequal;
                 LOG("Not equal at %5d: buffer=%g, bufferObj=%g\n",
-                    i, buffer[i], bufferObj[c][i]);
+                    static_cast<uint32_t>(i), buffer[i], bufferObj[c][i]);
             }
         }
     }
@@ -203,6 +204,8 @@ static void test_write_float(void)
 
 int main(void)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     test_check();
     test_read();
     test_write();

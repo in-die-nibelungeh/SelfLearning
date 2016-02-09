@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-16 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,14 +74,14 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     }
 
     // r=1:N-4 (端点以外の方程式を設定)
-    for (uint r = 1; r < equation.GetRowLength() - 1; ++r )
+    for (size_t r = 1; r < equation.GetRowLength() - 1; ++r )
     {
         equation[r][r - 1] = 1; // h[r];
         equation[r][r    ] = 4; // (h[r] + h[r+1]) * 2;
         equation[r][r + 1] = 1; // h[r+1];
     }
     // v を代入
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r][N - 2] = 6 * (input[r+2] - 2 * input[r+1] + input[r]);
     }
@@ -89,16 +89,16 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     // Gauss-Jordan
     //--------------------------------
     // 各行を正規化
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
     }
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         // 注目している列の中で、最大値を持つ列を探す。
-        uint index = r;
+        size_t index = r;
         double maximum = fabs(equation[r][r]);
-        for (uint k = index + 1; k < equation.GetRowLength() - 1; ++k )
+        for (size_t k = index + 1; k < equation.GetRowLength() - 1; ++k )
         {
             if ( fabs(equation[k][r]) > maximum )
             {
@@ -125,7 +125,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
         equation[r] /= maximum;
 
         // 他の行から引く。
-        for (uint m = 0; m < equation.GetRowLength(); ++m )
+        for (size_t m = 0; m < equation.GetRowLength(); ++m )
         {
             if ( m == r )
             {
@@ -142,7 +142,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     };
     u[0] = 0;
     u[N-1] = 0;
-    for (uint k = 0; k < u.GetLength() - 2; ++k )
+    for (size_t k = 0; k < u.GetLength() - 2; ++k )
     {
         u[k+1] = equation[k][N - 2];
     }
@@ -160,7 +160,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     mcon::Vector<double> b(coefficients[1]);
     mcon::Vector<double> c(coefficients[2]);
     mcon::Vector<double> d(coefficients[3]);
-    for (uint k = 0; k < coefficients.GetColumnLength(); ++k )
+    for (size_t k = 0; k < coefficients.GetColumnLength(); ++k )
     {
         a[k] = (u[k+1] - u[k]) / 6;
         b[k] = u[k] / 2;

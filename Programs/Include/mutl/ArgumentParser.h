@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <stdint.h> // uint
+#include <stdint.h> // size_t
 #include <stdlib.h> // atoi
 #include <string>  // std::string
 
@@ -33,7 +33,7 @@ namespace mutl {
 struct ArgumentDescription
 {
     const char* option;
-    uint count;
+    size_t count;
 };
 
 // Note:
@@ -43,12 +43,13 @@ struct ArgumentDescription
 class ArgumentParser
 {
 public:
-    ArgumentParser()
+    ArgumentParser(bool ignoreUnknown = true)
         : m_Options()
         , m_Inputs()
         , m_OptionCount(0)
         , m_InputCount(0)
         , m_IsInitialized(false)
+        , m_IgnoreUnknown(ignoreUnknown)
     {}
 
     ~ArgumentParser()
@@ -63,7 +64,7 @@ public:
         }
         bool isValid = true;  // desc に従うオプション入力かどうか
         int descIndex = Unselected;
-        uint arguments = 0;
+        size_t arguments = 0;
 
         // プログラムパスはスキップする
         for ( int k = 1; k < argc; ++k )
@@ -84,7 +85,7 @@ public:
                 // descIndex は Unselected であることが保証されている。
                 bool isFound = false;
                 // desc から探す
-                for (uint m = 0; m < descsCount; ++m)
+                for (size_t m = 0; m < descsCount; ++m)
                 {
                     // 一致するなら
                     if (!strcmp(descs[m].option, arg + 1)) // + 1 は先頭の '-' をスキップ
@@ -92,14 +93,11 @@ public:
                         // 見つかった、と。
                         isFound = true;
 
-                        char count[11];
-                        sprintf(count, "%d", descs[m].count);
-
                         // 追加していく準備
                         m_Options.append( std::string(" ")
                             + std::string(descs[m].option)
                             + std::string(":")
-                            + std::string(count)
+                            + std::to_string(descs[m].count)
                             + std::string(":") );
 
                         // リセット
@@ -115,9 +113,13 @@ public:
                         break;
                     }
                 }
-                // 害がないので無視する (TBD)
+                // 無視する/しないは設定次第 (デフォルトでは無視)
                 if (false == isFound)
                 {
+                    if (false == m_IgnoreUnknown)
+                    {
+                        return false;
+                    }
                     DEBUG_LOG("Unknown option: %s\n", arg);
                 }
             }
@@ -162,8 +164,8 @@ public:
                 m_Inputs.erase( m_Inputs.length() - 1, 1);
             }
         }
-        DEBUG_LOG("Inputs (%d): %s\n", m_InputCount, m_Inputs.c_str());
-        DEBUG_LOG("Options(%d): %s\n", m_OptionCount, m_Options.c_str());
+        DEBUG_LOG("Inputs (%d): %s\n", static_cast<int32_t>(m_InputCount), m_Inputs.c_str());
+        DEBUG_LOG("Options(%d): %s\n", static_cast<int32_t>(m_OptionCount), m_Options.c_str());
 
         m_IsInitialized = isValid;
 
@@ -188,7 +190,7 @@ public:
         return std::string::npos != m_Options.find( option, 0 );
     }
 
-    std::string GetOption(const char* _option, uint index = 0) const
+    std::string GetOption(const char* _option, size_t index = 0) const
     {
         ASSERT( IsInitialized() );
 
@@ -214,7 +216,7 @@ public:
 
     // 処理は Option::operator[] からの抜粋なので、そっちを参照。
     // そして、バグがあったらお互いに修正すること。
-    std::string GetArgument(uint index = 0) const
+    std::string GetArgument(size_t index = 0) const
     {
         ASSERT( IsInitialized() );
 
@@ -228,7 +230,7 @@ public:
         {
             size_t s = 0;
             size_t e = m_Inputs.find_first_of(",");
-            for (uint k = 0; k < index; ++k)
+            for (size_t k = 0; k < index; ++k)
             {
                 s = e + 1;
                 e = m_Inputs.find_first_of(",", s);
@@ -242,14 +244,14 @@ public:
         return argument;
     }
 
-    inline uint GetArgumentCount() const
+    inline size_t GetArgumentCount() const
     {
         ASSERT( IsInitialized() );
 
         return m_InputCount;
     }
 
-    inline uint GetOptionCount() const
+    inline size_t GetOptionCount() const
     {
         ASSERT( IsInitialized() );
 
@@ -269,7 +271,7 @@ private:
         inline explicit Option(const std::string& arguments);
         inline ~Option() {}
 
-        inline std::string operator[](uint index) const;
+        inline std::string operator[](size_t index) const;
 
         inline bool IsInitialized() const
         {
@@ -278,15 +280,16 @@ private:
     private:
         std::string m_Option;
         std::string m_Arguments;
-        uint m_ArgumentCount;
+        size_t m_ArgumentCount;
         bool m_IsInitialized;
     };
 
     std::string m_Options;
     std::string m_Inputs;
-    int m_OptionCount;
-    uint m_InputCount;
+    size_t m_OptionCount;
+    size_t m_InputCount;
     bool m_IsInitialized;
+    bool m_IgnoreUnknown;
     static const int Unselected = -1;
 };
 
@@ -324,7 +327,7 @@ ArgumentParser::Option::Option(const std::string& arguments)
     m_IsInitialized = true;
 }
 
-std::string ArgumentParser::Option::operator[](uint index) const
+std::string ArgumentParser::Option::operator[](size_t index) const
 {
     ASSERT( IsInitialized() );
 
@@ -338,7 +341,7 @@ std::string ArgumentParser::Option::operator[](uint index) const
     {
         size_t s = 0;
         size_t e = m_Arguments.find_first_of(",");
-        for (uint k = 0; k < index; ++k)
+        for (size_t k = 0; k < index; ++k)
         {
             s = e + 1;
             e = m_Arguments.find_first_of(",", s);
