@@ -37,24 +37,30 @@ static void test_ft(void)
 
     {
         double df = (double)fs/n;
-        printf("freq,gain,phase\n");
+        FILE* fh = fopen("test_ft_ft.csv", "w");
+        ASSERT(fh != NULL);
+        fprintf(fh, "freq,gain,phase\n");
         for (int i = 1; i < n/2; ++i)
         {
             double gain = 10 * log10(POW2(real[i]) + POW2(imag[i]));
             double phase = atan(real[i]/imag[i]);
-            printf("%f,%f,%f\n", i*df, gain, phase);
+            fprintf(fh, "%f,%f,%f\n", i*df, gain, phase);
         }
+        fclose(fh);
     }
     ifft = (double*)malloc(sizeof(double) * n * 2);
     double *td = ifft;
     printf("Ift\n");
     masp::ft::Ift(td, real, imag, n);
     {
-        printf("time,orig,td,td1\n");
+        FILE* fh = fopen("test_ft_ift.csv", "w");
+        ASSERT(fh != NULL);
+        fprintf(fh, "time,orig,td,td1\n");
         for (int i = 1; i < n/10; ++i)
         {
-            printf("%d,%f,%f,%f\n", i, buffer[i],td[i], 0.0);
+            fprintf(fh, "%d,%f,%f,%f\n", i, buffer[i],td[i], 0.0);
         }
+        fclose(fh);
     }
 
     free(buffer);
@@ -83,18 +89,19 @@ static void test_ft_buffer(void)
         mcon::Matrix<double> gp(2, n);
 
         masp::ft::ConvertToGainPhase(gp, fft);
-
-        printf("freq,gain,phase\n");
+        FILE* fh = fopen("test_ft_buf_polar.csv", "w");
+        ASSERT(fh != NULL);
+        fprintf(fh, "freq,gain,phase\n");
         for (int i = 1; i < n; ++i)
         {
-            printf("%f,%f,%f\n", i*df, gp[0][i], gp[1][i]);
+            fprintf(fh, "%f,%f,%f\n", i*df, gp[0][i], gp[1][i]);
         }
-        printf("Max gain: %f\n", gp[0].GetMaximum());
-
-        FILE* fp = fopen("fft.csv", "w");
+        fprintf(fh, "Max gain: %f\n", gp[0].GetMaximum());
+        fclose(fh);
+        FILE* fp = fopen("test_ft_buf_ft.csv", "w");
         if (NULL != fp)
         {
-            printf("i,fft_real,fft_imag,gain,phase\n");
+            fprintf(fp, "i,fft_real,fft_imag,gain,phase\n");
             for (int i = 1; i < n; ++i)
             {
                 fprintf(fp, "%d,%f,%f%f,%f\n", i, fft[0][i], fft[1][i], gp[0][i], gp[1][i]);
@@ -105,11 +112,13 @@ static void test_ft_buffer(void)
     mcon::Vector<double> ifft(n);
     masp::ft::Ift(ifft, fft);
     {
-        printf("time,orig,td,td1\n");
+        FILE* fh = fopen("test_ft_buf_ift.csv", "w");
+        fprintf(fh, "time,orig,td,td1\n");
         for (int i = 1; i < n/10; ++i)
         {
-            printf("%d,%f,%f,%f\n", i, buffer[i],ifft[i], 0.0);
+            fprintf(fh, "%d,%f,%f,%f\n", i, buffer[i],ifft[i], 0.0);
         }
+        fclose(fh);
     }
 }
 
@@ -134,7 +143,7 @@ static void test_gp_complex(void)
     masp::ft::ConvertToPolarCoords(gp, complex);
     LOG("Complex\n");
     masp::ft::ConvertToComplex(icomplex, gp);
-    for ( int i = 0; i < icomplex.GetColumnLength(); ++i)
+    for (size_t i = 0; i < icomplex.GetColumnLength(); ++i)
     {
         icomplex[0][i] = fabs(icomplex[0][i]) * sign(complex[0][i]);
         icomplex[1][i] = fabs(icomplex[1][i]) * sign(complex[1][i]);
@@ -180,7 +189,6 @@ static void test_fft(void)
     }
 #undef POW2
     // Save to check.
-    if(0)
     {
         mcon::Matrix<double> saved(5, n);
         const double df = (double)fs/n;
