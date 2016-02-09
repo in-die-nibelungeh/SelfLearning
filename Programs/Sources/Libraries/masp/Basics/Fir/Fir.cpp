@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "debug.h"
+#include "types.h"
 #include "status.h"
 #include "masp/Fir.h"
 
@@ -136,17 +137,17 @@ void GenerateLpfFilter(double coef[], size_t N, double fe, int type, double arg)
 
 static void GetCoefficients(mcon::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
 {
-    const int N = coef.GetLength();
+    const size_t N = coef.GetLength();
     BaseFunction baseFunction = GetBaseFunction(functionId);
     ASSERT(NULL != baseFunction);
     FilterFunction filterFunction = GetFilterFunction(typeId);
     ASSERT(NULL != filterFunction);
-    for (int i = 0; i < (N+1)/2; ++i)
+    for (size_t i = 0; i < (N + 1) / 2; ++i)
     {
-        const double m = (2 * i + 1 - N) / 2.0;
+        const double m = (2 * static_cast<int>(i) + 1 - static_cast<int>(N)) / 2.0;
         double v = filterFunction(m, fe1, fe2, arg, baseFunction);
         coef[i] = v;
-        coef[N-i-1] = v;
+        coef[N - i - 1] = v;
     }
 }
 
@@ -252,7 +253,7 @@ int GetNumOfTapps(double delta)
     return tapps;
 }
 
-errno_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impulse)
+status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impulse)
 {
     const size_t M = impulse.GetLength();
     if (in.GetLength() < M)

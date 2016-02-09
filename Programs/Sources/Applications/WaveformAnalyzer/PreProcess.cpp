@@ -28,17 +28,19 @@
 
 #include "Common.h"
 
+#define DUPLICATE(v) (v), (v)
+
 namespace {
 
 const int LowestSampleCount = 512;
 
-int GetU1Position(uint value)
+int GetU1Position(size_t value)
 {
     if (0 == value)
     {
         return -1;
     }
-    for (int k = (sizeof(uint) * 8 - 1); k >= 0; --k)
+    for (int k = (sizeof(size_t) * 8 - 1); k >= 0; --k)
     {
         if (value & (1 << k))
         {
@@ -49,12 +51,12 @@ int GetU1Position(uint value)
     return -2;
 }
 
-size_t GetLowerLimitSize(uint frequency)
+size_t GetLowerLimitSize(size_t frequency)
 {
-    const uint tmp = frequency / 100;
+    const size_t tmp = frequency / 100;
     size_t size = 0;
 
-    for (uint k = 31; k >= 0; --k)
+    for (size_t k = 31; k >= 0; --k)
     {
         if (tmp & (1 << k))
         {
@@ -78,7 +80,7 @@ size_t GetLowerLimitSize(uint frequency)
  * 2) ウィンドウ幅で区切った時、端数が少なくなるように幅を定める。
  * 3) 少し余った場合は切り捨て、少し足りない場合は 0 埋めする。
  */
-size_t GetWindowLength(size_t n, uint samplingRate)
+size_t GetWindowLength(size_t n, size_t samplingRate)
 {
     const size_t upperWidth = ( 1 << GetU1Position(n * 2 - 1) );
     const size_t lowerWidth = GetLowerLimitSize(samplingRate);
@@ -89,8 +91,8 @@ size_t GetWindowLength(size_t n, uint samplingRate)
     }
 
     int caseCount = 0;
-    DEBUG_LOG("upperWidth: %ld (%08lx)\n", upperWidth, upperWidth);
-    DEBUG_LOG("lowerWidth: %ld (%08lx)\n", lowerWidth, lowerWidth);
+    DEBUG_LOG("upperWidth: %d (%08x)\n", DUPLICATE( static_cast<int>(upperWidth) ));
+    DEBUG_LOG("lowerWidth: %d (%08x)\n", DUPLICATE( static_cast<int>(lowerWidth) ));
 
     // 31 は 32 bit での最大左シフト数 ( 1 << 31 )、念のため。
     for ( ;upperWidth != (lowerWidth << caseCount) && caseCount < 31; ++caseCount);
@@ -99,11 +101,11 @@ size_t GetWindowLength(size_t n, uint samplingRate)
 
     mcon::Vector<double> ratio(caseCount);
 
-    for (uint w = lowerWidth, k = 0; w <= upperWidth; ++k, w *= 2)
+    for (size_t w = lowerWidth, k = 0; w <= upperWidth; ++k, w *= 2)
     {
-        const uint rest = n % w;
+        const size_t rest = n % w;
         ratio[k] = static_cast<double>(rest) / w;
-        DEBUG_LOG("n=%ld, %5d: %f (%d)\n", n, w, static_cast<double>(rest) / w, rest);
+        DEBUG_LOG("n=%d, %5d: %f (%d)\n", static_cast<int>(n), static_cast<int>(w), static_cast<double>(rest) / w, static_cast<int>(rest));
     }
     const double max = ratio.GetMaximum();
     const double min = ratio.GetMinimum();
@@ -123,7 +125,7 @@ size_t GetWindowLength(size_t n, uint samplingRate)
         }
     }
     ASSERT(index != -1);
-    DEBUG_LOG("Size: %ld\n", lowerWidth << index);
+    DEBUG_LOG("Size: %d\n", static_cast<int>(lowerWidth << index) );
     return (lowerWidth << index);
 }
 
@@ -133,9 +135,9 @@ size_t GetWindowLength(size_t n, uint samplingRate)
  * 階乗かどうか。
  * main からも呼ばれるので、無名空間には入れない。
  */
-bool IsFactorial(const uint _value, const uint base)
+bool IsFactorial(const size_t _value, const size_t base)
 {
-    uint value = _value;
+    size_t value = _value;
     if (0 == base || 0 == value)
     {
         return false;
@@ -164,8 +166,8 @@ bool IsFactorial(const uint _value, const uint base)
  */
 status_t PreProcess(ProgramParameter* param)
 {
-    const uint signalLength = param->signal.GetColumnLength();
-    const uint sampleCount = param->sampleCount > 0 ? param->sampleCount : signalLength;
+    const size_t signalLength = param->signal.GetColumnLength();
+    const size_t sampleCount = param->sampleCount > 0 ? param->sampleCount : signalLength;
     //----------------------------------------------------------------
     // ウィンドウ長を決定する
     //----------------------------------------------------------------
@@ -204,10 +206,10 @@ status_t PreProcess(ProgramParameter* param)
     //----------------------------------------------------------------
     // 使用サンプル数を決定する
     //----------------------------------------------------------------
-    const uint width = param->windowLength;
+    const size_t width = param->windowLength;
     const double ratio = static_cast<double>(sampleCount % width) / width;
     const int windowCount = (sampleCount / width) + (ratio >= 0.5f ? 1 : 0);
-    const uint sampleCountUsed = windowCount * width;
+    const size_t sampleCountUsed = windowCount * width;
 
     //----------------------------------------------------------------
     // サイズを変更する (信号データを編集する)
@@ -215,13 +217,13 @@ status_t PreProcess(ProgramParameter* param)
     if (sampleCountUsed != signalLength)
     {
         const size_t ch = param->signal.GetRowLength();
-        const uint N = sampleCountUsed;
+        const size_t N = sampleCountUsed;
         const mcon::Matrix<double> tmp(param->signal);
 
         param->signal.Resize(ch, N);
         param->signal = 0;
 
-        for (uint k = 0; k < ch; ++k)
+        for (size_t k = 0; k < ch; ++k)
         {
             param->signal[k].Copy(tmp[k]);
         }

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 #include "Common.h"
 
 namespace {
-    status_t LoadSignalFromWav(const std::string& filepath, mcon::Matrixd& signal, uint* pSamplingRate = NULL)
+    status_t LoadSignalFromWav(const std::string& filepath, mcon::Matrixd& signal, size_t* pSamplingRate = NULL)
     {
         mfio::Wave wave;
         mcon::Matrix<double> matrix;
@@ -55,7 +55,7 @@ status_t Setup(ProgramParameter* param)
     ShowMessage msg(__func__);
     do
     {
-        uint fs;
+        size_t fs;
         const std::string& inputPath = param->inputFilepath;
         LOG("Loading signal from wav (%s) ... \n", inputPath.c_str());
         const status_t status = LoadSignalFromWav(std::string(inputPath), param->inputSignal, &fs);
@@ -64,9 +64,9 @@ status_t Setup(ProgramParameter* param)
             ERROR_LOG("An error occured during loading %s: error=%d\n", inputPath.c_str(), status);
             return status;
         }
-        if (param->inputLength > 0 && static_cast<uint>(param->inputSignal.GetColumnLength()) > param->inputLength)
+        if (param->inputLength > 0 && static_cast<size_t>(param->inputSignal.GetColumnLength()) > param->inputLength)
         {
-            const uint length = param->inputLength;
+            const size_t length = param->inputLength;
             const int ch = param->inputSignal.GetRowLength();
             const mcon::Matrixd _input(param->inputSignal);
             param->inputSignal.Resize(ch, length);
@@ -77,10 +77,10 @@ status_t Setup(ProgramParameter* param)
                 param->inputSignal[r] = in;
             }
         }
-        for (uint r = 0; r < param->inputSignal.GetRowLength(); ++r)
+        for (size_t r = 0; r < param->inputSignal.GetRowLength(); ++r)
         {
             const mcon::Vectord& d = param->inputSignal[r];
-            LOG("    Energy-%d: %f\n", r, sqrt(d.Dot(d)));
+            LOG("    Energy-%d: %f\n", static_cast<int>(r), sqrt(d.Dot(d)));
         }
         msg.Log("Done\n");
         param->samplingRate = fs;
@@ -98,7 +98,7 @@ status_t Setup(ProgramParameter* param)
         mcon::Matrix<double> saved(2, n);
         saved[0] = input(base, n);
         input = input(base, n);
-        for (uint i = 0; i < input.GetLength(); ++i)
+        for (size_t i = 0; i < input.GetLength(); ++i)
         {
             input[i] *= window[i+n-1];
         }
@@ -111,7 +111,7 @@ status_t Setup(ProgramParameter* param)
     // Reference
     if ( !param->referenceFilepath.empty() )
     {
-        uint fs;
+        size_t fs;
         const std::string& referencePath = param->referenceFilepath;
         mcon::Matrixd referenceSignal;
         LOG("    Loading signal from wav (%s) ... \n", referencePath.c_str());
@@ -123,7 +123,7 @@ status_t Setup(ProgramParameter* param)
         }
         if (fs != param->samplingRate)
         {
-            ERROR_LOG("Not matched the sampling rates: %d (input) <=> %d (reference)\n", param->samplingRate, fs);
+            ERROR_LOG("Not matched the sampling rates: %d (input) <=> %d (reference)\n", static_cast<int>(param->samplingRate), static_cast<int>(fs) );
             return -ERROR_ILLEGAL;
         }
 

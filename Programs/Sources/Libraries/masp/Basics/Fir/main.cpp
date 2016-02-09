@@ -54,17 +54,20 @@ static void test_sinc(void)
     masp::fir::GetCoefficientsBefSinc(sbef, fe, fe2);
     masp::fir::FilterLanczos(lcoef, N, fe, 2.0);
 
+    FILE* fh = fopen("result.csv", "wb");
+    ASSERT(fh != NULL);
+
     slpf *= han;
-    LOG("N,i,sinc,sinc_n,lanczos\n");
+    fprintf(fh, "N,i,sinc,sinc_n,lanczos\n");
     for (size_t i = 0; i < N; ++i)
     {
-        LOG("%d,%d,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), scoef[i], slpf[i], lcoef[i]);
+        fprintf(fh, "%d,%d,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), scoef[i], slpf[i], lcoef[i]);
     }
-    LOG("\n");
-    LOG("N,i,slpf,shpf,sbpf,sbef\n");
+    fprintf(fh, "\n");
+    fprintf(fh, "N,i,slpf,shpf,sbpf,sbef\n");
     for (size_t i = 0; i < N; ++i)
     {
-        LOG("%d,%d,%f,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), slpf[i], shpf[i], sbpf[i], sbef[i]);
+        fprintf(fh, "%d,%d,%f,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), slpf[i], shpf[i], sbpf[i], sbef[i]);
     }
     N = 25;
     han.Resize(N);
@@ -80,17 +83,17 @@ static void test_sinc(void)
     masp::fir::GetCoefficientsBefSinc(sbef, fe, fe2);
     masp::fir::FilterLanczos(lcoef, N, fe, 2.0);
     slpf *= han;
-    LOG("\n");
-    LOG("N,i,sinc,sinc_n,lanczos\n");
+    fprintf(fh, "\n");
+    fprintf(fh, "N,i,sinc,sinc_n,lanczos\n");
     for (size_t i = 0; i < N; ++i)
     {
-        LOG("%d,%d,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), scoef[i], slpf[i], lcoef[i]);
+        fprintf(fh, "%d,%d,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), scoef[i], slpf[i], lcoef[i]);
     }
-    LOG("\n");
-    LOG("N,i,slpf,shpf,sbpf,sbef\n");
+    fprintf(fh, "\n");
+    fprintf(fh, "N,i,slpf,shpf,sbpf,sbef\n");
     for (size_t i = 0; i < N; ++i)
     {
-        LOG("%d,%d,%f,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), slpf[i], shpf[i], sbpf[i], sbef[i]);
+        fprintf(fh, "%d,%d,%f,%f,%f,%f\n", static_cast<int>(N), static_cast<int>(i), slpf[i], shpf[i], sbpf[i], sbef[i]);
     }
     return ;
 }

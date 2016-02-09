@@ -28,8 +28,9 @@ else
 MODULE_LIB_PATH :=
 endif
 
-CC := $(TOOLCHAIN_PREFIX)gcc
-LD := $(TOOLCHAIN_PREFIX)ld
+CC  := $(TOOLCHAIN_PREFIX)gcc
+CXX := $(TOOLCHAIN_PREFIX)g++
+LD  := $(TOOLCHAIN_PREFIX)ld
 
 LIBS += -lstdc++ -lm
 
@@ -116,7 +117,10 @@ install: $(MODULE_LIB_PATH)
 clean: 
 	@rm -rf $(MODULE_BIN_PATH) $(MODULE_LIB_PATH) *.BAK $(MODULE_OBJ)
 
+%.o: %.c $(INC)
+	$(CC) -c $(CFLAGS) $< -o $@
+
 %.o: %.cpp $(INC)
-	$(CC) -c $(CPPFLAGS) $< -o $@
+	$(CXX) -c $(CPPFLAGS) $< -o $@
 
 .PHONY: all lib install clean build run

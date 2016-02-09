@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,11 +85,11 @@ double CalculateSquaredSum(const mcon::VectordBase& signal)
 
 int FindBaseFromFront(const mcon::VectordBase& signal, const double energy, const double threshold)
 {
-    const uint N = signal.GetLength();
+    const size_t N = signal.GetLength();
     int start = -1;
     double tmp = 0;
     // 前から探す
-    for (uint k = 0; k < N; ++k)
+    for (size_t k = 0; k < N; ++k)
     {
         tmp += signal[k] * signal[k];
         if (tmp / energy > threshold)
@@ -103,11 +103,11 @@ int FindBaseFromFront(const mcon::VectordBase& signal, const double energy, cons
 
 int FindBaseFromBack(const mcon::VectordBase& signal, const double energy, const double threshold)
 {
-    const uint N = signal.GetLength();
+    const size_t N = signal.GetLength();
     int end = -1;
     double tmp = 0;
     // 後ろから探す
-    for (uint k = N - 1; k >= 0; --k)
+    for (size_t k = N - 1; k >= 0; --k)
     {
         tmp += signal[k] * signal[k];
         if (tmp / energy > threshold)
@@ -134,7 +134,7 @@ typedef struct _tagRange
 {
     int start;
     int end;
-    uint width;
+    size_t width;
 } Range;
 
 
@@ -143,7 +143,7 @@ Range GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double thresho
     const int N = input.GetColumnLength();
     int startIndex = N - 1;
     int endIndex = 0;
-    for (uint r = 0; r < input.GetRowLength(); ++r)
+    for (size_t r = 0; r < input.GetRowLength(); ++r)
     {
         int startSpot = 0;
         int endSpot = 0;
@@ -156,7 +156,7 @@ Range GetEnergySpotIndexOfInput(const mcon::Matrixd& input, const double thresho
     {
         startIndex,
         endIndex,
-        static_cast<uint>(endIndex - startIndex + 1)
+        static_cast<size_t>(endIndex - startIndex + 1)
     };
     return range;
 }
@@ -170,7 +170,7 @@ Range GetEnergySpotIndexOfReference(const mcon::Vectord& reference, const double
     {
         startIndex,
         endIndex,
-        static_cast<uint>(endIndex - startIndex + 1)
+        static_cast<size_t>(endIndex - startIndex + 1)
     };
     return range;
 }
@@ -180,13 +180,13 @@ int FindLocalMinimum(const mcon::Vectord& v)
     // 値が最少となる極小値を探す
     double minimum = v.GetMaximum();
     int index = -1;
-    for (uint k = 0; k < v.GetLength(); ++k)
+    for (size_t k = 0; k < v.GetLength(); ++k)
     {
         if (v[k]==0)
         {
             continue;
         }
-        DEBUG_LOG("%d,%g\n", k, log10(v[k]));
+        DEBUG_LOG("%d,%g\n", static_cast<int>(k), log10(v[k]));
         if (0 == k || k == v.GetLength() - 1)
         {
             continue;
@@ -204,7 +204,7 @@ int FindLocalMinimum(const mcon::Vectord& v)
     return index;
 }
 
-int GetIterationCount(const uint M, const int split)
+int GetIterationCount(const size_t M, const int split)
 {
     int count = 0;
     for (int _range = M, step; 1 != step; _range = 3 * step, ++count)
@@ -236,7 +236,7 @@ int Optimizer(
     // 入力信号のエネルギが高い領域 (開始点と終了点) を取得する。
     // 入力信号長を短くしても結果が (大きく) 変わらないなら使いたい。
     const Range erInput = GetEnergySpotIndexOfInput(input, 0.999);
-    DEBUG_LOG("Input    : %d-%d (width=%d)\n", erInput.start, erInput.end, erInput.width);
+    DEBUG_LOG("Input    : %d-%d (width=%d)\n", erInput.start, erInput.end, static_cast<int>(erInput.width) );
     UNUSED(erInput);
 
     // TBD:
@@ -244,23 +244,23 @@ int Optimizer(
     // 指定タップ数と同じ or 1/2 (計算量削減)
     //   1. 減らすと精度が落ち、数10サンプルずれた誤認識をした。
     //   2. もし減らすなら 1/2、数サンプル程度のずれだった。
-    const uint M = erInput.width; // or tapps or tapps / 2;
+    const size_t M = erInput.width; // or tapps or tapps / 2;
     // タップ数の2倍か信号長か、短い方
     //const int N = std::min(M * 2, input.GetColumnLength());
     // 1. N == M にするとうまくいかない...
     // 2. N == 1.1 M くらいならまだうまくいくが、N == 1.05 M ではダメ。
     //    何故か理解できていないのが残念
     // とりあえず、タップ数の1.5 倍にしておく
-    const uint N = std::min(static_cast<int>(M * 1.5), static_cast<int>(input.GetColumnLength()));
-    const uint channelCount = input.GetRowLength() + 1;
+    const size_t N = std::min(static_cast<int>(M * 1.5), static_cast<int>(input.GetColumnLength()));
+    const size_t channelCount = input.GetRowLength() + 1;
     const Range erReference = GetEnergySpotIndexOfReference(reference, 0.99);
-    LOG("    Reference: %d-%d (width=%d)\n", erReference.start, erReference.end, erReference.width);
+    LOG("    Reference: %d-%d (width=%d)\n", erReference.start, erReference.end, static_cast<int>(erReference.width));
     int offsets[channelCount];
     int range = M; // 捜索範囲
     const int iter = GetIterationCount(M, split);
     mcon::Matrixd log(iter * channelCount, split + 1); // + 1 はインデックスを入れるため。
-    DEBUG_LOG("M=%d, N=%d\n", M, N);
-    for (uint ch = 0; ch < channelCount; ++ch)
+    DEBUG_LOG("M=%d, N=%d\n", static_cast<int>(M), static_cast<int>(N));
+    for (size_t ch = 0; ch < channelCount; ++ch)
     {
         offsets[ch] = ClampLower<int>(0, erReference.end - M + 1); // 捜索開始インデックス
     }
@@ -270,22 +270,22 @@ int Optimizer(
         const int step = ClampLower<int>(0, (range + split - 1) / split);
         mcon::VectordBase& JsAll = log[channelCount * (i + 1) - 1];
         JsAll  = 0;
-        for (uint r = 0; r < input.GetRowLength(); ++r)
+        for (size_t r = 0; r < input.GetRowLength(); ++r)
         {
             const int& offset = separately ? offsets[r] : offsets[channelCount - 1];
             //const int end = ( (erReference.start - offset) + step - 1 ) / step;
-            LOG("    Stage-%d: Ch=%d, Range=%d-%d, Step=%d\n", i + 1, r, offset, offset + range - 1, step);
+            LOG("    Stage-%d: Ch=%d, Range=%d-%d, Step=%d\n", i + 1, static_cast<int>(r), offset, offset + range - 1, step);
             mcon::VectordBase& Js = log[channelCount * i + r];
             Js = 0;
             const mcon::Vectord _signal(input[r]);
             const mcon::Vectord signal = _signal(0, N);
             mcon::Matrixd Ut(M, N);
-            DEBUG_LOG("Ut: (%d, %d)\n", Ut.GetRowLength(), Ut.GetColumnLength());
+            DEBUG_LOG("Ut: (%d, %d)\n", static_cast<int>(Ut.GetRowLength()), static_cast<int>(Ut.GetColumnLength()));
             mcon::Matrixd inversed;
-            DEBUG_LOG("r=%d: NormalEquationPre()\n", r);
+            DEBUG_LOG("r=%d: NormalEquationPre()\n", static_cast<int>(r));
             NormalEquationPre(inversed, Ut, signal, W);
-            DEBUG_LOG("Inv: (%d, %d)\n", inversed.GetRowLength(), inversed.GetColumnLength());
-            DEBUG_LOG("r=%d: Do, Optimizing ...\n", r);
+            DEBUG_LOG("Inv: (%d, %d)\n", static_cast<int>(inversed.GetRowLength()), static_cast<int>(inversed.GetColumnLength()));
+            DEBUG_LOG("r=%d: Do, Optimizing ...\n", static_cast<int>(r));
             for (int k = 0; k < split; ++k)
             {
                 double J;
@@ -305,7 +305,7 @@ int Optimizer(
             }
         }
         // 誤差配列で極小値をとるインデックスを取得する。
-        for (uint ch = 0; ch < channelCount; ++ch)
+        for (size_t ch = 0; ch < channelCount; ++ch)
         {
             const int idx = channelCount * i + ch;
             mcon::VectordBase& Js = log[idx];
@@ -320,11 +320,11 @@ int Optimizer(
             lmIndex *= step;
             lmIndex += offset;
             Js[log.GetColumnLength() - 1] = lmIndex;
-            LOG("        ==> Local minimum (Ch-%d): %d.\n", ch, lmIndex);
+            LOG("        ==> Local minimum (Ch-%d): %d.\n", static_cast<int>(ch), lmIndex);
         }
 
         bool isNotFound = true;
-        for (uint ch = 0; ch < channelCount; ++ch)
+        for (size_t ch = 0; ch < channelCount; ++ch)
         {
             const int ridx = channelCount * (i + 1) - 1;
             const int cidx = log.GetColumnLength() - 1;
@@ -344,7 +344,7 @@ int Optimizer(
             const int cidx = log.GetColumnLength() - 1;
             if (separately)
             {
-                for (uint ch = 0; ch < referenceOffset.GetLength(); ++ch)
+                for (size_t ch = 0; ch < referenceOffset.GetLength(); ++ch)
                 {
                     const int ridx = channelCount * i + ch;
                     referenceOffset[ch] = log[ridx][cidx];
@@ -353,7 +353,7 @@ int Optimizer(
             else
             {
                 const int ridx = channelCount * (i + 1) - 1;
-                for (uint ch = 0; ch < referenceOffset.GetLength(); ++ch)
+                for (size_t ch = 0; ch < referenceOffset.GetLength(); ++ch)
                 {
                     referenceOffset[ch] = log[ridx][cidx];
                 }
@@ -364,7 +364,7 @@ int Optimizer(
         // 極小値が見つかった区間とその前後、合計3 の区間を対象にする。
         // そうすると、確実に次も極小値が見つかる。
         // なので...
-        for (uint ch = 0; ch < channelCount; ++ch)
+        for (size_t ch = 0; ch < channelCount; ++ch)
         {
             const int ridx = channelCount * i + ch; // Each channel (Row)
             const int aidx = channelCount * (i + 1) - 1; // All (Row)

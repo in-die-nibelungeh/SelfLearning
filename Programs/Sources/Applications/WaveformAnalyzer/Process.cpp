@@ -41,13 +41,13 @@ status_t CaculateEnergy(const mcon::Matrix<double>& input, const std::string& ou
     const size_t N = input.GetColumnLength();
     mcon::Matrix<double> energyRatio(2 * ch, N);
 
-    for (uint c = 0; c < ch; ++c)
+    for (size_t c = 0; c < ch; ++c)
     {
         const mcon::Vector<double>& _input = input[c];
         const double energy = sqrt(_input.GetDotProduct(_input));
-        LOG("    Energy[%d-ch]: %g\n", c, energy);
+        LOG("    Energy[%d-ch]: %g\n", static_cast<int>(c), energy);
         double sum = 0;
-        for ( uint k = 0; k < N; ++k )
+        for ( size_t k = 0; k < N; ++k )
         {
             sum += _input[k] * _input[k];
             energyRatio[2 * c + 0][k] = sqrt(sum);
@@ -57,7 +57,7 @@ status_t CaculateEnergy(const mcon::Matrix<double>& input, const std::string& ou
     const std::string ecsv("_energy.csv");
     mfio::Csv csv(outputBase + ecsv);
     csv.Write("Id");
-    for (uint c = 0; c < ch; ++c)
+    for (size_t c = 0; c < ch; ++c)
     {
         csv.Write(",Enegy,Energy ratio");
     }
@@ -96,13 +96,13 @@ status_t CaculateSpectrum(const ProgramParameter* param)
             break;
     }
 
-    for (uint i = 0; i < N; ++i)
+    for (size_t i = 0; i < N; ++i)
     {
         matrix[0][i] = 1.0 * i / N * param->samplingRate;
     }
     const double windowEnergy = sqrt(window.Dot(window) / window.GetLength()) ;
     DEBUG_LOG("WindowEnergy=%g\n", windowEnergy);
-    for (uint c = 0; c < ch; ++c)
+    for (size_t c = 0; c < ch; ++c)
     {
         const int count = input.GetColumnLength() / param->windowLength;
         const int rest = (input.GetColumnLength() % param->windowLength);
@@ -159,14 +159,14 @@ status_t CaculateSpectrum(const ProgramParameter* param)
             || param->gainFormat == GainFormat_20Log)
         {
             const double gain = param->gainFormat == GainFormat_10Log ? 10.0 : 20.0;
-            for (uint i = 0; i < N; ++i)
+            for (size_t i = 0; i < N; ++i)
             {
                 sum[0][i] = gain * log10(sum[0][i]);
             }
         }
         if (param->argFormat == ArgFormat_Degree)
         {
-            for (uint i = 0; i < N; ++i)
+            for (size_t i = 0; i < N; ++i)
             {
                 sum[1][i] = sum[1][i] / M_PI * 180.0;
             }
@@ -179,7 +179,7 @@ status_t CaculateSpectrum(const ProgramParameter* param)
 
     mfio::Csv csv(param->outputBase + ecsv);
     csv.Write("Id,Frequency");
-    for (uint c = 0; c < ch; ++c)
+    for (size_t c = 0; c < ch; ++c)
     {
         csv.Write(",Amplitude,Argument");
     }

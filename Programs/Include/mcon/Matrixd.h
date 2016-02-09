@@ -67,9 +67,10 @@ public:
         ASSERT(true == status);
         if (true == transpose)
         {
+            const size_t _0 = 0;
             for (size_t i = 0; i < v.GetLength(); ++i)
             {
-                m_ObjectBase[i][0] = v[i];
+                m_ObjectBase[i][_0] = v[i];
             }
         }
         else
@@ -77,7 +78,6 @@ public:
             m_ObjectBase[0] = v;
         }
     }
-
     Matrix<double>(const Matrix<double>& m)
         : m_RowLength(m.GetRowLength())
         , m_ColumnLength(m.GetColumnLength())

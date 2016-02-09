@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -175,7 +175,7 @@ status_t Csv::Write(const mcon::Matrix<double>& matrix) const
 
 status_t Csv::Read(const char* fname, mcon::Matrix<double>& matrix)
 {
-    Csv csv(fname, "r");
+    Csv csv(fname, "rb");
     return csv.Read(matrix);
 }
 
@@ -216,12 +216,14 @@ void CountRowColumn(FILE* handle, int& row, int& column)
     }
 }
 
-int ReadTokensAsDouble(mcon::Matrix<double>& matrix, char* line, int column, int rowMaximum)
+int ReadTokensAsDouble(mcon::Matrix<double>& matrix, char* line, int _column, int _rowMaximum)
 {
+    const size_t column = _column;
+    const size_t rowMaximum = _rowMaximum;
     const char sep[] = {Csv::g_Delimiter, '\0'};
     char* s = line;
     s = strtok(s, sep);
-    for ( int r = 0 ; NULL != s && r < rowMaximum; ++r )
+    for (size_t r = 0 ; NULL != s && r < rowMaximum; ++r )
     {
         double v;
         sscanf(s, "%lf", &v);
