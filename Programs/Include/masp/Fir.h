@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <sys/types.h>
+#include <cerrno>
 
 #include "mcon.h"
 
@@ -85,7 +85,7 @@ inline int GetNumOfTapps(double passband, int samplingRate)
     return GetNumOfTapps(static_cast<double>(passband)/samplingRate);
 }
 
-status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse);
+errno_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impluse);
 
 
 } // namespace fir {
