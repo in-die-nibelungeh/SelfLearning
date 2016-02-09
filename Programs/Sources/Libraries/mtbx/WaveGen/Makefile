@@ -6,7 +6,7 @@ MODULE_SRC=WaveGen.cpp
 
 INC=$(MODULE_HEADER)
 
-LIBS=-lmcon
+LIBS=-lmcon -lmfio
 
 CPPFLAGS += -O3
 
