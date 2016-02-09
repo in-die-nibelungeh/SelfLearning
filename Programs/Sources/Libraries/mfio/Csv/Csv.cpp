@@ -133,7 +133,7 @@ status_t Csv::Write(const double data[], int length) const
     }
     for (int i = 0; i < length; ++i)
     {
-        fprintf(m_Handle, "%d%c%g\n", i, g_Delimiter,  data[i]);
+        fprintf(m_Handle, "%d%c%g\n", static_cast<uint32_t>(i), g_Delimiter,  data[i]);
     }
     return NO_ERROR;
 }
@@ -144,9 +144,9 @@ status_t Csv::Write(const mcon::Vector<double>& vector) const
     {
         return -ERROR_INVALID_HANDLE;
     }
-    for (uint i = 0; i < vector.GetLength(); ++i)
+    for (size_t i = 0; i < vector.GetLength(); ++i)
     {
-        fprintf(m_Handle, "%d%c%g\n", i, g_Delimiter,  vector[i]);
+        fprintf(m_Handle, "%d%c%g\n", static_cast<uint32_t>(i), g_Delimiter,  vector[i]);
     }
     return NO_ERROR;
 }
@@ -157,10 +157,10 @@ status_t Csv::Write(const mcon::Matrix<double>& matrix) const
     {
         return -ERROR_INVALID_HANDLE;
     }
-    for (uint i = 0; i < matrix.GetColumnLength(); ++i)
+    for (size_t i = 0; i < matrix.GetColumnLength(); ++i)
     {
-        fprintf(m_Handle, "%d%c%g", i, g_Delimiter,  matrix[0][i]);
-        for (uint k = 1; k < matrix.GetRowLength(); ++k)
+        fprintf(m_Handle, "%d%c%g", static_cast<uint32_t>(i), g_Delimiter,  matrix[0][i]);
+        for (size_t k = 1; k < matrix.GetRowLength(); ++k)
         {
             fprintf(m_Handle, "%c%g", g_Delimiter,  matrix[k][i]);
         }

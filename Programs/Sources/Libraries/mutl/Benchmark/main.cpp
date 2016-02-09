@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdio.h>
 
 #include "mutl.h"
@@ -5,10 +29,12 @@
 double g_Value = 0.0;
 
 #include <stdio.h>
+#if 0
 #include <unistd.h>          // sysconf/_SC_CLK_TCK
 #include <sys/resource.h>    // getrusage
 #include <sys/time.h>        // clock/CLOCKS_PER_SEC/gettimeofday
 #include <sys/times.h>       // times
+#endif
 #include <stdint.h>          // int64_t
 
 //-----------------------------------------------------------------
@@ -37,7 +63,11 @@ inline int mtgettimeofday(struct timeval* p, void* tz /* IGNORED */)
     GetSystemTimeAsFileTime( &(now.ft) );
     p->tv_usec=(long)((now.ns100 / 10LL) % 1000000LL );
     p->tv_sec= (long)((now.ns100-(116444736000000000LL))/10000000LL);
+#if defined(_WIN64)
+    printf("now=%I64d\n", now.ns100);
+#else
     printf("now=%lld\n", now.ns100);
+#endif
     return 0;
 }
 
@@ -47,6 +77,7 @@ inline int mtgettimeofday(struct timeval* p, void* tz /* IGNORED */)
 #endif
 
 //-----------------------------------------------------------------
+#if 0
 double gettimeofday_sec()
 {
     struct timeval tv;
@@ -78,10 +109,12 @@ double gettime_sec()
     sec += tp.tv_sec;
     return sec;
 }
+#endif
 
 #define RDTSC(X) __asm__ volatile ("rdtsc" : "=A" (X))
 //-----------------------------------------------------------------
 
+#if 0
 static void test_methods(void)
 {
     clock_t ct1,ct2;     // clock() 関数を使った時間計測
@@ -182,15 +215,22 @@ static void test_methods(void)
     printf("    RDTSC: elapsed tsc = %ld : %ld ==> %ld\n", tsc2-tsc1, tsc1, tsc2);
 
 }
+#endif
 
 void test_stopwatch(void)
 {
     mutl::Stopwatch sw;
+    const int iter = 6;
+    const int cases = 2;
     const int a = 0;
+    const int iterCount = 100;
+
+    double records[cases][iter] = {0};
     int b;
-    for (int m = 0; m < 2; ++m )
+    LOG("[Stopwatch]\n");
+    for (int m = 0; m < cases; ++m )
     {
-        int limit = 100;
+        int limit = iterCount;
         if (m != 0)
         {
             printf("Correlating ... ");
@@ -198,7 +238,7 @@ void test_stopwatch(void)
             printf("Done\n");
         }
 
-        for ( int k = 0; k < 6; ++k, limit *= 10)
+        for (int k = 0; k < iter; ++k, limit *= 10)
         {
             sw.Tick();
             // 時間を計測する処理
@@ -212,14 +252,89 @@ void test_stopwatch(void)
                 :[a]"r"(a)
                 );
             }
-            printf("Time consumed: %g\n", sw.Tick());
+            records[m][k] = sw.Tick();
         }
     }
+    const double threshold = 0.01;
+    for (int k = 0, loop = iterCount; k < iter; ++k, loop *= 10)
+    {
+        std::string recordString(std::string("    ") + std::to_string(loop) + std::string(": "));
+
+        for (int c = 0; c < cases; ++c)
+        {
+            recordString += std::string("\t") + std::to_string(records[c][k]);
+        }
+        std::string resultString("\tSkipped...\n");
+        if (0.0 != records[0][k])
+        {
+            const double error = fabs(records[0][k] - records[1][k]) / records[1][k];
+            if ( error < threshold)
+            {
+                resultString = std::string("\t[OK]\n");
+            }
+            else
+            {
+                resultString = std::string("\t[NG] (") + std::to_string(error) + std::string(")\n");
+            }
+        }
+
+        recordString += resultString;
+        LOG(recordString.c_str());
+    }
+    LOG("\n");
+}
+
+void test_clockwatch(void)
+{
+    mutl::Clockwatch cw;
+    const int iter = 6;
+    const int cases = 1;
+    const int a = 0;
+    const int iterCount = 100;
+    uint64_t records[cases][iter] = {0};
+    int b;
+    LOG("[Clockwatch]\n");
+    for (int m = 0; m < cases; ++m )
+    {
+        int limit = iterCount;
+
+        for (int k = 0; k < iter; ++k, limit *= 10)
+        {
+            cw.Tick();
+            // 時間を計測する処理
+            for ( int i = 0; i < limit; ++i )
+            {
+                __asm__ volatile(
+                ".rept 1000\n"
+                "  add %[a], %[b]\n"
+                ".endr\n"
+                :[b]"=r"(b)
+                :[a]"r"(a)
+                );
+            }
+            records[m][k] = cw.Tick();
+        }
+    }
+    for (int k = 0, loop = iterCount; k < iter; ++k, loop *= 10)
+    {
+        std::string recordString(std::string("    ") + std::to_string(loop) + std::string(": "));
+
+        for (int c = 0; c < cases; ++c)
+        {
+            recordString += std::string("\t") + std::to_string(records[c][k]);
+        }
+        recordString += std::string("\n");
+        LOG(recordString.c_str());
+    }
+    LOG("\n");
 }
 
 int main(void)
 {
-    test_methods();
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    //test_methods();
     test_stopwatch();
+    test_clockwatch();
     return 0;
 }
