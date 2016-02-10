@@ -69,7 +69,7 @@ const Desc descs[] =
 int main(int argc, const char* argv[])
 {
 #if 0
-    const uint freqs[] =
+    const size_t freqs[] =
     {
         4000,
         8000,
@@ -80,14 +80,14 @@ int main(int argc, const char* argv[])
         96000,
         192000
     };
-    for (uint k = 0; k < sizeof(freqs)/sizeof(uint); ++k)
+    for (size_t k = 0; k < sizeof(freqs)/sizeof(size_t); ++k)
     {
         const size_t size = GetLowerLimitSize(freqs[k]);
         printf("%3dk: %ld\n", freqs[k]/1000, size);
     }
 
-    const uint base = 3;
-    for (uint k = 0; k < 33; ++k)
+    const size_t base = 3;
+    for (size_t k = 0; k < 33; ++k)
     {
         LOG("%d: %s\n", k, IsFactorial(k, base) ? "yes" : "no ");
     }
@@ -133,10 +133,10 @@ int main(int argc, const char* argv[])
     }
     if ( parser.IsEnabled("w") )
     {
-        const uint width  = atoi( parser.GetOption("w").c_str() );
+        const size_t width  = atoi( parser.GetOption("w").c_str() );
         if ( !IsFactorial(width, 2) )
         {
-            ERROR_LOG("The value specified with -w must be 2^n: %d\n", width);
+            ERROR_LOG("The value specified with -w must be 2^n: %d\n", static_cast<int>(width) );
             return 0;
         }
         param.windowLength = width;
@@ -198,23 +198,23 @@ int main(int argc, const char* argv[])
     LOG("[Input]\n");
     LOG("    InputFile   : %s\n", param.inputFilepath.c_str());
     LOG("    OutputFile  : %s\n", param.outputBase.c_str());
-    LOG("    Window      : %d\n", param.windowLength);
+    LOG("    Window      : %d\n", static_cast<int>(param.windowLength) );
     LOG("    WindowType  : %d\n", param.windowType);
-    LOG("    Sample      : %d\n", param.sampleCount);
+    LOG("    Sample      : %d\n", static_cast<int>(param.sampleCount) );
     LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
     LOG("    Gain        : %d\n", param.gainFormat);
     LOG("    Argument    : %d\n", param.argFormat);
 
     PRINT_RETURN_IF_FAILED( Setup(&param) );
-    LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
-    LOG("    SamplingRate: %d\n", param.samplingRate);
+    LOG("    SignalLength: %d\n", static_cast<int>(param.signal.GetColumnLength()));
+    LOG("    SamplingRate: %d\n", static_cast<int>(param.samplingRate));
     LOG("\n");
 
     PRINT_RETURN_IF_FAILED( PreProcess(&param) );
     LOG("[PreProcessed]\n");
-    LOG("    SignalLength: %d\n", param.signal.GetColumnLength());
-    LOG("    Window      : %d\n", param.windowLength);
-    LOG("    Count       : %d (%d)\n", param.signal.GetColumnLength() / param.windowLength, param.signal.GetColumnLength() % param.windowLength);
+    LOG("    SignalLength: %d\n", static_cast<int>(param.signal.GetColumnLength()));
+    LOG("    Window      : %d\n", static_cast<int>(param.windowLength));
+    LOG("    Count       : %d (%d)\n", static_cast<int>(param.signal.GetColumnLength() / param.windowLength), static_cast<int>(param.signal.GetColumnLength() % param.windowLength));
     LOG("    Process     : %s\n", param.isUsedOnlyFt ? "ft" : "fft");
 
     PRINT_RETURN_IF_FAILED( Process(&param) );

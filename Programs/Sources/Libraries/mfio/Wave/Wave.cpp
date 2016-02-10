@@ -1,13 +1,33 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "debug.h"
 #include "status.h"
-#include "types.h"
-#include "mfio.h"
+#include "mfio/Wave.h"
 
 namespace mfio {
 
@@ -145,7 +165,7 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
             }
             default:
             {
-                char * c = chunk.name.c;
+                const char* c = chunk.name.c;
                 ERROR_LOG("Unsupported chunk: %c%c%c%c\n", c[0], c[1], c[2], c[3]);
                 FileSeek(fd, chunk.size, SEEK_CUR);
                 // ret = ERROR_UNKNOWN;
@@ -167,7 +187,7 @@ status_t Wave::ReadMetaData(FILE*& fd, int& pos, size_t& size)
 
 status_t Wave::Read(const char* path, mcon::Vector<double>& buffer)
 {
-    FILE* fd = fopen(path, "r");
+    FILE* fd = fopen(path, "rb");
     if (NULL == fd)
     {
         return -ERROR_NOT_FOUND; // NOT_FOUND
@@ -225,7 +245,7 @@ END:
     return status;
 }
 
-status_t Wave::Read(const char* path, double** buffer, int* length)
+status_t Wave::Read(const char* path, double** buffer, int* pLength)
 {
     mcon::Vector<double> tmp;
     status_t status = Read(path, tmp);
@@ -234,15 +254,15 @@ status_t Wave::Read(const char* path, double** buffer, int* length)
         return status;
     }
 
-    const uint _length = tmp.GetLength();
-    const size_t _size =  _length * sizeof(double);
-    *length = _length;
-    *buffer = reinterpret_cast<double*>(malloc(_size));
+    const size_t length = tmp.GetLength();
+    const size_t _size =  length * sizeof(double);
+    *pLength = length;
+    *buffer = new double[_size];
     if (*buffer == NULL)
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    for (uint i = 0; i < _length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         (*buffer)[i] = tmp[i];
     }
@@ -258,15 +278,15 @@ status_t Wave::Read(const char* path, mcon::Matrix<double>& buffer)
     {
         return status;
     }
-    const uint ch = GetNumChannels();
-    const uint length = tmp.GetLength() / ch;
+    const size_t ch = GetNumChannels();
+    const size_t length = tmp.GetLength() / ch;
     if ( false == buffer.Resize(ch, length) )
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
-        for (uint c = 0; c < ch; ++c)
+        for (size_t c = 0; c < ch; ++c)
         {
             buffer[c][i] = tmp[i*ch+c];
         }
@@ -350,7 +370,7 @@ status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
         return -ERROR_NULL;
     }
 
-    FILE *fd = fopen(path, "w");
+    FILE *fd = fopen(path, "wb");
     if (NULL == fd)
     {
         return -ERROR_ILLEGAL_PERMISSION;
@@ -434,7 +454,7 @@ status_t Wave::Write(const char* path, const mcon::Vector<double>& buffer) const
 status_t Wave::Write(const char* path, double* buffer, size_t size) const
 {
     mcon::Vector<double> tmp(size/sizeof(double));
-    for (uint i = 0; i < tmp.GetLength(); ++i)
+    for (size_t i = 0; i < tmp.GetLength(); ++i)
     {
         tmp[i] = buffer[i];
     }
@@ -448,16 +468,16 @@ status_t Wave::Write(const char* path, const mcon::Matrix<double>& buffer) const
     {
         return -ERROR_NULL;
     }
-    const int ch = GetNumChannels();
-    const int length = buffer.GetColumnLength();
+    const size_t ch = GetNumChannels();
+    const size_t length = buffer.GetColumnLength();
     const int bits = GetBitDepth();
     UNUSED(bits);
 
     mcon::Vector<double> tmp(ch * length);
 
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
-        for (int c = 0; c < ch; ++c)
+        for (size_t c = 0; c < ch; ++c)
         {
             tmp[ch*i+c] = buffer[c][i];
         }

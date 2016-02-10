@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -343,12 +343,12 @@ status_t Estimater(
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
     status_t status = NO_ERROR;
-    for (uint r = 0; r < input.GetRowLength(); ++r)
+    for (size_t r = 0; r < input.GetRowLength(); ++r)
     {
-        const uint referenceOffset = referenceOffsets.IsNull() ? 0 : referenceOffsets[r];
+        const size_t referenceOffset = referenceOffsets.IsNull() ? 0 : referenceOffsets[r];
         if (!referenceOffsets.IsNull())
         {
-            LOG("    Ch-%d: ReferenceOffset=%d\n", r, referenceOffset);
+            LOG("    Ch-%d: ReferenceOffset=%d\n", static_cast<int>(r), static_cast<int>(referenceOffset));
         }
         const mcon::Vectord d = reference(referenceOffset, N);
         const mcon::Vectord _u = input[r];

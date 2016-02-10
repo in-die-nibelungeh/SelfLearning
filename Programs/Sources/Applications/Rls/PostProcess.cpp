@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,15 +69,15 @@ status_t PostProcess(ProgramParameter* param)
         mcon::Vectord sumups(ch);
         mcon::Vectord energies(ch);
 
-        for (uint r = 0; r < ch; ++r)
+        for (size_t r = 0; r < ch; ++r)
         {
             // チャンネル毎のレベル調整
             const mcon::VectordBase& signal = param->inversedSignal[r];
             energies[r] = sqrt(signal.Dot(signal));
-            LOG("    Ch-%d Energy: %g\n", r, energies[r]);
+            LOG("    Ch-%d Energy: %g\n", static_cast<int>(r), energies[r]);
             // 積算 (畳み込み) する時のための最大値調整 (全体)
             double sumup = 0;
-            for (uint k = 0; k < N; ++k)
+            for (size_t k = 0; k < N; ++k)
             {
                 sumup += fabs(signal[k]);
             }
@@ -86,13 +86,13 @@ status_t PostProcess(ProgramParameter* param)
         LOG("    Ajusted Level:\n");
         // レベル調整 (上げる方向)
         const double maxEnergy = energies.GetMaximum();
-        for (uint r = 0; r < ch; ++r)
+        for (size_t r = 0; r < ch; ++r)
         {
             mcon::VectordBase& signal = param->inversedSignal[r];
             const double extendFactor =
                 sqrt( maxEnergy / energies[r]  );
             signal *= extendFactor;
-            LOG("    Ch-%d Energy: %g\n", r, sqrt(signal.Dot(signal)) );
+            LOG("    Ch-%d Energy: %g\n", static_cast<int>(r), sqrt(signal.Dot(signal)) );
         }
         param->inversedSignal *= param->upperValue / sumups.GetMaximum();
     }

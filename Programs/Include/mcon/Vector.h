@@ -24,23 +24,23 @@
 
 #pragma once
 
-#include <string>
-#include <math.h>
+#include <string> // std::min
+#include <cmath> // std::sqrt
 
-#include "types.h"
-#include "debug.h"
+#include "debug.h" // ASSERT()
+
 #include "VectordBase.h"
 
 namespace mcon {
 
 template <typename Type> class Matrix;
 
-#define MCON_ITERATION(var, iter, statement)  \
-    do {                                      \
-        for (uint var = 0; var < iter; ++var) \
-        {                                     \
-            statement;                        \
-        }                                     \
+#define MCON_ITERATION(var, iter, statement)    \
+    do {                                        \
+        for (size_t var = 0; var < iter; ++var) \
+        {                                       \
+            statement;                          \
+        }                                       \
     } while(0)
 
 template <typename Type>
@@ -55,13 +55,13 @@ public:
     ~Vector();
 
     // For const object
-    const Type& operator[](const uint i) const
+    const Type& operator[](const size_t i) const
     {
         ASSERT (i < m_Length);
         return m_Address[i];
     }
     // For non-const object
-    Type& operator[](const uint i)
+    Type& operator[](const size_t i)
     {
         ASSERT (i < m_Length);
         return m_Address[i];
@@ -94,7 +94,7 @@ public:
         return reinterpret_cast<void*>(m_Address);
     }
 
-    Vector<Type> operator()(uint offset, uint length) const
+    Vector<Type> operator()(size_t offset, size_t length) const
     {
         Vector<Type> carveout;
         if (GetLength() <= offset)
@@ -104,7 +104,7 @@ public:
         }
         // Smaller value as length
         carveout.Resize( std::min(GetLength() - offset, length) );
-        for (uint i = offset; i < Smaller(offset + length); ++i)
+        for (size_t i = offset; i < Smaller(offset + length); ++i)
         {
             carveout[i-offset] = (*this)[i];
         }
@@ -114,7 +114,7 @@ public:
     Type Fifo(Type v)
     {
         Type ret = (*this)[0];
-        for (uint i = 0; i < GetLength() - 1; ++i)
+        for (size_t i = 0; i < GetLength() - 1; ++i)
         {
             (*this)[i] = (*this)[i+1];
         }
@@ -125,7 +125,7 @@ public:
     Type Unshift(Type v)
     {
         Type ret = (*this)[GetLength()-1];
-        for (uint i = GetLength() - 1; i > 0; --i)
+        for (size_t i = GetLength() - 1; i > 0; --i)
         {
             (*this)[i] = (*this)[i-1];
         }
@@ -158,15 +158,15 @@ public:
 
     void Initialize(int offset = 0, int step = 1)
     {
-        for (uint k = 0; k < GetLength(); ++k )
+        for (size_t k = 0; k < GetLength(); ++k )
         {
             (*this)[k] = offset + step * k;
         }
     }
 
-    void Initialize( Type (*initializer)(uint, uint) )
+    void Initialize( Type (*initializer)(size_t, size_t) )
     {
-        for (uint k = 0; k < GetLength(); ++k )
+        for (size_t k = 0; k < GetLength(); ++k )
         {
             (*this)[k] = initializer(k, GetLength());
         }
@@ -189,7 +189,7 @@ public:
     inline Type GetMaximum(void) const
     {
         Type max = (*this)[0];
-        for (uint i = 1; i < GetLength(); ++i)
+        for (size_t i = 1; i < GetLength(); ++i)
         {
             if (max < (*this)[i])
             {
@@ -202,7 +202,7 @@ public:
     inline Type GetMaximumAbsolute(void) const
     {
         Type max = Absolute((*this)[0]);
-        for (uint i = 1; i < GetLength(); ++i)
+        for (size_t i = 1; i < GetLength(); ++i)
         {
             const Type v = Absolute((*this)[i]);
             if (max < v)
@@ -216,7 +216,7 @@ public:
     inline Type GetMinimum(void) const
     {
         Type min = (*this)[0];
-        for (uint i = 1; i < GetLength(); ++i)
+        for (size_t i = 1; i < GetLength(); ++i)
         {
             if (min > (*this)[i])
             {
@@ -229,7 +229,7 @@ public:
     inline Type GetMinimumAbsolute(void) const
     {
         Type min = Absolute((*this)[0]);
-        for (uint i = 1; i < GetLength(); ++i)
+        for (size_t i = 1; i < GetLength(); ++i)
         {
             const Type v = Absolute((*this)[i]);
             if (min > v)
@@ -257,7 +257,7 @@ public:
     {
         double squareSum = 0;
         MCON_ITERATION( i, GetLength(), squareSum += (*this)[i] * (*this)[i]);
-        return sqrt(squareSum);
+        return std::sqrt(squareSum);
     }
     inline double GetDotProduct(const Vector<Type>& v) const
     {
@@ -266,18 +266,18 @@ public:
         return dot;
     }
 
-    uint GetLength(void) const { return m_Length; }
+    size_t GetLength(void) const { return m_Length; }
     bool IsNull(void) const { return m_Length == 0; }
-    bool Resize(uint length);
+    bool Resize(size_t length);
 
 private:
     // Private member functions.
-    uint   Smaller(uint input) const { return GetLength() < input ? GetLength() : input; }
-    void   Allocate(void);
-    Type   Absolute(Type v) const { return (v < 0) ? -v : v; }
+    size_t   Smaller(size_t input) const { return GetLength() < input ? GetLength() : input; }
+    void     Allocate(void);
+    Type     Absolute(Type v) const { return (v < 0) ? -v : v; }
     // Private member variables.
-    Type*  m_Address;
-    uint   m_Length;
+    Type*    m_Address;
+    size_t   m_Length;
 };
 
 template <typename Type>
@@ -364,7 +364,7 @@ Vector<Type>& Vector<Type>::operator=(const VectordBase& v)
 }
 
 template <typename Type>
-bool Vector<Type>::Resize(uint length)
+bool Vector<Type>::Resize(size_t length)
 {
     if (length == m_Length)
     {

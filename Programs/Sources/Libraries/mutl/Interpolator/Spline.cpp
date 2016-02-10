@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-16 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,7 @@ namespace interp {
 
 status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBase& input, int sampleCount)
 {
+    const size_t _0 = 0;
     if ( sampleCount <= 0 )
     {
         return -ERROR_INVALID_ARGUMENT;
@@ -50,7 +51,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    const int N = input.GetLength();
+    const size_t N = input.GetLength();
     mcon::Matrix<double> equation;
     if ( false == equation.Resize(N-2, N-1) )
     {
@@ -61,27 +62,27 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
 
     // r=0 (開始点の方程式)
     {
-        const int r = 0;
+        const size_t r = 0;
         equation[r][r    ] = 4;
         equation[r][r + 1] = 1;
     }
 
     // r=N-3 (終端の方程式)
     {
-        const int r = N - 3;
+        const size_t r = N - 3;
         equation[r][r - 1] = 1;
         equation[r][r    ] = 4;
     }
 
     // r=1:N-4 (端点以外の方程式を設定)
-    for (uint r = 1; r < equation.GetRowLength() - 1; ++r )
+    for (size_t r = 1; r < equation.GetRowLength() - 1; ++r )
     {
         equation[r][r - 1] = 1; // h[r];
         equation[r][r    ] = 4; // (h[r] + h[r+1]) * 2;
         equation[r][r + 1] = 1; // h[r+1];
     }
     // v を代入
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r][N - 2] = 6 * (input[r+2] - 2 * input[r+1] + input[r]);
     }
@@ -89,16 +90,16 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     // Gauss-Jordan
     //--------------------------------
     // 各行を正規化
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         equation[r] /= equation[r].GetMaximumAbsolute();
     }
-    for (uint r = 0; r < equation.GetRowLength(); ++r )
+    for (size_t r = 0; r < equation.GetRowLength(); ++r )
     {
         // 注目している列の中で、最大値を持つ列を探す。
-        uint index = r;
+        size_t index = r;
         double maximum = fabs(equation[r][r]);
-        for (uint k = index + 1; k < equation.GetRowLength() - 1; ++k )
+        for (size_t k = index + 1; k < equation.GetRowLength() - 1; ++k )
         {
             if ( fabs(equation[k][r]) > maximum )
             {
@@ -125,7 +126,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
         equation[r] /= maximum;
 
         // 他の行から引く。
-        for (uint m = 0; m < equation.GetRowLength(); ++m )
+        for (size_t m = 0; m < equation.GetRowLength(); ++m )
         {
             if ( m == r )
             {
@@ -140,9 +141,9 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     };
-    u[0] = 0;
+    u[_0] = 0;
     u[N-1] = 0;
-    for (uint k = 0; k < u.GetLength() - 2; ++k )
+    for (size_t k = 0; k < u.GetLength() - 2; ++k )
     {
         u[k+1] = equation[k][N - 2];
     }
@@ -160,7 +161,7 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     mcon::Vector<double> b(coefficients[1]);
     mcon::Vector<double> c(coefficients[2]);
     mcon::Vector<double> d(coefficients[3]);
-    for (uint k = 0; k < coefficients.GetColumnLength(); ++k )
+    for (size_t k = 0; k < coefficients.GetColumnLength(); ++k )
     {
         a[k] = (u[k+1] - u[k]) / 6;
         b[k] = u[k] / 2;
@@ -169,12 +170,12 @@ status_t Spline::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     }
     // 両端の値はループ外で代入しておく。
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
-    output[0] = input[0];
-    output[sampleCount - 1] = input[N - 1];
-    for (int k = 1; k < sampleCount - 1; ++k )
+    output[_0] = input[_0];
+    output[static_cast<size_t>(sampleCount) - 1] = input[N - 1];
+    for (size_t k = 1; k < static_cast<size_t>(sampleCount) - 1; ++k )
     {
         const double position = k * step;             // 換算した位置 (小数)
-        const int index = static_cast<int>(position); // 入力配列インデックス (整数)
+        const size_t index = static_cast<size_t>(position); // 入力配列インデックス (整数)
         const double frac = position - index;         // 小数部
         DEBUG_LOG("k=%d, frac=%g, index=%d, (a, b, c, d)=(%g, %g, %g, %g)\n", k, frac, index, a[index], b[index], c[index], d[index]);
         const double frac2 = frac * frac;

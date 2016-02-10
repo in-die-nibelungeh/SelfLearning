@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <math.h>
 
 #include "mcon.h"
@@ -14,7 +38,7 @@ namespace ft {
 
 namespace
 {
-    static double g_Pi(M_PI);
+    const double g_Pi(M_PI);
     int Ilog2(int v)
     {
         for (int i = sizeof(v) * 8 - 1; i >= 0 ; --i)
@@ -48,7 +72,7 @@ namespace
 
 status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeries)
 {
-    const int N = timeSeries.GetLength();
+    const size_t N = timeSeries.GetLength();
     if (Count1(N) != 1)
     {
         return -ERROR_ILLEGAL;
@@ -66,7 +90,7 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
     mcon::Vector<double> sinTable(N/2);
     mcon::Vector<double> cosTable(N/2);
 
-    for (int i = 0; i < N/2; ++i)
+    for (size_t i = 0; i < N / 2; ++i)
     {
         sinTable[i] = sin(df * i);
         cosTable[i] = cos(df * i);
@@ -75,7 +99,7 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
     real = timeSeries;
     imag = 0;
 
-    int innerLoop = N/2;
+    size_t innerLoop = N / 2;
     int outerLoop = 1;
     //DEBUG_LOG("N=%d\n", N);
 
@@ -88,7 +112,7 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
             const int& step = innerLoop;
             const int ofs = outer * step * 2;
 #if 0
-            for ( int k = 0; k < innerLoop; ++k )
+            for (size_t k = 0; k < innerLoop; ++k )
             {
                 const double r1 = real[k+ofs];
                 const double i1 = imag[k+ofs];
@@ -110,14 +134,14 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
             double* pImagL = reinterpret_cast<double*>(_pImag) + ofs;
             double* pRealH = reinterpret_cast<double*>(_pReal) + ofs + step;
             double* pImagH = reinterpret_cast<double*>(_pImag) + ofs + step;
-            for ( int k = 0; k < innerLoop; ++k )
+            for (size_t k = 0; k < innerLoop; ++k )
             {
                 const double r1 = pRealL[k];
                 const double i1 = pImagL[k];
                 const double r2 = pRealH[k];
                 const double i2 = pImagH[k];
 
-                const int idx = k * outerLoop;
+                const size_t idx = k * outerLoop;
                 pRealL[k] = r1 + r2;
                 pImagL[k] = i1 + i2;
                 pRealH[k] =   (r1 - r2) * cosTable[idx] + (i1 - i2) * sinTable[idx];
@@ -130,9 +154,9 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
     // Bit-reverse
     const int width = Ilog2(N);
     //DEBUG_LOG("width=%d\n", width);
-    for ( int i = 0; i < N; ++i )
+    for (size_t i = 0; i < N; ++i )
     {
-        const int k = BitReverse(i, width);
+        const size_t k = BitReverse(i, width);
         if (k == i || k < i)
         {
             continue;
@@ -149,7 +173,7 @@ status_t Fft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSeri
 
 status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& complex)
 {
-    const int N = complex.GetColumnLength();
+    const size_t N = complex.GetColumnLength();
     if (Count1(N) != 1)
     {
         return -ERROR_ILLEGAL;
@@ -168,7 +192,7 @@ status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
 
     const double df = 2.0 * g_Pi / N;
 
-    for (int i = 0; i < N/2; ++i)
+    for (size_t i = 0; i < N / 2; ++i)
     {
         sinTable[i] = sin(df * i);
         cosTable[i] = cos(df * i);
@@ -177,14 +201,14 @@ status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
     timeSeries = complex[0];
     tsPair = complex[1];
 
-    int innerLoop = N/2;
-    int outerLoop = 1;
+    size_t innerLoop = N / 2;
+    size_t outerLoop = 1;
 
     // Decimation in frequency.
     for ( ; 0 < innerLoop; innerLoop >>= 1, outerLoop <<= 1)
     {
         //DEBUG_LOG("inner=%d, outer=%d\n", innerLoop, outerLoop);
-        for ( int outer = 0; outer < outerLoop; ++outer )
+        for (size_t outer = 0; outer < outerLoop; ++outer )
         {
             const int& step = innerLoop;
             const int ofs = outer * step * 2;
@@ -195,14 +219,14 @@ status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
             double* pTsPairL = reinterpret_cast<double*>(_pTsPair) + ofs;
             double* pTsH     = reinterpret_cast<double*>(_pTs) + ofs + step;
             double* pTsPairH = reinterpret_cast<double*>(_pTsPair) + ofs + step;
-            for ( int k = 0; k < innerLoop; ++k )
+            for (size_t k = 0; k < innerLoop; ++k )
             {
                 const double r1 = pTsL[k];
                 const double i1 = pTsPairL[k];
                 const double r2 = pTsH[k];
                 const double i2 = pTsPairH[k];
 
-                const int idx = k * outerLoop;
+                const size_t idx = k * outerLoop;
                 pTsL[k]     = r1 + r2;
                 pTsPairL[k] = i1 + i2;
                 pTsH[k]     =   (r1 - r2) * cosTable[idx] - (i1 - i2) * sinTable[idx];
@@ -214,9 +238,9 @@ status_t Ifft(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& comp
     // Bit-reverse
     const int width = Ilog2(N);
     //DEBUG_LOG("width=%d\n", width);
-    for ( int i = 0; i < N; ++i )
+    for (size_t i = 0; i < N; ++i )
     {
-        const int k = BitReverse(i, width);
+        const size_t k = BitReverse(i, width);
         if (k < i)
         {
             continue;
@@ -286,7 +310,7 @@ status_t Ft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSerie
     mcon::VectordBase& real = complex[0];
     mcon::VectordBase& imag = complex[1];
 
-    const int N = timeSeries.GetLength();
+    const size_t N = timeSeries.GetLength();
     const double df = 2.0 * g_Pi / N;
 
     mcon::Vector<double> sinTable;
@@ -298,19 +322,19 @@ status_t Ft(mcon::Matrix<double>& complex, const mcon::Vector<double>& timeSerie
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
 
-    for (int i = 0; i < N; ++i)
+    for (size_t i = 0; i < N; ++i)
     {
         sinTable[i] = sin(df * i);
         cosTable[i] = cos(df * i);
     }
 
-    for (int i = 0; i < N; ++i)
+    for (size_t i = 0; i < N; ++i)
     {
         real[i] = 0.0;
         imag[i] = 0.0;
-        for (int j = 0; j < N; ++j)
+        for (size_t j = 0; j < N; ++j)
         {
-            int k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
+            const size_t k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
             real[i] += (timeSeries[j] * cosTable[k]);
             imag[i] -= (timeSeries[j] * sinTable[k]);
         }
@@ -343,13 +367,13 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    const int N = complex.GetColumnLength();
+    const size_t N = complex.GetColumnLength();
     const double df = 2.0 * g_Pi / N;
 
     mcon::Vector<double> sinTable(N);
     mcon::Vector<double> cosTable(N);
 
-    for (int i = 0; i < N; ++i)
+    for (size_t i = 0; i < N; ++i)
     {
         sinTable[i] = sin(df * i);
         cosTable[i] = cos(df * i);
@@ -358,13 +382,13 @@ status_t Ift(mcon::Vector<double>& timeSeries, const mcon::Matrix<double>& compl
     const mcon::Vector<double>& real = complex[0];
     const mcon::Vector<double>& imag = complex[1];
 
-    for (uint i = 0; i < timeSeries.GetLength(); ++i)
+    for (size_t i = 0; i < timeSeries.GetLength(); ++i)
     {
-        const int N = complex.GetColumnLength();
+        const size_t N = complex.GetColumnLength();
         timeSeries[i] = 0.0;
-        for (int j = 0; j < N; ++j)
+        for (size_t j = 0; j < N; ++j)
         {
-            int k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
+            const size_t k = ( static_cast<int64_t>(i) * static_cast<int64_t>(j) ) % N;
             timeSeries[i] += (real[j] * cosTable[k] - imag[j] * sinTable[k]);
         }
     }
@@ -390,7 +414,7 @@ status_t ConvertToPolarCoords(mcon::Matrix<double>& polar, const mcon::Matrix<do
     const mcon::Vector<double>& real  = complex[0];
     const mcon::Vector<double>& imag  = complex[1];
 
-    for (uint i = 0; i < complex.GetColumnLength(); ++i)
+    for (size_t i = 0; i < complex.GetColumnLength(); ++i)
     {
         r[i] = sqrt(POW2(real[i]) + POW2(imag[i]));
         arg[i] = atan(imag[i]/real[i]);
@@ -414,7 +438,7 @@ status_t ConvertToComplex(mcon::Matrix<double>& complex, const mcon::Matrix<doub
     mcon::VectordBase& real  = complex[0];
     mcon::VectordBase& imag  = complex[1];
 
-    for (uint i = 0; i < polar.GetColumnLength(); ++i)
+    for (size_t i = 0; i < polar.GetColumnLength(); ++i)
     {
         const double v = r[i];
         real[i] = v * cos(arg[i]);

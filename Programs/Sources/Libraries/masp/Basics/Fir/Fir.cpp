@@ -1,9 +1,33 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 
 #include <math.h>
-#include <sys/types.h>
 
-#include "status.h"
 #include "debug.h"
+#include "types.h"
+#include "status.h"
 #include "masp/Fir.h"
 
 namespace masp {
@@ -23,8 +47,13 @@ enum FilterBaseId
     FBI_LANCZOS
 };
 
+#if !defined(M_PI)
+#define M_PI (3.14159265358979323846)
+#endif
 
-static const double g_Pi(M_PI);
+namespace {
+    const double g_Pi(M_PI);
+}
 
 typedef double (*BaseFunction)(double, double);
 typedef double (*FilterFunction)(double m, double fe1, double fe2, double arg, BaseFunction function);
@@ -93,7 +122,7 @@ void GenerateLpfFilter(double coef[], size_t N, double fe, int type, double arg)
 {
     BaseFunction function = GetBaseFunction(type);
     ASSERT(NULL != function);
-    for (uint i = 0; i < N / 2; ++i)
+    for (size_t i = 0; i < N / 2; ++i)
     {
         const double x = 2.0 * fe * static_cast<int>(2 * i + 1 - N) / 2.0 * g_Pi;
         double v = 2.0 * fe * function(x, arg);
@@ -108,17 +137,17 @@ void GenerateLpfFilter(double coef[], size_t N, double fe, int type, double arg)
 
 static void GetCoefficients(mcon::Vector<double>& coef, double fe1, double fe2, double arg, int typeId, int functionId)
 {
-    const int N = coef.GetLength();
+    const size_t N = coef.GetLength();
     BaseFunction baseFunction = GetBaseFunction(functionId);
     ASSERT(NULL != baseFunction);
     FilterFunction filterFunction = GetFilterFunction(typeId);
     ASSERT(NULL != filterFunction);
-    for (int i = 0; i < (N+1)/2; ++i)
+    for (size_t i = 0; i < (N + 1) / 2; ++i)
     {
-        const double m = (2 * i + 1 - N) / 2.0;
+        const double m = (2 * static_cast<int>(i) + 1 - static_cast<int>(N)) / 2.0;
         double v = filterFunction(m, fe1, fe2, arg, baseFunction);
         coef[i] = v;
-        coef[N-i-1] = v;
+        coef[N - i - 1] = v;
     }
 }
 
@@ -126,7 +155,7 @@ static void GetCoefficients(double coef[], size_t N, double fe1, double fe2, dou
 {
     mcon::Vector<double> _coef(N);
     GetCoefficients(_coef, fe1, fe2, arg, typeId, functionId);
-    for (uint i = 0; i < _coef.GetLength(); ++i)
+    for (size_t i = 0; i < _coef.GetLength(); ++i)
     {
         coef[i] = _coef[i];
     }
@@ -226,7 +255,7 @@ int GetNumOfTapps(double delta)
 
 status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, const mcon::Vector<double>& impulse)
 {
-    const uint M = impulse.GetLength();
+    const size_t M = impulse.GetLength();
     if (in.GetLength() < M)
     {
         return -ERROR_ILLEGAL;
@@ -237,10 +266,10 @@ status_t Convolution(mcon::Vector<double>& out, const mcon::Vector<double>& in, 
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
 
-    for (uint i = 0; i < in.GetLength(); ++i)
+    for (size_t i = 0; i < in.GetLength(); ++i)
     {
         out[i] = 0.0;
-        for (uint k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
+        for (size_t k = 0; k < ( (M - 1 > i) ? i + 1 : M ); ++k)
         {
             out[i] += in[i - k] * impulse[k];
         }

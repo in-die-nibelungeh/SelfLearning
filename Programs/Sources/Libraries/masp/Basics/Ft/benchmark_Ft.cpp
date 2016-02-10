@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2015-2016 Ryosuke Kanata
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -22,7 +46,7 @@ static void tune_ft(void)
         fs = wave.GetSamplingRate();
     }
     LOG("SamplingRate: %d\n", fs);
-    LOG("Length: %d\n", sweep.GetLength());
+    LOG("Length: %d\n", static_cast<int>(sweep.GetLength()));
 
     status_t status;
     const int n = sweep.GetLength();
@@ -55,20 +79,20 @@ static void tune_ft(void)
 
         if (NULL != fp)
         {
-            for (int i = 0; i < complex.GetColumnLength(); ++i)
+            for (size_t i = 0; i < complex.GetColumnLength(); ++i)
             {
-                fprintf(fp, "%d,%g,%g\n", i, complex[0][i], complex[1][i]);
+                fprintf(fp, "%d,%g,%g\n", static_cast<int>(i), complex[0][i], complex[1][i]);
             }
             fprintf(fp, "\n");
             const double df = static_cast<double>(fs) / sweep.GetLength();
-            for (int i = 0; i < gp.GetColumnLength(); ++i)
+            for (size_t i = 0; i < gp.GetColumnLength(); ++i)
             {
                 fprintf(fp, "%g,%g,%g\n", i*df, gp[0][i], gp[1][i]);
             }
             fprintf(fp, "\n");
-            for (int i = 0; i < ift.GetLength(); ++i)
+            for (size_t i = 0; i < ift.GetLength(); ++i)
             {
-                fprintf(fp, "%d,%g,%g,%g\n", i, sweep[i], ift[i], sqrt( pow(sweep[i] - ift[i], 2) ) );
+                fprintf(fp, "%d,%g,%g,%g\n", static_cast<int>(i), sweep[i], ift[i], sqrt( pow(sweep[i] - ift[i], 2) ) );
             }
             fclose(fp);
         }

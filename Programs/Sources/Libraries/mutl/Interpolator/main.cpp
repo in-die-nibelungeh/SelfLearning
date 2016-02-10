@@ -33,7 +33,7 @@ void test_interp()
 
     const int every = N / ratio;
     mcon::Vector<double> coarse(every + (N % ratio ? 1 : 0));
-    for (uint k = 0; k < data.GetLength(); ++k )
+    for (size_t k = 0; k < data.GetLength(); ++k )
     {
         data[k] = VALUE(static_cast<int>(k));
         if ( (k % every) == 0 )

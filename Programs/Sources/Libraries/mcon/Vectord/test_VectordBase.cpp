@@ -11,8 +11,8 @@ static double _fabs(double v)
 
 void ShowVectordBase(const mcon::VectordBase& v)
 {
-    const uint n = v.GetLength();
-    for (uint i = 0; i < n; ++i )
+    const size_t n = v.GetLength();
+    for (size_t i = 0; i < n; ++i )
     {
         printf("\t%g", v[i]);
         if ( (i % 8) == 7 )
@@ -33,11 +33,11 @@ void test_VectordBase(void)
     CHECK_VALUE(dvec.GetLength(), length);
 
     LOG("* [operator[]]\n");
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         dvec[i] = i;
     }
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], i);
     }
@@ -45,41 +45,41 @@ void test_VectordBase(void)
     LOG("* [operator+=(double)]\n");
     // operator+=(T)
     dvec += 1;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], i+1);
     }
     // operator*=(T)
     LOG("* [operator*=(double)]\n");
     dvec *= 10;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1)*10);
     }
     // operator/=(T)
     LOG("* [operator/=(double)]\n");
     dvec /= 5;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1)*2);
     }
     // operator-=(T)
     LOG("* [operator-=(double)]\n");
     dvec -= 5;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (static_cast<int>(i)+1)*2-5);
     }
     LOG("* [Copy]\n");
     mcon::VectordBase dvec2(area+(length/4+1)*4, length*2);
 
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = -(i+1);
     }
     // Copy
     dvec2.Copy(dvec);
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         if (0 <= i && i < length)
         {
@@ -87,53 +87,53 @@ void test_VectordBase(void)
         }
     }
     dvec = 10;
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 1;
     }
 
     LOG("* [operator+=]\n");
     dvec += dvec2;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1) + 10);
     }
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = (i & 1) ? 1.0 : 2.0;
     }
 
     LOG("* [operator*=]\n");
     dvec *= dvec2;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], ((i+1) + 10) * ((i & 1) ? 1.0 : 2.0));
     }
     LOG("* [operator/=]\n");
     dvec /= dvec2;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], (i+1) + 10);
     }
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 1;
     }
     LOG("* [operator-=]\n");
     dvec -= dvec2;
-    for (uint i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         CHECK_VALUE(dvec[i], 10);
     }
     // Fifo
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         dvec2[i] = i + 2;
     }
     LOG("* [Fifo]\n");
     double v = dvec2.Fifo(5);
     CHECK_VALUE(v, 2);
-    for (uint i = 0; i < dvec2.GetLength()-1; ++i)
+    for (size_t i = 0; i < dvec2.GetLength()-1; ++i)
     {
         CHECK_VALUE(dvec2[i], i+3);
     }
@@ -143,7 +143,7 @@ void test_VectordBase(void)
     LOG("* [Unshift]\n");
     v = dvec2.Unshift(2);
     CHECK_VALUE(v, 5);
-    for (uint i = 0; i < dvec2.GetLength(); ++i)
+    for (size_t i = 0; i < dvec2.GetLength(); ++i)
     {
         CHECK_VALUE(dvec2[i], i+2);
     }
@@ -346,10 +346,10 @@ void test_VectordBase(void)
     LOG("* [GetLocalMinimumIndex/GetLocalMaximumIndex]\n");
     {
         const int lens[] = {1, -1, -2, 4, 5, 6, 5, -2, -6, 7, 10, 11, 0};
-        const uint length = sizeof(lens)/sizeof(int);
+        const size_t length = sizeof(lens)/sizeof(int);
         double __attribute((aligned(mcon::VectordBase::g_Alignment))) _area[length];
         mcon::VectordBase v(_area, length);
-        for (uint k = 0; k < v.GetLength(); ++k)
+        for (size_t k = 0; k < v.GetLength(); ++k)
         {
             v[k] = static_cast<double>(lens[k]);
         }

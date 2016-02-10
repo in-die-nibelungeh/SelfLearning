@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 Ryosuke Kanata
+ * Copyright (c) 2015-2016 Ryosuke Kanata
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ status_t Linear::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
     {
         return -ERROR_CANNOT_ALLOCATE_MEMORY;
     }
-    const int N = input.GetLength();
+    const size_t N = input.GetLength();
     // 間隔の数はそれぞれの長さから 1 だけ引いた値になる。
     // この値でスケールする。
     const double step = static_cast<double>(N - 1) / (sampleCount - 1);
@@ -50,12 +50,13 @@ status_t Linear::Interpolate(mcon::Vector<double>& output, const mcon::VectordBa
 
     // 両端の値はループ外で代入しておく。
     // 終端の値はループ外で処理しようとすると、範囲外アクセスを生じるので注意。
-    output[0] = input[0];
-    output[sampleCount - 1] = input[N - 1];
-    for ( int k = 1; k < sampleCount - 1; ++k )
+    const size_t _0 = 0;
+    output[_0] = input[_0];
+    output[static_cast<size_t>(sampleCount) - 1] = input[N - 1];
+    for (size_t k = 1; k < static_cast<size_t>(sampleCount) - 1; ++k )
     {
         const double position = k * step;             // 換算した位置 (小数)
-        const int index = static_cast<int>(position); // 入力配列インデックス (整数)
+        const size_t index = static_cast<int>(position); // 入力配列インデックス (整数)
         const double frac = position - index;         // 小数部
         DEBUG_LOG("k=%d, pos=%g, index=%d\n", k, position, index);
         output[k] = (input[index + 1] - input[index]) * frac + input[index];
